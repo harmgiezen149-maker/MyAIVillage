@@ -39,7 +39,7 @@ Running log of every decision made during the build. Newest entries at the botto
 - **End:** _open_
 - **Artlist credits:** start 1,340 / end _open_
 - **Claude usage:** start 9% of plan / end _open_
-- **Claude plan:** _waiting for Harm_
+- **Claude plan:** Pro
 - **Usage limits / extra usage:** none so far
 - **Built:**
   - `ai-village` folder and `NOTES.md` with ground rules, setup decisions and build-log rules.
