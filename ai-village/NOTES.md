@@ -29,6 +29,12 @@ Running log of every decision made during the build. Newest entries at the botto
 - **Interiors:** Every house can be walked into (each has its own interior).
 - **Not yet decided:** How the artwork is made (Artlist-generated vs. drawn in code), map size, number of houses. Claude proposes these before building and waits for a yes.
 
+## Art style (2026-10-30)
+
+- The style guide lives in `STYLE_GUIDE.md` (approved by Harm as written).
+- Every art prompt includes the style guide paragraph **word for word**.
+- Harm's original style brief: 16-bit SNES pixel art, warm colors, top-down three-quarter view, light from the upper left, dark outlines, no text anywhere.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
