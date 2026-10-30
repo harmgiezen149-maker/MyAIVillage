@@ -32,12 +32,13 @@ Running log of every decision made during the build. Newest entries at the botto
 
 ## Build log
 
-### Session 1 — 2026-10-30
+### Day 1 — 2026-10-30
 
-- **Start:** ~17:25 UTC (18:25 CET)
+- **Day 1, start (logged 17:33 UTC / 18:33 CET):** Artlist 1,340 of 16,500 credits · Claude usage 9% of plan
+- **Session opened:** ~17:25 UTC (18:25 CET)
 - **End:** _open_
 - **Artlist credits:** start 1,340 / end _open_
-- **Claude usage:** start _waiting for Harm's numbers_ / end _open_
+- **Claude usage:** start 9% of plan / end _open_
 - **Claude plan:** _waiting for Harm_
 - **Usage limits / extra usage:** none so far
 - **Built:**
