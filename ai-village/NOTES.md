@@ -48,6 +48,10 @@ Running log of every decision made during the build. Newest entries at the botto
 - For the modern-look drafts, the style guide's pixel-art lines were left out; the warm palette, three-quarter view, upper-left light and no-text rules were kept.
 - Once Harm picks a look, `STYLE_GUIDE.md` gets rewritten to match (with Harm's yes).
 
+## Look chosen (2026-10-30)
+
+- Harm chose the **HD-2D** look (draft 1) for the town map.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
@@ -74,6 +78,7 @@ Running log of every decision made during the build. Newest entries at the botto
   - Town map batch: 5 versions, one per period (Ancient Rome, Medieval Europe, Edo Japan, Victorian England, Wild West). Nano Banana 2, 2K, square. 130 credits each, **650 credits total** (approved by Harm). Balance after: 690.
     - Images live in Harm's Artlist generations. Download into the workspace was blocked by the session's network policy (Artlist hosts not on the allowed list).
   - Modern-look drafts: Harm found map 2 too pixelated and wants a more modern RPG feel. 5 low-res drafts redrawing map 2 with the same layout (HD-2D, hand-painted, modern hi-res pixel art, cel-shaded 3D, cozy miniature diorama). Same prompts also asked for a fountain instead of the well, visible doors on the two hidden houses, and removing the stray object. Nano Banana 2 Lite, 1K. 50 credits each, **250 credits total** (approved by Harm). Balance after: 440.
+  - Harm picked **draft 1: HD-2D**. Redrawn at 4K (4096 × 4096) from draft 1, Nano Banana 2, **200 credits** (approved by Harm). Download still blocked; waiting for Harm to upload it or allow the Artlist host.
 
 ## Open questions
 
