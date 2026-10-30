@@ -31,7 +31,7 @@ Running log of every decision made during the build. Newest entries at the botto
 
 ## Art style (2026-10-30)
 
-- The style guide lives in `STYLE_GUIDE.md` (approved by Harm as written).
+- The style guide lives in `STYLE_GUIDE.md` (approved by Harm as written). Replaced by the HD-2D version later the same day; see "Style change" below.
 - Every art prompt includes the style guide paragraph **word for word**.
 - Harm's original style brief: 16-bit SNES pixel art, warm colors, top-down three-quarter view, light from the upper left, dark outlines, no text anywhere.
 
@@ -47,6 +47,8 @@ Running log of every decision made during the build. Newest entries at the botto
 - Harm wants a more modern RPG look than 16-bit SNES pixel art.
 - For the modern-look drafts, the style guide's pixel-art lines were left out; the warm palette, three-quarter view, upper-left light and no-text rules were kept.
 - Once Harm picks a look, `STYLE_GUIDE.md` gets rewritten to match (with Harm's yes).
+- **Done:** `STYLE_GUIDE.md` rewritten for HD-2D and approved by Harm as written. The old pixel-art paragraph is kept below it as a record. From now on, every art prompt uses the HD-2D paragraph word for word.
+- Open check: confirm draft 1 actually has outlines; if not, drop "subtle dark outlines".
 
 ## Look chosen (2026-10-30)
 
