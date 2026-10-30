@@ -53,6 +53,7 @@ Running log of every decision made during the build. Newest entries at the botto
 ## Look chosen (2026-10-30)
 
 - Harm chose the **HD-2D** look (draft 1) for the town map.
+- Town map format: **4:3 landscape** to fit desktop screens (2K version chosen over 4K to save credits).
 
 ## How the build log works (2026-10-30)
 
@@ -81,6 +82,7 @@ Running log of every decision made during the build. Newest entries at the botto
     - Images live in Harm's Artlist generations. Download into the workspace was blocked by the session's network policy (Artlist hosts not on the allowed list).
   - Modern-look drafts: Harm found map 2 too pixelated and wants a more modern RPG feel. 5 low-res drafts redrawing map 2 with the same layout (HD-2D, hand-painted, modern hi-res pixel art, cel-shaded 3D, cozy miniature diorama). Same prompts also asked for a fountain instead of the well, visible doors on the two hidden houses, and removing the stray object. Nano Banana 2 Lite, 1K. 50 credits each, **250 credits total** (approved by Harm). Balance after: 440.
   - Harm picked **draft 1: HD-2D**. Redrawn at 4K (4096 × 4096) from draft 1, Nano Banana 2, **200 credits** (approved by Harm). Download still blocked; waiting for Harm to upload it or allow the Artlist host.
+  - 4:3 town map for desktop screens: redrawn from the 4K HD-2D map with the new style guide, town kept centered, extra grass and trees on the sides. Nano Banana 2, 2K (2048 × 1536), **130 credits** (approved by Harm). This is the main town map from now on.
 
 ## Open questions
 
