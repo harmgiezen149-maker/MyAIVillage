@@ -42,6 +42,12 @@ Running log of every decision made during the build. Newest entries at the botto
 - Check against the brief: 10 houses ✓, town hall with bell tower on the north side ✓, cobblestone square ✓, paths ✓, open yards ✓, grass and trees ✓, no people ✓, no text ✓.
 - Problems found: the centerpiece is a stone well rather than a fountain; the two tall tile-roof houses (left and right of the square) are tucked behind thatched cottages, so their front doors can't be seen; there's a tiny stray yellow object just right of the square.
 
+## Style change in progress (2026-10-30)
+
+- Harm wants a more modern RPG look than 16-bit SNES pixel art.
+- For the modern-look drafts, the style guide's pixel-art lines were left out; the warm palette, three-quarter view, upper-left light and no-text rules were kept.
+- Once Harm picks a look, `STYLE_GUIDE.md` gets rewritten to match (with Harm's yes).
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
@@ -67,6 +73,7 @@ Running log of every decision made during the build. Newest entries at the botto
   - `STYLE_GUIDE.md` (approved art style paragraph).
   - Town map batch: 5 versions, one per period (Ancient Rome, Medieval Europe, Edo Japan, Victorian England, Wild West). Nano Banana 2, 2K, square. 130 credits each, **650 credits total** (approved by Harm). Balance after: 690.
     - Images live in Harm's Artlist generations. Download into the workspace was blocked by the session's network policy (Artlist hosts not on the allowed list).
+  - Modern-look drafts: Harm found map 2 too pixelated and wants a more modern RPG feel. 5 low-res drafts redrawing map 2 with the same layout (HD-2D, hand-painted, modern hi-res pixel art, cel-shaded 3D, cozy miniature diorama). Same prompts also asked for a fountain instead of the well, visible doors on the two hidden houses, and removing the stray object. Nano Banana 2 Lite, 1K. 50 credits each, **250 credits total** (approved by Harm). Balance after: 440.
 
 ## Open questions
 
