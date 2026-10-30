@@ -35,6 +35,10 @@ Running log of every decision made during the build. Newest entries at the botto
 - Every art prompt includes the style guide paragraph **word for word**.
 - Harm's original style brief: 16-bit SNES pixel art, warm colors, top-down three-quarter view, light from the upper left, dark outlines, no text anywhere.
 
+## Town map choice (2026-10-30)
+
+- Harm picked **map 2: Medieval Europe** as the town map.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
