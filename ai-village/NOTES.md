@@ -38,6 +38,9 @@ Running log of every decision made during the build. Newest entries at the botto
 ## Town map choice (2026-10-30)
 
 - Harm picked **map 2: Medieval Europe** as the town map.
+- Saved as `art/maps/2-medieval-europe.png` (2048 × 2048, uploaded by Harm because the download was blocked).
+- Check against the brief: 10 houses ✓, town hall with bell tower on the north side ✓, cobblestone square ✓, paths ✓, open yards ✓, grass and trees ✓, no people ✓, no text ✓.
+- Problems found: the centerpiece is a stone well rather than a fountain; the two tall tile-roof houses (left and right of the square) are tucked behind thatched cottages, so their front doors can't be seen; there's a tiny stray yellow object just right of the square.
 
 ## How the build log works (2026-10-30)
 
@@ -67,5 +70,5 @@ Running log of every decision made during the build. Newest entries at the botto
 
 ## Open questions
 
-- Town map download: allow Artlist hosts in the environment's network settings, or Harm downloads the chosen map and shares it.
+- Future art downloads: allow `cms-toolkit-artifacts.artlist.io` in the environment's network settings, or Harm uploads files in chat.
 - Price per Artlist credit: work it out from the plan price (monthly price ÷ 16,500), or use a fixed number from Harm?
