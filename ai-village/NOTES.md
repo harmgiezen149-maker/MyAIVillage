@@ -21,6 +21,14 @@ Running log of every decision made during the build. Newest entries at the botto
 - This notes file is pushed to GitHub after every change so it survives between sessions.
 - Artlist balance at start: 1,340 of 16,500 monthly credits (AI Suite 16500 plan), renews 2026-11-07.
 
+## Village vision (2026-10-30)
+
+- **Style:** Top-down, high-detail 16-bit RPG village.
+- **Purpose:** Each of Harm's AI agents will live and work in the village, in their own house.
+- **First milestone — empty town:** Build the whole town with nobody in it: houses, paths, trees, a town square, and a town hall.
+- **Interiors:** Every house can be walked into (each has its own interior).
+- **Not yet decided:** How the artwork is made (Artlist-generated vs. drawn in code), map size, number of houses. Claude proposes these before building and waits for a yes.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
