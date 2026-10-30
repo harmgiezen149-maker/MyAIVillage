@@ -57,7 +57,11 @@ Running log of every decision made during the build. Newest entries at the botto
 - **Usage limits / extra usage:** none so far
 - **Built:**
   - `ai-village` folder and `NOTES.md` with ground rules, setup decisions and build-log rules.
+  - `STYLE_GUIDE.md` (approved art style paragraph).
+  - Town map batch: 5 versions, one per period (Ancient Rome, Medieval Europe, Edo Japan, Victorian England, Wild West). Nano Banana 2, 2K, square. 130 credits each, **650 credits total** (approved by Harm). Balance after: 690.
+    - Images live in Harm's Artlist generations. Download into the workspace was blocked by the session's network policy (Artlist hosts not on the allowed list).
 
 ## Open questions
 
+- Town map download: allow Artlist hosts in the environment's network settings, or Harm downloads the chosen map and shares it.
 - Price per Artlist credit: work it out from the plan price (monthly price ÷ 16,500), or use a fixed number from Harm?
