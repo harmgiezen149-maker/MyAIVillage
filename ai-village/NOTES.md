@@ -127,6 +127,10 @@ One Artlist image per house. Every room:
   - Second fix (Harm: "remove 2 trees"): Nano Banana Pro edit removing the top two trees in the row between the workshop and the press (replaced with a dirt path), plus moving the paper stacks and removing the right tall house (both part of the already-approved option A). **160 credits**. Uploaded by Harm, saved as `art/maps/town-jobs-4x3-v3.png` (2400 × 1792).
     - Check: tree row removed, workshop now has a clear dirt path ✓; workbench moved aside ✓. Still wrong: both tall tile houses left and right of the square are still there (the edit ignored the removal twice), and the paper stacks still sit next to the press doors.
   - Interior drafts: 10 rooms (Council Hall, Post House, Counting House, Scholar's Tower, Artisan's Workshop, Family Cottage, Bard's House, Crier's Press, Herald's Lodge, Carrier's Depot). Style guide + interior rules in every prompt, 4:3. Nano Banana 2 Lite, 1K. 50 credits each, **500 credits total** (approved by Harm). Guest houses skipped for now.
+    - Harm uploaded all 10 drafts (zip) and approved them ("these look great"). Saved as `art/interiors/drafts/<room>.jpg` (1200 × 896).
+    - Check against the room rules: job themes and luxury ✓, no people ✓, one desk + chair ✓. Drift: walls are tall dollhouse walls rather than thin strips; several rooms float on a dark background instead of filling the image; furniture is larger than the 1/12-person scale; the Artisan's Workshop is a corner view with **no door**.
+- **Town hall interior changed (Harm, 2026-10-31):** one big table with 12 chairs, one chair at the head of the table for Harm. Replaces the map table + desk design.
+- Next: 4K versions of the 9 approved rooms (not the town hall), plus a new town hall draft.
 - **Rule (Harm, 2026-10-31):** Every house must have a clear path to its front door. Nothing may sit in front of a door; trees or objects blocking a path get removed. People must be able to walk in and out of every house.
 
 ## Open questions
