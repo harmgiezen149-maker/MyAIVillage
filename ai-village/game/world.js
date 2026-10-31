@@ -79,9 +79,37 @@ const WALK_SHEET = {
 
 // Kevin, Chief of Staff (they/them): Harm's right hand. Lives in the Council Hall, follows Harm everywhere.
 // Same layout as Harm's sheet; the phone sheet is used while Kevin is on a call.
+const HARM_SEATED = { image: 'seat:harm', src: 'assets/characters/harm-seated.png' };
 const KEVIN_SHEET = { ...WALK_SHEET, image: 'char:kevin', src: 'assets/characters/kevin-walk.png' };
 const KEVIN_PHONE_SHEET = { ...WALK_SHEET, image: 'char:kevin-phone', src: 'assets/characters/kevin-phone.png' };
+const KEVIN_SEATED = { image: 'seat:kevin', src: 'assets/characters/kevin-seated.png' };
 const KEVIN = { name: 'Kevin', job: 'Chief of Staff', home: 'council-hall', followDistance: 0.9 }; // in person heights
+
+// ---------- meetings in the Council Hall ----------
+// Seat points are where the person sits on the chair (room pixels, 1200 x 896). dir is the way they face.
+// table: the seat is at the table, so the legs disappear under it. chairBack: the chair back is in front of them.
+// Workers have no seat: they stand behind their director's chair.
+const MEETING = {
+  room: 'council-hall',
+  table: [[545, 352], [662, 352], [677, 602], [677, 650], [529, 650], [529, 602]],
+  bottomChairBack: [[574, 606], [588, 596], [604, 590], [620, 596], [634, 606], [634, 690], [574, 690]],
+  seats: [
+    { who: 'harm', seat: [605, 326], dir: 'down', table: true },                 // the head of the table
+    { who: 'kevin', seat: [501, 430], dir: 'right', table: true },               // Harm's right hand
+    { who: 'margot-finch', seat: [706, 430], dir: 'left', table: true },
+    { who: 'theo-ashworth', seat: [496, 474], dir: 'right', table: true },
+    { who: 'imani-okafor', seat: [709, 474], dir: 'left', table: true },
+    { who: 'rafael-moreno', seat: [491, 522], dir: 'right', table: true },
+    { who: 'rosie-bell', seat: [713, 522], dir: 'left', table: true },
+    { who: 'jasper-vale', seat: [485, 577], dir: 'right', table: true },
+    { who: 'nova-lindqvist', seat: [720, 577], dir: 'left', table: true },
+    { who: 'leo-castellano', seat: [603, 648], dir: 'up', chairBack: true },     // the end of the table, facing Harm
+    { who: 'greta-holm', seat: [489, 610], dir: 'down' },                        // the armchair at the end
+    // the other armchair (712, 610) is kept free for the 10th director
+  ],
+  // where Harm and Kevin stand after the meeting: in front of the Council Hall
+  after: { harm: [1194, 590], kevin: [1150, 600] },
+};
 
 const START = [1200, 1060]; // the CEO starts just below the fountain
 

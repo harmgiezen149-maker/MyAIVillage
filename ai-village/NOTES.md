@@ -156,6 +156,15 @@ One Artlist image per house. Every room:
 - **In the game:** `game/residents.js`. Each director wanders their yard (around their front door) or their house, swapping every 30–70 seconds by walking through the door. Each worker follows a step behind their director on the director's own path (same yard/house). Name tags appear over anyone the CEO walks up to (workers in yellow). **Names** list in the edit menu (key E → Names): change a name, it saves to the page's storage (`settings/names`).
 - Agent folders: `agents/` (made by `tools/make_agents.py`; Harm approved Margot's sample format). The "advisor" setting is written into each director's file; how to switch it on in practice is still to be checked before anything runs.
 
+## Meetings, seated poses and portraits (Harm, 2026-10-31)
+
+- **Seated poses:** every character who sits at the Council Hall table gets a seated sheet made from their own character sheet: 4 views in a 2 × 2 grid on magenta (toward the camera, facing right, facing left, facing away), sitting on an invisible chair. Cut with `tools/cut_seated.py` into a strip `assets/characters/<id>-seated.png` (same scale as their walking sheet, so heads match). If the AI draws both side views facing the same way, the good one is mirrored (`--left-from-right`).
+- **Seats (Harm: "assign everyone their own seat"):** Harm at the head of the table; Kevin at Harm's right hand; then the directors in turn down the sides (Margot, Theo, Imani, Rafael, Rosie, Jasper, Nova), Leo at the far end facing Harm, Greta in one armchair at the end. The other armchair is kept for the 10th director. Plan in `MEETING` in `game/world.js`.
+- **Workers stand behind their director's chair** during meetings (Harm's choice: the hall has 12 chairs and the team is 20 people). So workers need no seated pose.
+- **Legs under the table:** the game hides the part of a seated person that falls on the table below their hands, so knees and legs disappear under it; at the far end the chair back hides the person's back.
+- **Call meeting button** (menu bar): everyone goes to the Council Hall with Harm (short fade). Harm stays seated until **End meeting**: then the directors and workers go back to their own yards, and Harm and Kevin stand in front of the Council Hall. During a meeting the name tag shows for whoever the mouse points at.
+- **Face portraits:** a small square head-and-shoulders portrait of every character, same style, from their character sheet, saved as `assets/portraits/<id>.jpg` (256 px). Shown in a panel at the top of the screen while someone is on a call, so Harm can see who's talking (for now only Kevin makes calls, key C). Without a portrait the panel shows initials.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
@@ -226,6 +235,8 @@ One Artlist image per house. Every room:
   - Still carrying bits of the faded room, parked in `art/props/needs-fix/`: barrel-small, bush-large, flowerbed-b. Clean look-alikes exist for each, so they are optional.
   - Placement plan: props get cut out and placed **in code** on the walkable page (never on paths or in front of doors), not painted into the map by AI. The two hidden tall houses next to the square stay closed in the game.
 - **Rule (Harm, 2026-10-31):** Every house must have a clear path to its front door. Nothing may sit in front of a door; trees or objects blocking a path get removed. People must be able to walk in and out of every house.
+
+- **Seated poses + portraits test (2026-10-31):** Harm's seated sheet (Nano Banana 2, 2K, 130 credits) and face portrait (Nano Banana 2 Lite, 1K, 50 credits) as a test before the rest. **180 credits** (approved by Harm). Saved as `art/characters/harm-seated-v1.png` and `harm-portrait-v1.png`. Result: all four poses right except the facing-left view, which faced right too (fixed for free by mirroring). Portrait matches.
 
 ## Open questions
 

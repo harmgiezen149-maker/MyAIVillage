@@ -10,14 +10,9 @@ ROWS, COLS = 4, 3
 OUT_W, OUT_H = 192, 256          # size of each frame in the packed sheet
 FOOT = 244                       # foot line inside each packed frame
 
-src, out = sys.argv[1], sys.argv[2]
-mirrors = [a.split('=') for a in sys.argv[3:] if '=' in a]
-no_shadow = '--no-shadow' in sys.argv   # drop darker magenta shadows the AI painted under the feet
-
-sheet = Image.open(src).convert('RGB')
-fw, fh = sheet.width / COLS, sheet.height / ROWS
-
-def cut(r, c):
+def cut_frame(sheet, r, c, rows, cols, no_shadow=False):
+    """Cut grid cell (r, c) out of the sheet as a tight transparent figure."""
+    fw, fh = sheet.width / cols, sheet.height / rows
     box = (round(c * fw), round(r * fh), round((c + 1) * fw), round((r + 1) * fh))
     im = np.asarray(sheet.crop(box)).astype(np.int32)
     h, w, _ = im.shape
@@ -57,16 +52,25 @@ def cut(r, c):
     fig = Image.fromarray(rgba, 'RGBA')
     return fig.crop(fig.getchannel('A').point(lambda v: 255 if v > 60 else 0).getbbox())
 
-frames = {(r, c): cut(r, c) for r in range(ROWS) for c in range(COLS)}
-for target, source in mirrors:
-    tr, tc = map(int, target.split(',')); sr, sc = map(int, source.split(','))
-    frames[(tr, tc)] = frames[(sr, sc)].transpose(Image.FLIP_LEFT_RIGHT)
+def main():
+  src, out = sys.argv[1], sys.argv[2]
+  mirrors = [a.split('=') for a in sys.argv[3:] if '=' in a]
+  no_shadow = '--no-shadow' in sys.argv   # drop darker magenta shadows the AI painted under the feet
+  sheet = Image.open(src).convert('RGB')
+  frames = {(r, c): cut_frame(sheet, r, c, ROWS, COLS, no_shadow) for r in range(ROWS) for c in range(COLS)}
+  for target, source in mirrors:
+      tr, tc = map(int, target.split(',')); sr, sc = map(int, source.split(','))
+      frames[(tr, tc)] = frames[(sr, sc)].transpose(Image.FLIP_LEFT_RIGHT)
 
-tallest = max(f.height for f in frames.values())
-scale = (FOOT - 8) / tallest
-packed = Image.new('RGBA', (OUT_W * COLS, OUT_H * ROWS), (0, 0, 0, 0))
-for (r, c), f in frames.items():
-    g = f.resize((max(1, round(f.width * scale)), max(1, round(f.height * scale))), Image.LANCZOS)
-    packed.paste(g, (c * OUT_W + (OUT_W - g.width) // 2, r * OUT_H + FOOT - g.height), g)
-packed.save(out, optimize=True)
-print('saved', out, packed.size, 'tallest frame', tallest, 'px')
+  tallest = max(f.height for f in frames.values())
+  scale = (FOOT - 8) / tallest
+  packed = Image.new('RGBA', (OUT_W * COLS, OUT_H * ROWS), (0, 0, 0, 0))
+  for (r, c), f in frames.items():
+      g = f.resize((max(1, round(f.width * scale)), max(1, round(f.height * scale))), Image.LANCZOS)
+      packed.paste(g, (c * OUT_W + (OUT_W - g.width) // 2, r * OUT_H + FOOT - g.height), g)
+  packed.save(out, optimize=True)
+  print('saved', out, packed.size, 'tallest frame', tallest, 'px')
+
+
+if __name__ == '__main__':
+  main()

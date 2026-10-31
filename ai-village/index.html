@@ -63,6 +63,17 @@
   .name-row .role { font-size: 12px; color: var(--muted); }
   .name-row .role.worker { color: #ffd84a; }
   .name-row input { font: inherit; font-size: 13px; color: var(--text); background: rgba(0,0,0,.3); border: 1px solid var(--panel-edge); border-radius: 6px; padding: 4px 6px; min-width: 0; }
+  #call { top: 16px; left: 50%; transform: translateX(-50%); flex-direction: column; gap: 6px; }
+  #call[hidden] { display: none; }
+  .caller { display: flex; gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--panel-edge);
+    border-radius: 12px; padding: 8px 14px 8px 8px; animation: ring 1.6s ease-in-out infinite; }
+  .caller img, .caller .initials { width: 64px; height: 64px; border-radius: 8px; border: 2px solid var(--accent); object-fit: cover; flex: none; }
+  .caller .initials { display: grid; place-items: center; font-size: 24px; color: var(--accent); background: rgba(0,0,0,.3); }
+  .caller-name { color: var(--accent); font-size: 16px; }
+  .caller-status { color: var(--muted); font-size: 12px; }
+  @keyframes ring { 50% { box-shadow: 0 0 0 4px rgba(242,193,78,.18); } }
+  @media (prefers-reduced-motion: reduce) { .caller { animation: none; } }
+  @media (max-width: 560px) { #call { top: auto; bottom: 16px; } }
   body.editing #view { cursor: crosshair; }
   body.editing #help { display: none; }
   @media (max-width: 560px) { #help { display: none; } #place-name { font-size: 16px; } }
@@ -76,10 +87,12 @@
   <button id="zoom-out" aria-label="Zoom out">−</button>
   <button id="zoom-in" aria-label="Zoom in">+</button>
   <button id="sound" aria-pressed="true">Sound on</button>
+  <button id="meeting" aria-pressed="false" title="Everyone to the Council Hall">Call meeting</button>
   <button id="edit" aria-pressed="false" title="Paint where he can walk (key E)">Edit map</button>
 </div>
-<div class="hud" id="help"><span>Walk: arrow keys / WASD or click · Zoom: mouse wheel · Walk into a door to enter · M: sound · C: Kevin makes a call · E: edit map</span></div>
+<div class="hud" id="help"><span>Walk: arrow keys / WASD or click · Zoom: mouse wheel · Walk into a door to enter · M: sound · C: Kevin makes a call · Call meeting: everyone to the Council Hall · E: edit map</span></div>
 <div id="toast" role="status"></div>
+<div class="hud" id="call" role="status" aria-live="polite" hidden></div>
 
 <div class="hud" id="editor" hidden>
   <div class="row" id="tools"></div>
@@ -114,5 +127,6 @@
 <script src="game/village.js"></script>
 <script src="game/editor.js"></script>
 <script src="game/residents.js"></script>
+<script src="game/meeting.js"></script>
 </body>
 </html>

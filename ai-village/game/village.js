@@ -135,6 +135,7 @@ function update(dt) {
     if (d < 4) state.target = null;
     else { dx = tx / d; dy = ty / d; }
   }
+  if (state.meeting) { dx = 0; dy = 0; state.target = null; }   // seated at the head of the table
   const speed = (state.scene === 'map' ? 190 : 230) * dt;
   p.moving = false;
   if (dx || dy) {
@@ -148,11 +149,13 @@ function update(dt) {
     p.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
   }
   p.step = p.moving ? p.step + dt * 9 : 0;
-  updateKevin(dt);
-  if (typeof updateResidents === 'function') updateResidents(dt);
+  if (!state.meeting) {
+    updateKevin(dt);
+    if (typeof updateResidents === 'function') updateResidents(dt);
+  }
 
   // doors
-  if (state.fade <= 0) {
+  if (state.fade <= 0 && !state.meeting) {
     if (state.scene === 'map') {
       let near = null;
       for (const b of BUILDINGS) if (Math.hypot(p.x - b.door[0], p.y - b.door[1]) < 26) near = b;
@@ -638,9 +641,12 @@ function drawRoom(id) {
   const img = images['room:' + id];
   if (img) ctx.drawImage(img, 0, 0, ROOM_W, ROOM_H);
   const things = (room.props || []).map((p) => ({ y: p[2], draw: () => drawProp(p) }));
-  things.push({ y: state.player.y, draw: drawCEOInPlace });
-  things.push({ y: state.kevin.y - 0.01, draw: drawKevinInPlace });
-  if (typeof residentsHere === 'function') for (const r of residentsHere()) things.push({ y: r.y, draw: () => drawResidentInPlace(r) });
+  if (state.meeting) things.push(...meetingThings());
+  else {
+    things.push({ y: state.player.y, draw: drawCEOInPlace });
+    things.push({ y: state.kevin.y - 0.01, draw: drawKevinInPlace });
+    if (typeof residentsHere === 'function') for (const r of residentsHere()) things.push({ y: r.y, draw: () => drawResidentInPlace(r) });
+  }
   things.sort((a, b) => a.y - b.y).forEach((t) => t.draw());
   if (typeof drawNameTags === 'function') drawNameTags();
   ctx.save();

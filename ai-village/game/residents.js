@@ -174,8 +174,16 @@ function drawResidentInPlace(r) {
 
 // A small name tag over anyone the CEO walks up to.
 function drawNameTags() {
-  const p = state.player, H = personHeight();
-  const people = [...residentsHere(), { ...state.kevin, name: KEVIN.name, role: 'Kevin' }];
+  const H = personHeight();
+  // walking: tags over everyone near Harm; in a meeting: only the person under the mouse
+  const p = !state.meeting ? state.player : state.pointer ? { x: state.pointer[0], y: state.pointer[1] + H * 0.45 } : null;
+  if (!p) return;
+  let people = [...residentsHere(), { ...state.kevin, name: KEVIN.name, role: 'Kevin' }];
+  if (state.meeting) {
+    people.push({ ...state.player, name: 'Harm', role: 'Harm' });
+    const near = people.map((r) => [Math.hypot(r.x - p.x, r.y - p.y), r]).filter(([d]) => d < H * 0.45).sort((a, b) => a[0] - b[0]);
+    people = near.length ? [near[0][1]] : [];
+  }
   ctx.save();
   ctx.font = `${Math.max(9, H * 0.16)}px Georgia, serif`;
   ctx.textAlign = 'center';
