@@ -237,6 +237,7 @@ One Artlist image per house. Every room:
 - **Rule (Harm, 2026-10-31):** Every house must have a clear path to its front door. Nothing may sit in front of a door; trees or objects blocking a path get removed. People must be able to walk in and out of every house.
 
 - **Seated poses + portraits test (2026-10-31):** Harm's seated sheet (Nano Banana 2, 2K, 130 credits) and face portrait (Nano Banana 2 Lite, 1K, 50 credits) as a test before the rest. **180 credits** (approved by Harm). Saved as `art/characters/harm-seated-v1.png` and `harm-portrait-v1.png`. Result: all four poses right except the facing-left view, which faced right too (fixed for free by mirroring). Portrait matches.
+- **Face portraits batch (2026-10-31):** 19 portraits (Kevin, 9 directors, 9 workers), Nano Banana 2 Lite, 1K, from each character's own sheet. **950 credits** (approved by Harm). All matched their characters. Several came out small in the middle of the square, and Nova's and Felix's sat inside a faint inner box: fixed for free by cropping (`tools/crop_portraits.py`, Nova cropped by hand). Originals in `art/portraits/`, game copies in `assets/portraits/<id>.jpg`, overview `art/portraits/portraits-overview.jpg`.
 
 ## Open questions
 
