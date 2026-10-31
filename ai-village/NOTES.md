@@ -131,6 +131,15 @@ One Artlist image per house. Every room:
 - **Rule update (proposed by Claude):** every character sheet also gets the pose guide as a reference. When a new character is made from an existing sheet, use the pose guide plus that sheet, never an older sheet of the same character.
 - **Every character after the first** is made by giving Artlist an existing character sheet as the reference and asking it to redraw it as a DIFFERENT person in the same style, same proportions and same grid. Never from words alone, or the proportions won't match the rest of the cast.
 
+## Kevin — Chief of Staff (2026-10-31)
+
+- **Name:** Kevin (they/them). **Home:** the Council Hall (town hall).
+- **Job:** Harm's right hand. Follows Harm everywhere; takes Harm's orders and passes them to the right person; later helps Harm find new people to hire.
+- **Model:** runs on Opus 5.5. Before Kevin "thinks or talks" in the village, Claude checks that this works through Harm's subscription (no API key / pay-per-use) and confirms with Harm.
+- **Look (approved):** tailored navy suit, crisp white shirt, polished brown shoes, small gold lapel pin, short neat dark hair, clean-shaven, thin-rimmed glasses.
+- **Sheets (approved, 2 × 160 credits):** a walking sheet made from Harm's cleaned sheet + the pose guide ("a different person, same style, proportions and grid"); then a second walking sheet holding a phone to the ear, made from Kevin's own sheet + the pose guide. Shown in the game while Kevin is "on a call".
+- **For now it's just Harm and Kevin. Nobody else** in the village.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
