@@ -217,6 +217,33 @@ One Artlist image per house. Every room:
 - Logs (Kevin's line, village talk, meeting chat) are kept in the page's own storage.
 - Tested in the workspace with stand-ins for Claude: T, M M, single M, come here / back to work (walks over, walks home inside), Kevin's phone call, Kevin's line, village talk, meeting chat (everyone and one person), face size, no errors. Published after Harm approved it (2026-10-31).
 
+## Harm's own apps: kookboek and darkglass (Harm, 2026-10-31)
+
+- **Harm asked:** can the agents connect with my Vercel apps, like darkglass and the kookboek (= the app `weekmenuplanner`)? Harm chose level 2: working **inside** the apps, not just checking how they run.
+- **How:** each app gets its own small "door" for Claude: a connector (MCP server) at `/api/mcp/<secret key>`. No extra packages, no API keys, no pay-per-use. The key is made in the app itself and never passes through Claude; a new key cancels the old one at once; a wrong key gets a bare 404.
+- **Kookboek** (repo `Weekmenuplanner`, branch `claude-koppeling`). Harm's choice: read + plan + add recipes.
+  - Read: recipes, week menu, shopping list, pantry.
+  - Change (only after Harm's Approve in the village): plan a recipe on a day, add to the shopping list, add a recipe. Nothing deleted.
+  - The food/weight tracker is personal and stays out.
+  - Key: in the app under Instellingen → **Claude-koppeling**.
+  - Owners in the village: **Rosie** (Family Cottage) and **Daisy**.
+- **Darkglass** (repo `darkglass`, branch `claude-koppeling`). Harm's choice: read + setlists.
+  - Read: presets, setlists, rig.
+  - Change (only after Approve): make or change a setlist from existing presets. Nothing deleted, presets never edited.
+  - The door never starts the analysis or chat (those cost Anthropic API money).
+  - Key: in **Beheer** (admin only).
+  - Owners in the village: **Jasper** (Bard's House) and **Remy**.
+- **Changes (Harm's choice): with Approve.** Every app change shows in the to-do list as an Approve / Decline box (like calendar changes), and in the hover card and PDF report.
+- **To switch it on:**
+  1. Harm OKs merging both branches (Vercel then puts them live).
+  2. In each app Harm makes the key and copies the address.
+  3. In claude.ai → Settings → Connectors → Add custom connector, named exactly **Kookboek** and **Darkglass**.
+  4. Then the village page declares those two connectors and is republished.
+- **Tested:**
+  - Kookboek: unit tests (625 pass), a full build, and an end-to-end run against a stand-in database (plan a recipe → the app sees it; tracker unreachable; old key 404).
+  - Darkglass: 54 tests pass, plus an end-to-end run on its dev server.
+  - Village: Kevin → Rosie → proposal → Approve → kookboek call → PDF.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

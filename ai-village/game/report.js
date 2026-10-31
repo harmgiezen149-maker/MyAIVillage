@@ -135,8 +135,8 @@ async function makeTaskReport(t) {
     { text: t.from === 'chat' ? `Harm asked ${whoName(t.askedPerson)} in person: "${pdfText(t.words)}"` : 'From Harm\'s to-do list.',
       fontSize: 9, italics: true, color: REPORT.soft, margin: [0, 8, 0, 0] },
     { table: { widths: ['*', '*', '*', '*'], body: [[
-      statTile(log.length, 'steps logged'), statTile(toolsUsed, 'Gmail & Calendar look-ups'),
-      statTile(drafts.length, drafts.length === 1 ? 'draft written' : 'drafts written'), statTile(approvals.length, 'calendar items'),
+      statTile(log.length, 'steps logged'), statTile(toolsUsed, 'look-ups in mail, calendar & apps'),
+      statTile(drafts.length, drafts.length === 1 ? 'draft written' : 'drafts written'), statTile(approvals.length, 'calendar & app changes'),
     ]] }, layout: { hLineColor: () => REPORT.line, vLineColor: () => REPORT.line, hLineWidth: () => 0.8, vLineWidth: () => 0.8 }, margin: [0, 16, 0, 0] },
 
     titled('In short', callout([{ text: pdfText(t.summary) || 'The team finished this task.', fontSize: 11.5, lineHeight: 1.35, color: REPORT.ink }], REPORT.goldLight, REPORT.gold)),
@@ -170,13 +170,13 @@ async function makeTaskReport(t) {
   }
 
   if (approvals.length) {
-    content.push(titled('Calendar', { table: { widths: ['*', 'auto', 'auto'], headerRows: 1, body: [
-      ['Event', 'When', 'Status'].map((h) => ({ text: h, bold: true, fontSize: 8.5, color: REPORT.soft, margin: [0, 2, 0, 2] })),
+    content.push(titled('Calendar and app changes', { table: { widths: ['*', 'auto', 'auto'], headerRows: 1, body: [
+      ['What', 'When', 'Status'].map((h) => ({ text: h, bold: true, fontSize: 8.5, color: REPORT.soft, margin: [0, 2, 0, 2] })),
       ...approvals.map((a) => [
-        { stack: [{ text: pdfText(a.payload.summary || a.what), fontSize: 10, color: REPORT.ink },
-          ...(a.what && a.payload.summary ? [{ text: pdfText(a.what), fontSize: 8.5, color: REPORT.soft }] : []),
+        { stack: [{ text: pdfText(a.kind === 'app' ? `${a.app}: ${a.what}` : (a.payload.summary || a.what)), fontSize: 10, color: REPORT.ink },
+          ...(a.kind !== 'app' && a.what && a.payload.summary ? [{ text: pdfText(a.what), fontSize: 8.5, color: REPORT.soft }] : []),
           ...(a.url ? [{ text: 'Open in Google Calendar', link: a.url, color: REPORT.gold, decoration: 'underline', fontSize: 8.5 }] : [])] },
-        { text: (a.payload.startTime || '').replace('T', ' ').slice(0, 16) + (a.payload.endTime ? ' – ' + a.payload.endTime.slice(11, 16) : ''), fontSize: 9.5, color: REPORT.ink },
+        { text: a.kind === 'app' ? '' : (a.payload.startTime || '').replace('T', ' ').slice(0, 16) + (a.payload.endTime ? ' – ' + a.payload.endTime.slice(11, 16) : ''), fontSize: 9.5, color: REPORT.ink },
         { text: a.status === 'done' ? 'Saved (you approved)' : a.status === 'declined' ? 'Declined by you' : 'Waiting for you', fontSize: 9.5,
           color: a.status === 'done' ? REPORT.green : a.status === 'declined' ? REPORT.red : REPORT.gold, bold: true },
       ]),

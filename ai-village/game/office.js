@@ -49,7 +49,10 @@ function rosterText() {
 const ACCESS_TEXT = `What the team can do with Harm's accounts:
 - Gmail: search and read mail, and write DRAFTS (they land in Harm's Drafts folder). Nobody sends, deletes or labels mail.
 - Google Calendar: read events freely. To add or change an event, PROPOSE it; it is saved only after Harm clicks Approve. Nobody deletes events.
-Never invent facts about mail or events: look them up with the tools. If something can't be done with these tools, say so plainly.`;
+- Harm's own apps (only the director who looks after the app and their worker have these tools):
+  - Kookboek (Rosie Bell's area): recipes, week menu, shopping list and pantry. Read freely; planning a recipe, adding to the shopping list or adding a recipe is PROPOSED and only done after Harm clicks Approve. Never the food/weight tracker, never delete.
+  - Darkglass (Jasper Vale's area): bass presets, setlists and rig. Read freely; making or changing a setlist is PROPOSED and only done after Harm clicks Approve. Never delete, never edit presets, never run the paid analysis.
+Never invent facts about mail, events or app data: look them up with the tools. If something can't be done with these tools, say so plainly.`;
 
 function today() { return new Date().toString().slice(0, 24); }
 
@@ -258,7 +261,71 @@ function teamTools(t, who) {
         await saveTask(t);
         return 'Proposed. It will be changed only after Harm approves it.';
       } },
-  ];
+  ].concat(appTools(t, who, call));
+}
+
+// ---------- Harm's own apps (connectors "Kookboek" and "Darkglass", Harm 2026-10-31) ----------
+// Reading goes straight through; every change is a proposal that waits for Harm's Approve.
+const APPS = {
+  'family-cottage': { server: 'Kookboek', key: 'kookboek', label: 'Kookboek',
+    reads: [
+      ['search_recipes', "Search the household's recipes (all filters optional): query (title or ingredient), cuisine, main, meal, maxMinutes, limit.",
+        { query: { type: 'string' }, cuisine: { type: 'string' }, main: { type: 'string' }, meal: { type: 'string' }, maxMinutes: { type: 'number' }, limit: { type: 'number' } }],
+      ['get_recipe', 'Read one recipe in full (ingredients and preparation).', { id: { type: 'string' } }, ['id']],
+      ['get_week_menu', 'Read the week menu. week is an ISO week like 2026-W45; leave out for this week.', { week: { type: 'string' } }],
+      ['get_shopping_list', 'Read the shopping list.', {}],
+      ['get_pantry', 'Read the pantry (household items and how many are left).', {}],
+    ],
+    writes: [
+      ['plan_recipe', 'Put a recipe on a day of the week menu. day: Maandag..Zondag; week: ISO week (leave out for this week); meal default Avondeten; replace:true only if Harm wants the planned meal replaced.',
+        { recipeId: { type: 'string' }, day: { type: 'string' }, week: { type: 'string' }, meal: { type: 'string' }, servings: { type: 'number' }, replace: { type: 'boolean' } }, ['recipeId', 'day']],
+      ['add_to_shopping_list', 'Add items to the shopping list. store: Lidl, Jumbo, AH or Anders (optional).',
+        { items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, amount: { type: 'number' }, unit: { type: 'string' }, store: { type: 'string' } }, required: ['name'] } } }, ['items']],
+      ['add_recipe', 'Add a new recipe. cuisine: Italiaans, Grieks, Frans, Aziatisch, Mexicaans, Hollands, Midden-Oosters, Indiaas or Overig; main: Vis, Vlees, Kip, Vegetarisch, Vegan, Pasta, Rijst or Soep; meal: Ontbijt, Lunch, Avondeten or Toetje; difficulty: Makkelijk, Gemiddeld or Pittig werk.',
+        { title: { type: 'string' }, cuisine: { type: 'string' }, main: { type: 'string' }, meal: { type: 'string' }, difficulty: { type: 'string' }, minutes: { type: 'number' }, servings: { type: 'number' },
+          ingredients: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, amount: { type: 'number' }, unit: { type: 'string' } }, required: ['name'] } }, preparation: { type: 'string' } },
+        ['title', 'ingredients', 'preparation']],
+    ] },
+  'bards-house': { server: 'Darkglass', key: 'darkglass', label: 'Darkglass',
+    reads: [
+      ['list_presets', "List Harm's Darkglass Anagram presets (artist, song, bass, tags, genre). Optional query.", { query: { type: 'string' }, limit: { type: 'number' } }],
+      ['get_preset', 'Read one preset in full (scenes, blocks, settings).', { id: { type: 'string' } }, ['id']],
+      ['list_setlists', 'List the setlists with their presets in order.', {}],
+      ['get_rig', "Read Harm's rig: basses, output, playing style.", {}],
+    ],
+    writes: [
+      ['save_setlist', 'Make a setlist, or change one (give its id): name, note, presetIds in order. Only existing presets.',
+        { id: { type: 'string' }, name: { type: 'string' }, note: { type: 'string' }, presetIds: { type: 'array', items: { type: 'string' } } }, ['name', 'presetIds']],
+    ] },
+};
+
+function appTools(t, who, call) {
+  const r = residents.find((x) => x.id === who);
+  const app = r && APPS[r.house];
+  if (!app) return [];
+  const name = firstName(who);
+  const tools = app.reads.map(([tool, description, props, required]) => ({
+    name: `${app.key}_${tool}`, description: `${app.label} app: ${description}`,
+    inputSchema: { type: 'object', properties: props, ...(required ? { required } : {}) },
+    execute: async (input, ctx) => {
+      logStep(t, who, `${name} looked in the ${app.label} app (${tool.replace(/_/g, ' ')}).`, { tool: `${app.key}_${tool}` });
+      return compact(await call(app.server, tool, input, ctx), 14000);
+    } }));
+  for (const [tool, description, props, required] of app.writes) {
+    tools.push({ name: `${app.key}_propose_${tool}`,
+      description: `${app.label} app: PROPOSE this change; it is NOT done yet. Harm sees it and approves or declines. ${description} Also give "what": one plain line for Harm saying what will change.`,
+      inputSchema: { type: 'object', properties: { ...props, what: { type: 'string' } }, required: [...(required || []), 'what'] },
+      execute: async (input) => {
+        const payload = { ...input };
+        const what = String(payload.what || tool.replace(/_/g, ' '));
+        delete payload.what;
+        t.approvals.push({ id: newId(), kind: 'app', server: app.server, app: app.label, tool, by: who, payload, what, status: 'pending', at: nowStamp() });
+        logStep(t, who, `${name} proposed a change in the ${app.label} app: ${what}. Waiting for Harm's OK.`);
+        await saveTask(t);
+        return 'Proposed. It will be done only after Harm approves it.';
+      } });
+  }
+  return tools;
 }
 
 const RESULT_SHAPE = `When you are finished, reply with only JSON:
@@ -364,15 +431,23 @@ async function decide(taskId, apId, approve) {
   renderTodo();
   if (approve) {
     try {
-      const tool = ap.kind === 'create_event' ? 'create_event' : 'update_event';
-      const res = await office.mcp.callTool(CAL, tool, ap.payload);
-      const out = res.payload || {};
-      ap.status = 'done';
-      ap.url = out.htmlLink || out.viewUrl || (out.event && (out.event.htmlLink || out.event.viewUrl)) || '';
-      logStep(t, 'harm', `Harm approved: ${ap.kind === 'create_event' ? 'added' : 'changed'} "${ap.payload.summary || ap.what}" in the calendar.`, { link: ap.url });
+      if (ap.kind === 'app') {
+        const res = await office.mcp.callTool(ap.server, ap.tool, ap.payload);
+        ap.status = 'done';
+        ap.result = compact(res.payload !== undefined ? res.payload : res.content, 600);
+        logStep(t, 'harm', `Harm approved: ${ap.what} (${ap.app} app). Done.`);
+      } else {
+        const tool = ap.kind === 'create_event' ? 'create_event' : 'update_event';
+        const res = await office.mcp.callTool(CAL, tool, ap.payload);
+        const out = res.payload || {};
+        ap.status = 'done';
+        ap.url = out.htmlLink || out.viewUrl || (out.event && (out.event.htmlLink || out.event.viewUrl)) || '';
+        logStep(t, 'harm', `Harm approved: ${ap.kind === 'create_event' ? 'added' : 'changed'} "${ap.payload.summary || ap.what}" in the calendar.`, { link: ap.url });
+      }
     } catch (e) {
       ap.status = 'pending';
-      logStep(t, 'office', `The calendar didn't take it: ${e.message || e.code}. You can try Approve again.`);
+      const why = { server_not_connected: `add the ${ap.server || 'Google Calendar'} connector in claude.ai Settings → Connectors`, not_in_manifest: `allow ${ap.server || 'Google Calendar'} for this page`, needs_reauth: `reconnect ${ap.server || 'Google Calendar'} in claude.ai Settings → Connectors` }[e.code];
+      logStep(t, 'office', `${ap.kind === 'app' ? `The ${ap.app} app` : 'The calendar'} didn't take it: ${why || e.message || e.code}. You can try Approve again.`);
       await saveTask(t);
       return;
     }
@@ -445,7 +520,7 @@ function renderTodo() {
       const p = ap.payload;
       const box = document.createElement('div');
       box.className = 'todo-approval';
-      box.innerHTML = `<div><b>${ap.kind === 'create_event' ? 'Add to calendar' : 'Change event'}:</b> ${esc(p.summary || ap.what || '')}</div>
+      box.innerHTML = `<div><b>${ap.kind === 'app' ? esc(ap.app) : ap.kind === 'create_event' ? 'Add to calendar' : 'Change event'}:</b> ${esc(ap.kind === 'app' ? ap.what : (p.summary || ap.what || ''))}</div>
         <div class="todo-meta">${esc((p.startTime || '').replace('T', ' ').slice(0, 16))}${p.endTime ? ' – ' + esc(p.endTime.slice(11, 16)) : ''}${p.location ? ' · ' + esc(p.location) : ''}</div>`;
       const ok = document.createElement('button'); ok.textContent = ap.status === 'approving' ? 'Saving…' : 'Approve'; ok.className = 'small primary'; ok.disabled = ap.status === 'approving';
       ok.onclick = () => decide(t.id, ap.id, true);
@@ -480,7 +555,7 @@ function showDone(t, li) {
     ${t.summary ? `<p>${esc(t.summary)}</p>` : ''}
     ${t.whatWasDone.length ? `<div class="pop-h">What was done</div><ol>${t.whatWasDone.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
     ${t.drafts.length ? `<div class="pop-h">Drafts in your Gmail</div><ul>${t.drafts.map((d) => `<li>${esc(d.subject)}${d.to.length ? ' → ' + esc(d.to.join(', ')) : ''}</li>`).join('')}</ul>` : ''}
-    ${(t.approvals || []).length ? `<div class="pop-h">Calendar</div><ul>${t.approvals.map((a) => `<li>${esc(a.payload.summary || a.what)}: ${esc(a.status === 'done' ? 'saved' : a.status)}</li>`).join('')}</ul>` : ''}
+    ${(t.approvals || []).length ? `<div class="pop-h">Calendar and app changes</div><ul>${t.approvals.map((a) => `<li>${a.kind === 'app' ? esc(a.app) + ': ' + esc(a.what) : esc(a.payload.summary || a.what)}: ${esc(a.status === 'done' ? 'done' : a.status)}</li>`).join('')}</ul>` : ''}
     ${t.noteForHarm ? `<div class="pop-h">For you</div><p>${esc(t.noteForHarm)}</p>` : ''}`;
   const r = li.getBoundingClientRect();
   pop.hidden = false;
