@@ -73,6 +73,16 @@ Each building's outside matches its agent's job (medieval version of the job, sy
 | Tall house far right | Products | "Artisan's Workshop": open workshop doors, workbench, striped awning, display stall, forge chimney | teal |
 | Upper right (below post house) | AI news | "Crier's Press": printing press, notice board with blank papers, bell, glowing crystal orb | silver + cyan |
 
+## House interiors — rules (Harm, 2026-10-31)
+
+One Artlist image per house. Every room:
+- **Scale:** a standing person is 1/12 of the image height. Furniture drawn that small, with open floor between pieces.
+- **Layout:** the room fills the whole image. Back wall = thin strip at the top. One door, centered in a thin wall at the bottom.
+- **Quality:** looks expensive, like a hundred-thousand-dollar fit-out. Nothing shabby.
+- **No people** in the art; characters are added on top later.
+- **Job:** each room obviously belongs to its job, with **one desk and chair** where its owner sits.
+- **Process:** low-resolution drafts first, shown to Harm before spending on full-quality versions.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
@@ -114,7 +124,8 @@ Each building's outside matches its agent's job (medieval version of the job, sy
     - Job looks that came out right: Post House, Crier's Press (glowing orb), Scholar's Tower (telescope), Counting House (gilded disc), Carrier's Depot, Herald's Lodge, Bard's House (bandstand), Artisan's Workshop + stall, Council Hall banners and clock. Family items got split between the lower-left cottage and the bottom-middle cottage.
     - Door check (Harm's rule: clear path to every front door, nothing in front of a door): blocked = depot (cart wheel), counting house (crate on steps), crier's press (paper stacks), workshop (workbench), family cottage lower-left (flower beds), post house (letter chest tight against door). No door at all = the two tall tile houses left and right of the square (fronts still hidden).
   - Door fix: Harm chose **option A** (remove the two hidden tall houses left and right of the square, leaving 11 houses: 9 agents + 2 spare guest houses) and **Nano Banana Pro** for precise edits. One 2K edit also moved the 6 blocking objects aside and asked for a clear path from every door. **160 credits**. Harm's screenshot of the right side showed: workbench moved ✓, but a row of trees blocked the workshop's path to the square, paper stacks still in front of the press doors, and the right tall house still there.
-  - Second fix (Harm: "remove 2 trees"): Nano Banana Pro edit removing the top two trees in the row between the workshop and the press (replaced with a dirt path), plus moving the paper stacks and removing the right tall house (both part of the already-approved option A). **160 credits**. Waiting for Harm's upload to check it.
+  - Second fix (Harm: "remove 2 trees"): Nano Banana Pro edit removing the top two trees in the row between the workshop and the press (replaced with a dirt path), plus moving the paper stacks and removing the right tall house (both part of the already-approved option A). **160 credits**. Uploaded by Harm, saved as `art/maps/town-jobs-4x3-v3.png` (2400 × 1792).
+    - Check: tree row removed, workshop now has a clear dirt path ✓; workbench moved aside ✓. Still wrong: both tall tile houses left and right of the square are still there (the edit ignored the removal twice), and the paper stacks still sit next to the press doors.
 - **Rule (Harm, 2026-10-31):** Every house must have a clear path to its front door. Nothing may sit in front of a door; trees or objects blocking a path get removed. People must be able to walk in and out of every house.
 
 ## Open questions
