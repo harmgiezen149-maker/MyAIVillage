@@ -130,7 +130,7 @@ One Artlist image per house. Every room:
     - Harm uploaded all 10 drafts (zip) and approved them ("these look great"). Saved as `art/interiors/drafts/<room>.jpg` (1200 × 896).
     - Check against the room rules: job themes and luxury ✓, no people ✓, one desk + chair ✓. Drift: walls are tall dollhouse walls rather than thin strips; several rooms float on a dark background instead of filling the image; furniture is larger than the 1/12-person scale; the Artisan's Workshop is a corner view with **no door**.
 - **Town hall interior changed (Harm, 2026-10-31):** one big table with 12 chairs, one chair at the head of the table for Harm. Replaces the map table + desk design.
-- Next: 4K versions of the 9 approved rooms (not the town hall), plus a new town hall draft.
+- **4K interiors (2026-10-31):** Harm chose to fix the rule drift in the 4K pass. 9 rooms redrawn at 4K from their drafts (Nano Banana 2, 200 each) with full-image floor, thin walls, centered bottom door (door added to the Workshop) and smaller furniture; plus a new Council Hall draft (Nano Banana 2 Lite, 50): marble floor and nine banners kept, one long table with 12 chairs (Harm's carved chair at the head nearest the back wall, 5 per side, 1 at the far end; chief of staff sits at Harm's right hand). Batch total **1,850 credits** (approved by Harm). Waiting for Harm's upload to check them.
 - **Rule (Harm, 2026-10-31):** Every house must have a clear path to its front door. Nothing may sit in front of a door; trees or objects blocking a path get removed. People must be able to walk in and out of every house.
 
 ## Open questions
