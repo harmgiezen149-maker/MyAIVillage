@@ -145,6 +145,8 @@ One Artlist image per house. Every room:
     - Village map: nearly identical to the previous map, only slightly sharper; still close to pixel art. The two tall houses next to the square are **still there** (third failed removal) and the paper stacks still sit by the press doors. Decision pending: keep those two houses closed in the game instead of retrying.
     - Council Hall: now front-facing ✓, door in the bottom wall ✓, but chairs counted = **10** (1 head, 4 left, 4 right, 1 end), and the banners show 8 colors (silver missing).
 - **Props (Harm, 2026-10-31):** a sheet of small separate props (benches, street lamps, barrels, crates, flower beds, bushes, fences, the fountain, and a vintage jukebox playing with music notes coming out), same style guide, placed around town so it feels lived in, paths kept clear.
+  - Prop sheet made: ~20 props in a grid on a flat magenta background (for cutting out): 2 benches, 2 street lamps, fountain, 3 barrels, 3 crates, 2 flower beds, 3 bushes, 2 fence pieces, **2 extra carved council chairs** (to bring the Council Hall to 12 in the game), and the playing jukebox with music notes. Style guide word for word, crisp map + Council Hall as style references, no edge blur on this sheet. Nano Banana 2, 4K. **200 credits** (approved by Harm).
+  - Placement plan: props get cut out and placed **in code** on the walkable page (never on paths or in front of doors), not painted into the map by AI. The two hidden tall houses next to the square stay closed in the game.
 - **Rule (Harm, 2026-10-31):** Every house must have a clear path to its front door. Nothing may sit in front of a door; trees or objects blocking a path get removed. People must be able to walk in and out of every house.
 
 ## Open questions
