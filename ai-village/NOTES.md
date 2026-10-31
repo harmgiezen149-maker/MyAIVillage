@@ -110,6 +110,17 @@ One Artlist image per house. Every room:
 - **Paint mode**: key E or the Edit map button. Tools 1–5 (Walkable, Blocked, Under, Behind, No cover), brush size, undo, reset place, Save. Shift- or right-drag looks around. Saves go to the page's own storage (`masks/<place>`, owner-only writing); Claude reads them and folds them into `game/masks.js`.
 - Tested: all 12 doors and every room exit reachable; painting, undo and saving work.
 
+## Characters (rules from Harm, 2026-10-31)
+
+- **Harm is the Chief Human Officer** and is in charge. His character is made from his own photos, in the village style. (Earlier notes call the walking figure "the CEO"; that is this character.)
+- **Every character gets a walking character sheet** made with Artlist:
+  - A grid of **4 rows × 3 columns**, every frame the same size, on a plain background.
+  - Row 1: walking toward the camera. Row 2: walking to the right. Row 3: walking to the left. Row 4: walking away (we see their back).
+  - The 3 frames in each row: left foot forward, standing, right foot forward.
+  - Big, obvious stride: legs clearly different in each frame and arms swinging, so they don't look like they're gliding.
+  - Same person, same outfit, same size in all 12 frames.
+- **Every character after the first** is made by giving Artlist an existing character sheet as the reference and asking it to redraw it as a DIFFERENT person in the same style, same proportions and same grid. Never from words alone, or the proportions won't match the rest of the cast.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
