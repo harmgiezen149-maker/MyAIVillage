@@ -76,7 +76,7 @@ Each building's outside matches its agent's job (medieval version of the job, sy
 ## House interiors — rules (Harm, 2026-10-31)
 
 One Artlist image per house. Every room:
-- **Scale:** a standing person is 1/12 of the image height. Furniture drawn that small, with open floor between pieces.
+- **Scale:** a standing person is 1/12 of the image height. *(Updated 2026-10-31: in the game the character is drawn at 1/6 of the room height, because the furniture came out larger.)* Furniture drawn that small, with open floor between pieces.
 - **Layout:** the room fills the whole image. Back wall = thin strip at the top. One door, centered in a thin wall at the bottom.
 - **Quality:** looks expensive, like a hundred-thousand-dollar fit-out. Nothing shabby.
 - **No people** in the art; characters are added on top later.
@@ -126,7 +126,7 @@ One Artlist image per house. Every room:
 - **Harm's sheet v3 (with pose guide):** Nano Banana Pro, pose guide + 3 photos + sheet v1 as references, **160 credits** (approved by Harm). Saved as `art/characters/harm-sheet-v3.png`. Result: a near copy of v1 — it followed the v1 sheet instead of the pose guide. Lesson: don't include an old sheet of the same character as a reference when the poses must change.
 - **Harm's sheet v4 (used):** Nano Banana Pro with ONLY the pose guide + 3 photos (outfit in words), **160 credits** (approved by Harm). Saved as `art/characters/harm-sheet-v4.png`. Result: poses follow the guide (true side profiles, clear strides). Flaws fixed for free in code: the background wasn't one flat colour (each frame keyed on its own corner colour), and the first walking-away frame faced the camera (replaced by a mirror of the third back frame, so the tattoo flips to the other arm in that one frame).
 - Cut-out and packing: `tools/cut_character.py` → `art/characters/harm-walk.png` (12 frames of 192 × 256, shared foot line and scale). In the game: walks with frames left-standing-right-standing, faces the way he moves, stands still on the middle frame; drawn with the walk/cover layers.
-- **Size (Harm, 2026-10-31):** character made twice as large in town (92 map units tall instead of 46). Indoors stays 1/12 of the room height (the room rule).
+- **Size (Harm, 2026-10-31):** character made twice as large in town (92 map units tall instead of 46). Indoors first stayed 1/12 of the room height; Harm found that much too small, so indoors is now **1/6 of the room height** (twice as large), matching the furniture. This replaces the 1/12 figure in the interior rules for the character's size (the room art was drawn at a larger scale than 1/12).
 - Character sheet cost so far: 4 attempts, **640 credits**.
 - **Rule update (proposed by Claude):** every character sheet also gets the pose guide as a reference. When a new character is made from an existing sheet, use the pose guide plus that sheet, never an older sheet of the same character.
 - **Every character after the first** is made by giving Artlist an existing character sheet as the reference and asking it to redraw it as a DIFFERENT person in the same style, same proportions and same grid. Never from words alone, or the proportions won't match the rest of the cast.
