@@ -87,6 +87,16 @@ One Artlist image per house. Every room:
 
 - **Always daytime (2026-10-31):** It is always daytime in the village. No night, no sleeping. People are always up and out.
 
+## Walkable village page (2026-10-31)
+
+- `index.html` + `game/` (plain HTML/JavaScript, no keys, no outside servers, nothing loaded from the internet). Web-size art in `assets/` (map 3600 × 2688, rooms 2400 × 1792, props); full-size originals stay in `art/`.
+- Walk with arrow keys / WASD or click; mouse wheel or +/− to zoom. Walk into a door to enter; walk out through the bottom door. All 12 doors and every room exit tested reachable (`tools/check_reachable.js`). `?debug` shows walk areas, obstacles and doors.
+- Effects drawn in code (stay sharp when zoomed): chimney smoke (7 chimneys), fire only in the Council Hall and Family Cottage fireplaces plus the beacon brazier, fountain water, waving banners/flag/washing line, lamp and candle glow, glowing crystal orbs (the medieval "screens") and jukebox lights, drifting leaves. No ponds in the art, so no pond water.
+- Props placed in yards and around the square, off paths and doors. The 2 extra council chairs stand at the foot of the table (12 in total), toned to match.
+- The CEO is a simple drawn placeholder figure until the real characters arrive. Person height indoors = 1/12 of the room.
+- Sound: soft breeze, the odd bird, and a swing tune from the jukebox that fades in as the CEO walks close; quieter indoors. Starts after the first click (browser rule). Made in code for now.
+- Artlist sound: Harm upgraded the plan so sound downloads work (no watermark). Picked: "Morning birds chirping in a village" (re:focus), "Single Bird, Chirping" (InspectorJ), "Single Bird, Singing" (Marcello Del Monaco), and jukebox track "Learn How to Walk" (Ziv Grinberg). Downloads blocked by the workspace network (`cms-artifacts.artlist.io`, `cms-public-artifacts.artlist.io` not allowed). The page uses them automatically once saved as `assets/sound/village-birds.aac`, `bird-chirp.aac`, `bird-song.aac`, `jukebox.mp3`.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

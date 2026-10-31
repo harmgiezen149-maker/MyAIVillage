@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My AI Village</title>
+<style>
+  :root {
+    --bg: #1b140e;
+    --panel: rgba(32, 22, 14, 0.82);
+    --panel-edge: rgba(242, 193, 78, 0.35);
+    --text: #f6ead6;
+    --muted: #cdb796;
+    --accent: #f2c14e;
+    --accent-ink: #2a1c0e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #140e09; }
+  }
+  :root[data-theme="dark"] { --bg: #140e09; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 15px/1.4 "Georgia", "Iowan Old Style", serif; overflow: hidden; }
+  #view { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; cursor: pointer; touch-action: none; outline: none; }
+  .hud { position: fixed; display: flex; gap: 8px; align-items: center; pointer-events: none; }
+  .hud > * { pointer-events: auto; }
+  #place { top: 16px; left: 16px; flex-direction: column; align-items: flex-start; gap: 0;
+    background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 10px; padding: 8px 14px; }
+  #place-name { font-size: 18px; color: var(--accent); }
+  #place-job { font-size: 13px; color: var(--muted); }
+  #controls { top: 16px; right: 16px; }
+  button { font: inherit; font-size: 14px; color: var(--text); background: var(--panel); border: 1px solid var(--panel-edge);
+    border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #help { bottom: 16px; left: 16px; right: 16px; justify-content: center; }
+  #help span { background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+  #toast { position: fixed; left: 50%; bottom: 64px; transform: translate(-50%, 12px); opacity: 0; transition: .25s;
+    background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 8px; padding: 8px 14px; pointer-events: none; max-width: calc(100vw - 32px); text-align: center; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #intro { position: fixed; inset: 0; display: grid; place-items: center; padding: 16px;
+    background: radial-gradient(ellipse at center, rgba(40,26,14,.55), rgba(20,14,8,.92)); }
+  #intro[hidden] { display: none; }
+  #intro .card { max-width: 440px; text-align: center; background: var(--panel); border: 1px solid var(--panel-edge);
+    border-radius: 14px; padding: 28px 24px; }
+  #intro h1 { margin: 0 0 6px; font-size: 30px; color: var(--accent); font-weight: normal; }
+  #intro p { margin: 0 0 20px; color: var(--muted); }
+  #enter { background: var(--accent); color: var(--accent-ink); border: none; font-size: 17px; padding: 11px 22px; }
+  #enter:disabled { opacity: .6; cursor: wait; }
+  @media (max-width: 560px) { #help { display: none; } #place-name { font-size: 16px; } }
+</style>
+</head>
+<body>
+<canvas id="view" tabindex="0" aria-label="The village. Use the arrow keys or WASD to walk, or click where you want to go."></canvas>
+
+<div class="hud" id="place"><div id="place-name">My AI Village</div><div id="place-job">Town square</div></div>
+<div class="hud" id="controls">
+  <button id="zoom-out" aria-label="Zoom out">−</button>
+  <button id="zoom-in" aria-label="Zoom in">+</button>
+  <button id="sound" aria-pressed="true">Sound on</button>
+</div>
+<div class="hud" id="help"><span>Walk: arrow keys / WASD or click · Zoom: mouse wheel · Walk into a door to enter · M: sound</span></div>
+<div id="toast" role="status"></div>
+
+<div id="intro">
+  <div class="card">
+    <h1>My AI Village</h1>
+    <p>Always daytime. Everyone is up and out.</p>
+    <button id="enter" disabled>Loading…</button>
+  </div>
+</div>
+
+<script src="game/world.js"></script>
+<script src="game/audio.js"></script>
+<script src="game/village.js"></script>
+</body>
+</html>
