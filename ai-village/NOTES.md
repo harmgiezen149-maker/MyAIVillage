@@ -141,7 +141,10 @@ One Artlist image per house. Every room:
 - **Harm likes the crisp, clean look of the 4K rooms** and wants the whole village map redrawn in that style with the updated buildings.
   - Village redraw: Nano Banana Pro, 4K, 4:3, with the latest map as the layout reference and the new Crier's Press as the style reference. Same prompt retried removing the two hidden tall houses, moving the paper stacks and keeping every door clear. **280 credits** (approved by Harm, option A).
   - Council Hall chair fix: Nano Banana 2, 4K, with the Scholar's Tower as the angle reference; prompt spells out 1 + 5 + 5 + 1 = 12 chairs and the door set into the bottom wall. **200 credits** (approved by Harm).
-  - Waiting for Harm's upload to check both.
+  - Uploaded by Harm. Saved as `art/maps/town-crisp-4x3.png` and over `art/interiors/council-hall.png` (both 4800 × 3584).
+    - Village map: nearly identical to the previous map, only slightly sharper; still close to pixel art. The two tall houses next to the square are **still there** (third failed removal) and the paper stacks still sit by the press doors. Decision pending: keep those two houses closed in the game instead of retrying.
+    - Council Hall: now front-facing ✓, door in the bottom wall ✓, but chairs counted = **10** (1 head, 4 left, 4 right, 1 end), and the banners show 8 colors (silver missing).
+- **Props (Harm, 2026-10-31):** a sheet of small separate props (benches, street lamps, barrels, crates, flower beds, bushes, fences, the fountain, and a vintage jukebox playing with music notes coming out), same style guide, placed around town so it feels lived in, paths kept clear.
 - **Rule (Harm, 2026-10-31):** Every house must have a clear path to its front door. Nothing may sit in front of a door; trees or objects blocking a path get removed. People must be able to walk in and out of every house.
 
 ## Open questions
