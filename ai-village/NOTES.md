@@ -134,7 +134,11 @@ One Artlist image per house. Every room:
     - Harm uploaded all 9 rooms (4800 × 3584) and the Council Hall draft. Saved as `art/interiors/<room>.png` and `art/interiors/drafts/council-hall-12-chairs.jpg`.
     - Check: 7 rooms share the same front-facing three-quarter angle with a centered bottom door. Off-angle: **Crier's Press** (flat straight-down view) and **Artisan's Workshop** (still a diagonal corner view; door on the left, not centered). Family Cottage and Carrier's Depot still show a bit of outdoor stone below the door. Walls are still taller than "thin strips" in most rooms. Council Hall draft: about 11 chairs counted (1 head, 5 left, 4 right, 1 end), not 12.
     - Harm: redo the room that isn't angled like the rest, and make the Council Hall in 4K.
-    - Harm chose **option A**: redo the **Crier's Press** (Harm's "number 7") at 4K, using the Scholar's Tower as the angle reference, plus the **Council Hall at 4K** with exactly 12 chairs spelled out (1 head, 5 per side, 1 end). **400 credits** (approved by Harm). Artisan's Workshop stays as is for now (still a corner view). Waiting for Harm's upload to check both.
+    - Harm chose **option A**: redo the **Crier's Press** (Harm's "number 7") at 4K, using the Scholar's Tower as the angle reference, plus the **Council Hall at 4K** with exactly 12 chairs spelled out (1 head, 5 per side, 1 end). **400 credits** (approved by Harm). Artisan's Workshop stays as is for now (still a corner view).
+    - Uploaded by Harm and saved over `art/interiors/criers-press.png` and as `art/interiors/council-hall.png` (both 4800 × 3584).
+    - Crier's Press: angle now matches the other rooms ✓, door centered ✓. Side effect: its desk copied the Scholar's desk (open books, magnifying glass).
+    - Council Hall: chairs counted again = **11** (1 head, 5 left, 4 right, 1 end), not 12. View is diagonal rather than front-facing, and the door stands on the floor instead of sitting in the bottom wall.
+- **Harm likes the crisp, clean look of the 4K rooms** and wants the whole village map redrawn in that style with the updated buildings.
 - **Rule (Harm, 2026-10-31):** Every house must have a clear path to its front door. Nothing may sit in front of a door; trees or objects blocking a path get removed. People must be able to walk in and out of every house.
 
 ## Open questions
