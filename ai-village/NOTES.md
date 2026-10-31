@@ -123,6 +123,7 @@ One Artlist image per house. Every room:
 - **Harm's sheet v1:** Nano Banana Pro, 2K, 3:4, photos + Crier's Press as style reference. **160 credits.** Saved as `art/characters/harm-sheet-v1.png` (1792 × 2400). Check: grid, magenta background, likeness, outfit, tattoo side all right. Problems: rows 1 (toward) and 4 (away) have a tiny stride, almost gliding; the middle "standing" frame of rows 2 and 3 faces the camera instead of right/left.
 - **Harm's sheet v2 (fix edit):** Nano Banana Pro edit of v1, **160 credits** (approved by Harm). Saved as `art/characters/harm-sheet-v2.png`. Result: almost unchanged; rows 1 and 4 still barely step, the middle side frames still turn toward the camera.
 - **Pose guide:** `tools/make_pose_template.py` draws a plain mannequin in all 12 walking poses (`art/characters/pose-template.png`) for Artlist to copy. Free.
+- **Harm's sheet v3 (with pose guide):** Nano Banana Pro, pose guide + 3 photos + sheet v1 as references, **160 credits** (approved by Harm). Saved as `art/characters/harm-sheet-v3.png`. Result: a near copy of v1 — it followed the v1 sheet instead of the pose guide. Lesson: don't include an old sheet of the same character as a reference when the poses must change.
 - **Every character after the first** is made by giving Artlist an existing character sheet as the reference and asking it to redraw it as a DIFFERENT person in the same style, same proportions and same grid. Never from words alone, or the proportions won't match the rest of the cast.
 
 ## How the build log works (2026-10-30)
