@@ -138,6 +138,7 @@ function update(dt) {
   if (state.meeting) { dx = 0; dy = 0; state.target = null; }   // seated at the head of the table
   const speed = (state.scene === 'map' ? 190 : 230) * dt;
   p.moving = false;
+  const before = [p.x, p.y];
   if (dx || dy) {
     const len = Math.hypot(dx, dy);
     const mx = (dx / len) * speed, my = (dy / len) * speed;
@@ -148,11 +149,10 @@ function update(dt) {
     if (Math.abs(dx) > 0.2) p.facing = dx > 0 ? 1 : -1;
     p.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
   }
-  p.step = p.moving ? p.step + dt * 9 : 0;
-  if (!state.meeting) {
-    updateKevin(dt);
-    if (typeof updateResidents === 'function') updateResidents(dt);
-  }
+  const walked = Math.hypot(p.x - before[0], p.y - before[1]);
+  p.phase = (p.phase || 0) + walked / (personHeight() * 0.2);
+  if (!state.meeting) updateKevin(dt);                       // Kevin sits next to Harm in a meeting
+  if (typeof updateResidents === 'function') updateResidents(dt);   // everyone else keeps walking (to the meeting, too)
 
   // doors
   if (state.fade <= 0 && !state.meeting) {
@@ -454,6 +454,7 @@ function updateKevin(dt) {
     else if (d > 2) {
       const speed = Math.min(d, (state.scene === 'map' ? 210 : 255) * dt * (d > behind * 0.5 ? 1.25 : 1));
       k.x += (tx / d) * speed; k.y += (ty / d) * speed; k.moving = true;
+      k.phase = (k.phase || 0) + speed / (personHeight() * 0.2);
       k.dir = Math.abs(tx) > Math.abs(ty) ? (tx > 0 ? 'right' : 'left') : (ty > 0 ? 'down' : 'up');
     }
   }
@@ -461,7 +462,6 @@ function updateKevin(dt) {
     const tx = p.x - k.x, ty = p.y - k.y;
     if (Math.hypot(tx, ty) > 4) k.dir = Math.abs(tx) > Math.abs(ty) ? (tx > 0 ? 'right' : 'left') : (ty > 0 ? 'down' : 'up');
   }
-  k.step = k.moving ? k.step + dt * 9 : 0;
 }
 
 function kevinOnCall() {
@@ -476,7 +476,7 @@ function drawWalker(g, who, S) {
   const img = images[S.image];
   if (!img) return false;
   const scale = personHeight() / S.figure;
-  const col = who.moving ? WALK_CYCLE[Math.floor(who.step / 1.25) % 4] : 1;
+  const col = who.moving ? WALK_CYCLE[Math.floor(who.phase || 0) % 4] : 1;   // legs move by distance walked
   const row = S.rows[who.dir];
   g.save();
   g.fillStyle = 'rgba(40,25,10,0.28)';

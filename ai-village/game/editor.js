@@ -83,6 +83,7 @@ function endStroke() {
     if (editor.undo.length > 100) editor.undo.shift();
     editor.changed.add(id);
     computeBaselines(layers[id]);
+    if (typeof invalidateNav === 'function') invalidateNav(id);
     setStatus('Unsaved changes');
   }
   editor.stroke = null;
@@ -97,6 +98,7 @@ function undoLast() {
     L[layer][Number(i)] = old;
   }
   computeBaselines(L);
+  if (typeof invalidateNav === 'function') invalidateNav(step.id);
   editor.changed.add(step.id);
   editor.tintDirty = true;
   setStatus('Undone. Unsaved changes');
@@ -105,6 +107,7 @@ function undoLast() {
 function resetPlace() {
   const id = layerId(state.scene);
   layers[id] = buildLayer(DEFAULT_MASKS[id]);
+  if (typeof invalidateNav === 'function') invalidateNav(id);
   editor.undo = editor.undo.filter((s) => s.id !== id);
   editor.changed.add(id);
   editor.tintDirty = true;
@@ -267,7 +270,9 @@ getDb().then(async (db) => {
       const snap = await db.doc('masks/' + id).get();
       const data = snap.exists && snap.data();
       if (!data || data.cols !== layers[id].cols || data.rows !== layers[id].rows) continue;
+      if (typeof MASKS_MADE === 'string' && (!data.savedAt || data.savedAt < MASKS_MADE)) continue;   // painted on the old version
       layers[id] = buildLayer({ ...data, cell: layers[id].cell });
+      if (typeof invalidateNav === 'function') invalidateNav(id);
       editor.tintDirty = true;
     } catch (err) { /* keep the first version */ }
   }

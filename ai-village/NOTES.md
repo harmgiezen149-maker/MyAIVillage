@@ -165,6 +165,26 @@ One Artlist image per house. Every room:
 - **Call meeting button** (menu bar): everyone goes to the Council Hall with Harm (short fade). Harm stays seated until **End meeting**: then the directors and workers go back to their own yards, and Harm and Kevin stand in front of the Council Hall. During a meeting the name tag shows for whoever the mouse points at.
 - **Face portraits:** a small square head-and-shoulders portrait of every character, same style, from their character sheet, saved as `assets/portraits/<id>.jpg` (256 px). Shown in a panel at the top of the screen while someone is on a call, so Harm can see who's talking (for now only Kevin makes calls, key C). Without a portrait the panel shows initials.
 
+## Walking and daily life (Harm, 2026-10-31)
+
+- **Where people can walk, worked out from the art** (`tools/town_walk.py`, `tools/room_walk.py`, `tools/write_masks.py`):
+  - **Town:** every cell of the map is sorted by colour and texture into ground (paths, cobbles, dirt, grass) or not. Buildings, trees, hedges, the fountain, benches, stalls and so on are traced from close-up views and cut out, and the forest around town is closed off. The routes visible in the art (from every door to the square) are kept open. Roofs and tree tops count as cover: people can walk behind them (hidden) only where a route passes.
+  - **Rooms:** the open floor between the walls, minus every piece of furniture traced from the room pictures. The door strip stays open.
+  - Picture for Harm to check: `art/maps/walkable-areas.jpg` (green walk, yellow walk but hidden behind a roof or tree top, red no).
+  - Harm's earlier paint-mode corrections were made on the old rough version and are no longer applied (the game skips anything saved before the new version). Harm can paint new corrections on top (key E).
+- **Rules for moving (Harm):**
+  - Working: walk home, go inside and sit at the desk (directors). Workers stand at their own spot in their director's house.
+  - Not working: directors hang out in their own yard and pace a little; workers walk around the whole town.
+  - When Harm walks near someone, they stop and turn to look at Harm.
+  - A worker who bumps into someone they haven't talked to today stops and asks what that person is working on; both take a note. Already talked today: walk on by. Notes and who talked to whom are kept per day in the browser.
+  - Everyone stays on walkable ground, walks around each other, never through walls or furniture, and walks through the door to go in or out (nobody teleports). Nobody stops on top of anyone, in a doorway or in a narrow alley.
+  - Legs move by the distance walked (no gliding, no walking in place); everyone faces the way they walk. All 21 walking sheets checked: every left row is the mirror of its right row, front and back rows correct.
+- **How it works:** `game/nav.js` builds a walking grid per place (8-unit cells, with room for a body) and finds the way with A*. `game/residents.js` walks each person's plan leg by leg (to a door, through it, on to the spot), steers around people, queues at doors, and finds another way when blocked.
+- **No tasks yet:** "working" follows a simple routine for now (work for about a minute or two, then a break). When people answer "what are you working on", they say "no tasks yet". Real tasks will replace this.
+- **Meetings now walk too:** after Call meeting, Harm and Kevin are at the table straight away (as before) and everyone else walks over through the door to their seat or spot. End meeting: everyone walks back out.
+- **Hover card:** hover over any villager to see their name, one sentence on what they do, who they report to (directors: Kevin; workers: their director; Kevin: Harm), what they're doing now, and today's notes.
+- Tested on fast-forward (5 minutes of village life): nobody off walkable ground, nobody standing on anyone, nobody walking backwards or gliding, no one stuck; a meeting gathers in about 15 to 20 seconds.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

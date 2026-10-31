@@ -74,6 +74,15 @@
   @keyframes ring { 50% { box-shadow: 0 0 0 4px rgba(242,193,78,.18); } }
   @media (prefers-reduced-motion: reduce) { .caller { animation: none; } }
   @media (max-width: 560px) { #call { top: auto; bottom: 16px; } }
+  #hover-card { position: fixed; z-index: 5; max-width: 280px; pointer-events: none; background: var(--panel); border: 1px solid var(--panel-edge);
+    border-radius: 10px; padding: 9px 12px; font-size: 13px; line-height: 1.35; box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+  #hover-card[hidden] { display: none; }
+  #hover-card .hc-name { color: var(--accent); font-size: 16px; }
+  #hover-card .hc-name.worker { color: #ffd84a; }
+  #hover-card .hc-role, #hover-card .hc-status, #hover-card .hc-notes { color: var(--muted); font-size: 12px; }
+  #hover-card .hc-bio { margin: 4px 0; }
+  #hover-card .hc-reports { color: var(--text); font-size: 12px; }
+  #hover-card .hc-notes { margin-top: 4px; }
   body.editing #view { cursor: crosshair; }
   body.editing #help { display: none; }
   @media (max-width: 560px) { #help { display: none; } #place-name { font-size: 16px; } }
@@ -93,6 +102,7 @@
 <div class="hud" id="help"><span>Walk: arrow keys / WASD or click · Zoom: mouse wheel · Walk into a door to enter · M: sound · C: Kevin makes a call · Call meeting: everyone to the Council Hall · E: edit map</span></div>
 <div id="toast" role="status"></div>
 <div class="hud" id="call" role="status" aria-live="polite" hidden></div>
+<div id="hover-card" role="tooltip" hidden></div>
 
 <div class="hud" id="editor" hidden>
   <div class="row" id="tools"></div>
@@ -126,6 +136,7 @@
 <script src="game/audio.js"></script>
 <script src="game/village.js"></script>
 <script src="game/editor.js"></script>
+<script src="game/nav.js"></script>
 <script src="game/residents.js"></script>
 <script src="game/meeting.js"></script>
 </body>

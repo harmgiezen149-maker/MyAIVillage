@@ -25,10 +25,10 @@ function feetAt(s) {
 // Workers stand just behind their director's chair, looking at the table.
 function standBehind(s) {
   const [x, y] = s.seat;
-  if (s.dir === 'right') return [x - 64, y + 20, 'right'];
-  if (s.dir === 'left') return [x + 64, y + 20, 'left'];
-  if (s.dir === 'up') return [x + 66, y + 80, 'up'];
-  return [x - 62, y + 44, 'right'];
+  if (s.dir === 'right') return [x - 120, y + 30, 'right'];    // a step back from the chairs, leaving the aisle free
+  if (s.dir === 'left') return [x + 120, y + 30, 'left'];
+  if (s.dir === 'up') return [x + 90, y + 100, 'up'];
+  return [x - 90, y + 70, 'right'];
 }
 
 // A seated person, with the table hiding their legs (or the chair back hiding their back).
@@ -52,27 +52,53 @@ function drawSeated(id, s) {
   g.drawImage(img, SEAT_FRAME[s.dir] * F.w, 0, F.w, F.h, left, top, w, h);
   g.globalCompositeOperation = 'destination-out';
   const cut = (poly) => { g.beginPath(); poly.forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py))); g.closePath(); g.fill(); };
-  if (s.table) {                           // below the hands, whatever is over the table is under it
+  const tablePoly = s.cut || (s.table ? MEETING.table : null);   // a desk at home, or the council table
+  if (tablePoly) {                         // below the hands, whatever is over the table is under it
     g.save();
     g.beginPath();
     g.rect(left, y - H * 0.42, w, h);
     g.clip();
-    cut(MEETING.table);
+    cut(tablePoly);
     g.restore();
   }
   if (s.chairBack) cut(MEETING.bottomChairBack);
   ctx.drawImage(seatCanvas, left, top, w, h);
 }
 
-// What drawRoom draws for the people while a meeting is on, back to front.
+// What drawRoom draws for the people while a meeting is on, back to front: Harm and Kevin seated,
+// everyone else as they are (walking in, seated, or standing behind their director).
 function meetingThings() {
   const things = [];
   for (const s of MEETING.seats) {
-    if (!meetingPerson(s.who)) continue;
+    if (s.who !== 'harm' && s.who !== 'kevin') continue;
     things.push({ y: feetAt(s)[1], draw: () => drawSeated(s.who, s) });
   }
-  for (const r of residents) if (r.role === 'Worker' && r.where === MEETING.room) things.push({ y: r.y, draw: () => drawResidentInPlace(r) });
+  for (const r of residents) if (r.where === MEETING.room) things.push({ y: r.y, draw: () => drawResidentInPlace(r) });
   return things;
+}
+
+// Everyone walks to the Council Hall (through the door) and takes their seat; workers stand behind their director.
+function callResidents() {
+  for (const r of residents) {
+    r.inMeeting = true;
+    r.chatting = null;
+    r.atWork = false;
+    standUp(r);
+    r.plan = null; r.path = null;
+    if (r.role === 'Director') {
+      const s = MEETING.seats.find((x) => x.who === r.id);
+      if (!s) continue;
+      const H = heightIn(MEETING.room), off = SEAT_TO_FEET[s.dir];
+      const near = nearestOpenPoint(MEETING.room, s.seat[0] + off[0] * H, s.seat[1] + off[1] * H) || roomInside(MEETING.room);
+      planTo(r, MEETING.room, near, () => sitAt(r, s)); r.plan.exact = true;
+    } else {
+      const s = MEETING.seats.find((x) => x.who === r.boss.id);
+      if (!s) continue;
+      const [bx, by, dir] = standBehind(s);
+      const spot = nearestOpenPoint(MEETING.room, bx, by) || roomInside(MEETING.room);
+      planTo(r, MEETING.room, spot, () => { r.dir = dir; }); r.plan.exact = true;
+    }
+  }
 }
 
 function startMeeting() {
@@ -85,22 +111,17 @@ function startMeeting() {
     state.target = null;
     state.trail = [];
     for (const s of MEETING.seats) {
+      if (s.who !== 'harm' && s.who !== 'kevin') continue;
       const who = meetingPerson(s.who);
-      if (!who) continue;
       [who.x, who.y] = feetAt(s);
-      who.dir = s.dir; who.moving = false; who.step = 0; who.seat = s;
-      if (who.role) { who.where = MEETING.room; who.leaving = false; who.target = null; who.trail = []; }
+      who.dir = s.dir; who.moving = false; who.seat = s;
     }
-    for (const r of residents) {
-      if (r.role !== 'Worker') continue;
-      r.where = MEETING.room; r.moving = false; r.step = 0;
-      if (r.boss.seat) [r.x, r.y, r.dir] = standBehind(r.boss.seat);
-    }
+    callResidents();
     state.camera.zoom = fitZoom() * state.zoomFactor.room;
     state.camera.x = ROOM_W / 2;
     state.camera.y = ROOM_H / 2;
     audio.setIndoors(true);
-    setPlace('Council Hall', 'Meeting in progress');
+    setPlace('Council Hall', 'Meeting · everyone is walking over');
     setMeetingButton();
   });
 }
@@ -118,13 +139,9 @@ function endMeeting() {
     [k.x, k.y] = MEETING.after.kevin; k.dir = 'down';
     state.trail = [];
     delete p.seat; delete k.seat;
-    for (const r of residents) {
-      if (r.role !== 'Director') continue;
-      delete r.seat;
-      r.where = 'map'; r.leaving = false; r.target = null; r.trail = []; r.wait = 1 + Math.random() * 2;
-      placeAtHome(r);                        // somewhere in their own yard
-      const w = r.workerRef;
-      w.where = 'map'; w.x = r.x + 24; w.y = r.y + 18; w.dir = 'down';
+    for (const r of residents) {           // stand up and walk back out: directors to their yards, workers into town
+      r.inMeeting = false;
+      startMode(r, 'free');
     }
     state.camera.zoom = fitZoom() * state.zoomFactor.map;
     state.camera.x = p.x;
@@ -138,6 +155,11 @@ function endMeeting() {
 // During a meeting the name tag follows the mouse instead of Harm (Harm is sitting still).
 canvas.addEventListener('pointermove', (e) => { state.pointer = screenToWorld(e.offsetX, e.offsetY); });
 canvas.addEventListener('pointerleave', () => { state.pointer = null; });
+
+// Once everyone has arrived, the meeting is in progress.
+setInterval(() => {
+  if (state.meeting && placeJob.textContent.includes('walking') && residents.every((r) => !r.plan)) setPlace('Council Hall', 'Meeting in progress');
+}, 500);
 
 const meetingBtn = document.getElementById('meeting');
 function setMeetingButton() {
