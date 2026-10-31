@@ -55,6 +55,24 @@ Running log of every decision made during the build. Newest entries at the botto
 - Harm chose the **HD-2D** look (draft 1) for the town map.
 - Town map format: **4:3 landscape** to fit desktop screens (2K version chosen over 4K to save credits).
 
+## Agents and their buildings (2026-10-31)
+
+Each building's outside matches its agent's job (medieval version of the job, symbols only, no text). Each has an accent color.
+
+| Building (position on map) | Agent / job | Design | Accent |
+|---|---|---|---|
+| Town hall (top center) | Chief of staff | "Council Hall": nine banners in every house's color, flagpole, blank clock face, council table with map | all nine |
+| Right of town hall (upper right) | Inbox & email | "Post House": empty dovecote, letter chest, post horn, sorting cubbies, wax seals | sky blue |
+| Left of town hall (upper left) | Research | "Scholar's Tower": round tower with telescope, books, scrolls, ivy, reading bench | indigo |
+| Far upper left | Money | "Counting House": stone ground floor, iron-banded door, barred windows, gilded disc sign, scales, strongbox | gold + deep green |
+| Tall house far left | (spare) | Guest house for a future agent | — |
+| Lower left (bench, flower beds) | Family | "Family Cottage": garden, swing, washing line, picnic table, toy cart, heart shutters | rose |
+| Bottom left (by south road) | Logistics | "Carrier's Depot": cart, crates, barrels, lean-to, signpost with blank arrows | rust orange |
+| Bottom right (by south road) | Outreach | "Herald's Lodge": pennants, welcoming porch, lanterns, horn, beacon | red |
+| Lower right | Music | "Bard's House": bandstand porch, lute and drum, wind chimes, lute weathervane | plum purple |
+| Tall house far right | Products | "Artisan's Workshop": open workshop doors, workbench, striped awning, display stall, forge chimney | teal |
+| Upper right (below post house) | AI news | "Crier's Press": printing press, notice board with blank papers, bell, glowing crystal orb | silver + cyan |
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
@@ -84,6 +102,13 @@ Running log of every decision made during the build. Newest entries at the botto
   - Harm picked **draft 1: HD-2D**. Redrawn at 4K (4096 × 4096) from draft 1, Nano Banana 2, **200 credits** (approved by Harm). Uploaded by Harm and saved as `art/maps/town-hd2d-4k.png` (4096 × 4096).
     - Check: fountain ✓ (well replaced), stray yellow object gone ✓, 10 houses and town hall unchanged ✓, no people or text ✓, dark outlines present ✓ (so the style guide's outline line stays). Added extras: flower beds and benches. Still wrong: the two tall tile-roof houses (far left and far right) still have their front walls hidden behind thatched cottages. Look is still quite close to pixel art, with softer light and a sunlit glow upper left.
   - 4:3 town map for desktop screens: redrawn from the 4K HD-2D map with the new style guide, town kept centered, extra grass and trees on the sides. Nano Banana 2, 2K (2048 × 1536), **130 credits** (approved by Harm). This is the main town map from now on.
+
+### Day 2 — 2026-10-31
+
+- **Artlist plan upgraded by Harm:** now **AI Suite 40K** (40,000 credits/month, renews 2026-11-07). Balance at start of Day 2: 23,610 credits.
+- **Claude usage:** start _not yet reported_ / end _open_
+- **Built:**
+  - Job-themed town map: one 2K edit of the 4:3 map giving every building its agent's look (see "Agents and their buildings"). Nano Banana 2, **130 credits**. Balance after: 23,480.
 
 ## Open questions
 
