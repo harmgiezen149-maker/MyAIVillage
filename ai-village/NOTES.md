@@ -116,7 +116,7 @@ One Artlist image per house. Every room:
 ### Day 2 — 2026-10-31
 
 - **Artlist plan upgraded by Harm:** now **AI Suite 40K** (40,000 credits/month, renews 2026-11-07). Balance at start of Day 2: 23,610 credits.
-- **Claude usage:** start _not yet reported_ / end _open_
+- **Claude usage:** start 26% of plan (reported by Harm, logged 09:40 UTC) / end _open_
 - **Built:**
   - Job-themed town map: one 2K edit of the 4:3 map giving every building its agent's look (see "Agents and their buildings"). Nano Banana 2, **130 credits**. Balance after: 23,480.
     - Uploaded by Harm, saved as `art/maps/town-jobs-4x3.png` (2400 × 1792).
