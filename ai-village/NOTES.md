@@ -185,6 +185,24 @@ One Artlist image per house. Every room:
 - **Hover card:** hover over any villager to see their name, one sentence on what they do, who they report to (directors: Kevin; workers: their director; Kevin: Harm), what they're doing now, and today's notes.
 - Tested on fast-forward (5 minutes of village life): nobody off walkable ground, nobody standing on anyone, nobody walking backwards or gliding, no one stuck; a meeting gathers in about 15 to 20 seconds.
 
+## The office: to-do list, Gmail and Calendar access, task reports (Harm, 2026-10-31)
+
+- **Why:** Kevin told Harm they didn't have access yet. Harm asked to give Kevin (and the team) access to the inbox and calendar, and to add a to-do list.
+- **Access (Harm's choices):**
+  - **Gmail: read + draft.** The team can search and read mail and write drafts into Harm's Drafts folder. Nothing is sent, deleted or labelled; Harm does that.
+  - **Google Calendar: read + add with Harm's OK.** The team reads freely. A new or changed event is shown in the to-do list first and only saved after Harm clicks **Approve**. Nobody deletes events.
+  - Through Harm's own claude.ai connectors (Gmail and Google Calendar are two separate connectors). The page asks Harm's permission the first time it uses Claude, Gmail or Calendar.
+- **How it runs (Harm: "Yes, build it"):** only while the village page is open on claude.ai, on Harm's own Claude plan (counts toward Harm's usage limits). No API keys, no pay-per-use, no Artlist credits. Models: Kevin and the directors on Opus 5.5 (a director can ask an advisor on Fable 5.1), workers on Sonnet 5.5.
+- **The to-do list** (button **To-do** in the toolbar, with a count of open tasks):
+  - Harm types a task → Kevin reads it, picks the right director and calls them (the call panel shows both faces) → the director does it or hands it (or part of it) to their worker and checks the work → done.
+  - The people walk home to their desks while they work on it, and say what they're working on when a worker asks.
+  - Each task shows who has it and the latest step. Calendar proposals show as **Approve / Decline** boxes.
+  - Done tasks are crossed off. Hover one (or tab to it) to see exactly what was done: summary, steps, drafts, calendar items, and what Harm still has to do.
+  - Tasks are kept in the page's own storage. A task that was running when the page closed shows **Continue**.
+- **PDF report for every finished task:** made in the page (pdfmake 0.2.10, loaded from cdnjs) and saved with Harm's OK. Cream and gold, with the status, the summary, "For you" (what Harm still has to do), the chain of people with their portraits, what was done, the results, drafts (with a link), calendar items, the worker's report, and every step with its time. A **PDF report** button on each done task makes it again. Sample from a test run with made-up mail: `art/reports/sample-task-report.pdf`.
+- **Talking to people:** click anyone in the village to talk. If Harm asks for something and they agree ("on it", "I'll do it"), a real task is created from Harm's words. If they forget to create it, a check after every answer creates it anyway. The chat shows "Added to your to-do list". A task asked of a director goes straight to them; one asked of a worker goes to their director, who hands it to the worker; one asked of Kevin goes through Kevin's routing.
+- **Tested in the workspace** with stand-ins for Claude, Gmail and Calendar: Kevin routes, the director hands work to the worker, the draft and the calendar proposal are logged, Approve saves the event, the task is crossed off, the PDF is made, and a promise in chat becomes a task even when the tool isn't used. No errors. Without Claude (outside claude.ai), tasks pause with a clear note.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
@@ -259,6 +277,7 @@ One Artlist image per house. Every room:
 - **Seated poses + portraits test (2026-10-31):** Harm's seated sheet (Nano Banana 2, 2K, 130 credits) and face portrait (Nano Banana 2 Lite, 1K, 50 credits) as a test before the rest. **180 credits** (approved by Harm). Saved as `art/characters/harm-seated-v1.png` and `harm-portrait-v1.png`. Result: all four poses right except the facing-left view, which faced right too (fixed for free by mirroring). Portrait matches.
 - **Face portraits batch (2026-10-31):** 19 portraits (Kevin, 9 directors, 9 workers), Nano Banana 2 Lite, 1K, from each character's own sheet. **950 credits** (approved by Harm). All matched their characters. Several came out small in the middle of the square, and Nova's and Felix's sat inside a faint inner box: fixed for free by cropping (`tools/crop_portraits.py`, Nova cropped by hand). Originals in `art/portraits/`, game copies in `assets/portraits/<id>.jpg`, overview `art/portraits/portraits-overview.jpg`.
 - **Seated poses batch (2026-10-31):** 10 seated sheets (Kevin + 9 directors), Nano Banana 2, 2K, from each character's own sheet. **1,300 credits** (approved by Harm). All 10 usable. Margot, Rafael and Rosie came back with 6 or 8 poses instead of a 2 × 2 grid, and Kevin's and Leo's side views both faced right (as Harm's did). Fixed for free: `tools/cut_seated.py` now finds every figure on its own, picks the right ones and mirrors where needed. Strips in `assets/characters/<id>-seated.png`, overview `art/characters/seated-overview.jpg`. Tested in the game: everyone sits at the table with legs under it, the call panel shows Kevin's portrait, End meeting sends everyone home.
+- **Office build (2026-10-31, evening):** to-do list, team access to Gmail (read + drafts) and Calendar (read + add with Harm's OK), chats that create tasks, PDF task reports. No Artlist credits. Published to the village page.
 
 ## Open questions
 

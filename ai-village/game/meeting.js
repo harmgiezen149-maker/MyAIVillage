@@ -141,7 +141,8 @@ function endMeeting() {
     delete p.seat; delete k.seat;
     for (const r of residents) {           // stand up and walk back out: directors to their yards, workers into town
       r.inMeeting = false;
-      startMode(r, 'free');
+      if (r.task) { startMode(r, 'work'); goWork(r); r.modeUntil = Infinity; }   // still on a task: back to the desk
+      else startMode(r, 'free');
     }
     state.camera.zoom = fitZoom() * state.zoomFactor.map;
     state.camera.x = p.x;
@@ -170,10 +171,20 @@ meetingBtn.addEventListener('click', () => { (state.meeting ? endMeeting : start
 
 // ---------- who's on a call ----------
 
-// Everyone who can be on a call. Kevin is the only one who makes calls for now (key C).
+// Everyone on a call: Kevin calling a director about a task, a director calling their worker, or Kevin on key C.
 function peopleOnCall() {
   const list = [];
-  if (kevinOnCall()) list.push({ id: 'kevin', name: KEVIN.name, job: KEVIN.job });
+  const seen = new Set();
+  const nameOf = (id) => (id === 'kevin' ? KEVIN.name : (residents.find((r) => r.id === id) || {}).name || id);
+  const calls = typeof officeCallsNow === 'function' ? officeCallsNow() : [];
+  for (const c of calls) {
+    for (const [id, other] of [[c.a, c.b], [c.b, c.a]]) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      list.push({ id, name: nameOf(id), job: (id === c.a ? 'Calling ' : 'Talking to ') + nameOf(other).split(' ')[0] });
+    }
+  }
+  if (kevinOnCall() && !seen.has('kevin')) list.push({ id: 'kevin', name: KEVIN.name, job: 'On a call · ' + KEVIN.job });
   return list;
 }
 
@@ -181,7 +192,7 @@ const callPanel = document.getElementById('call');
 let callShown = '';
 function updateCallPanel() {
   const people = peopleOnCall();
-  const key = people.map((p) => p.id + ':' + p.name).join('|');
+  const key = people.map((p) => p.id + ':' + p.name + ':' + p.job).join('|');
   if (key === callShown) return;
   callShown = key;
   callPanel.innerHTML = '';
@@ -199,7 +210,8 @@ function updateCallPanel() {
       face.replaceWith(init);
     };
     const text = document.createElement('div');
-    text.innerHTML = `<div class="caller-name"></div><div class="caller-status">On a call · ${p.job}</div>`;
+    text.innerHTML = '<div class="caller-name"></div><div class="caller-status"></div>';
+    text.lastChild.textContent = p.job;
     text.firstChild.textContent = p.name;
     card.append(face, text);
     callPanel.appendChild(card);
