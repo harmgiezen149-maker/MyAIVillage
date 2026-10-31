@@ -151,6 +151,7 @@ One Artlist image per house. Every room:
 - **Every director is a real agent** with their own folder, a short instruction file (who they are, their job, who they report to, who reports to them) and their own notes file to remember what they learn.
 - **Start:** one director per job house, and one worker per director. No tasks yet.
 - **Roster (names chosen by Claude, approved; Harm will adjust names later in the game's edit menu):** Post House — Margot Finch (worker Juno Park); Counting House — Theo Ashworth (Felix Moss); Scholar's Tower — Imani Okafor (Iris Chen); Artisan's Workshop — Rafael Moreno (Otto Brandt); Family Cottage — Rosie Bell (Daisy Quinn); Bard's House — Jasper Vale (Remy Dubois); Crier's Press — Nova Lindqvist (Kai Tanaka); Herald's Lodge — Leo Castellano (Sol Rivera); Carrier's Depot — Greta Holm (Hugo Lind). 9 of 10 director spots used; 1 free.
+- **Director sheets (2026-10-31):** one batch of 9, Nano Banana Pro 2K, each from Kevin's sheet + pose guide as a different person. **1,440 credits** (approved by Harm). All 9 usable on the first try; saved as `art/characters/<name>-sheet-v1.png`, cut out to `<name>-walk.png`, overview `directors-overview.jpg`. Minor: a few toward/away strides are on the small side (Margot, Rosie).
 - Agent folders: `agents/` (made by `tools/make_agents.py`; Harm approved Margot's sample format). The "advisor" setting is written into each director's file; how to switch it on in practice is still to be checked before anything runs.
 
 ## How the build log works (2026-10-30)
