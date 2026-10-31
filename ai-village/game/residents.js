@@ -8,7 +8,8 @@
 //   both take a note. Already talked today: they walk on by.
 // - Everyone stays on walkable ground (game/nav.js), walks around each other, never through walls or furniture,
 //   and walks through the door to go in or out. Legs move by distance walked; everyone faces the way they walk.
-// There are no tasks yet, so "working" follows a simple routine for now (work for a while, then a break).
+// Without a task, "working" follows a simple routine (work for a while, then a break). With a task from Harm's
+// to-do list they stay at work until it is done (game/office.js). Harm can call anyone over (game/talk.js).
 
 const DIRECTORS = [
   { id: 'margot-finch', name: 'Margot Finch', house: 'post-house',
@@ -417,6 +418,7 @@ function tryChat(w) {
       a.notes.push(`${time} · Asked ${b.name} what they're working on: ${workingOn(b)}.`);
     }
     saveChatLog();
+    if (typeof villageMet === 'function') villageMet(w, o);   // a real conversation for the village talk log (C)
     return true;
   }
   return false;
@@ -432,8 +434,12 @@ function updateResident(r, dt) {
     if (state.time > r.chatting.until) { r.chatting = null; r.wait = 0.5; }
     else { setDirFrom(r, r.chatting.with.x - r.x, r.chatting.with.y - r.y); return; }
   }
+  // Harm asked them to come over: walk to Harm and stay there
+  if (r.summoned && !r.inMeeting) { updateSummoned(r, dt); return; }
+  // Harm is talking to them (chat box open): stand still and face Harm
+  if (heldByHarm(r)) { setDirFrom(r, state.player.x - r.x, state.player.y - r.y); return; }
   // Harm walks near: stop and turn to look
-  if (!r.seated && r.where === state.scene) {
+  if (!r.seated && r.where === state.scene && !(r.noWatchUntil > state.time)) {   // (not when Harm just sent them back to work)
     const d = Math.hypot(state.player.x - r.x, state.player.y - r.y);
     if (d < H * 1.25 || (r.watching && d < H * 1.6)) {
       r.watching = true;

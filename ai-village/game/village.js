@@ -693,13 +693,10 @@ function screenToWorld(sx, sy) {
 }
 
 window.addEventListener('keydown', (e) => {
+  if (e.target && e.target.closest && e.target.closest('input, textarea, select')) return;   // typing in a box, not walking
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(k)) e.preventDefault();
-  if (k === 'm') toggleSound();
-  if (k === 'c') {
-    state.kevin.callUntil = kevinOnCall() ? 0 : state.time + 12;
-    toast(kevinOnCall() ? 'Kevin is on a call.' : 'Kevin hung up.');
-  }
+  // M (sound / M M for Kevin), T (talk) and C (village talk) live in game/talk.js
   if (k === '+' || k === '=') zoomBy(1.2);
   if (k === '-') zoomBy(1 / 1.2);
   keys.add(k);

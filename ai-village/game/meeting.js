@@ -82,6 +82,7 @@ function callResidents() {
   for (const r of residents) {
     r.inMeeting = true;
     r.chatting = null;
+    r.summoned = false;
     r.atWork = false;
     standUp(r);
     r.plan = null; r.path = null;
@@ -123,6 +124,7 @@ function startMeeting() {
     audio.setIndoors(true);
     setPlace('Council Hall', 'Meeting · everyone is walking over');
     setMeetingButton();
+    if (typeof meetingChatStarted === 'function') meetingChatStarted();
   });
 }
 
@@ -150,6 +152,7 @@ function endMeeting() {
     audio.setIndoors(false);
     setPlace('My AI Village', 'Town square');
     setMeetingButton();
+    if (typeof meetingChatEnded === 'function') meetingChatEnded();
   });
 }
 
@@ -171,7 +174,7 @@ meetingBtn.addEventListener('click', () => { (state.meeting ? endMeeting : start
 
 // ---------- who's on a call ----------
 
-// Everyone on a call: Kevin calling a director about a task, a director calling their worker, or Kevin on key C.
+// Everyone on a call: Kevin calling a director about a task or calling someone over, a director calling their worker.
 function peopleOnCall() {
   const list = [];
   const seen = new Set();

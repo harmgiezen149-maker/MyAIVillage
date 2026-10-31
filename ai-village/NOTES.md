@@ -203,6 +203,20 @@ One Artlist image per house. Every room:
 - **Talking to people:** click anyone in the village to talk. If Harm asks for something and they agree ("on it", "I'll do it"), a real task is created from Harm's words. If they forget to create it, a check after every answer creates it anyway. The chat shows "Added to your to-do list". A task asked of a director goes straight to them; one asked of a worker goes to their director, who hands it to the worker; one asked of Kevin goes through Kevin's routing.
 - **Tested in the workspace** with stand-ins for Claude, Gmail and Calendar: Kevin routes, the director hands work to the worker, the draft and the calendar proposal are logged, Approve saves the event, the task is crossed off, the PDF is made, and a promise in chat becomes a task even when the tool isn't used. No errors. Without Claude (outside claude.ai), tasks pause with a clear note.
 
+## Talking to the village (Harm, 2026-10-31)
+
+- **T:** talk to whoever Harm is standing next to. Chat box on the right. They stop and face Harm, and answer in their own personality (written per character in `game/talk.js`), knowing their job, where they are, today's notes and their tasks.
+- **M twice quickly:** Kevin's chat box, from anywhere. A single M still turns the sound on and off (it waits a moment to see if a second M follows). Whatever Harm tells Kevin to do, Kevin passes to the right director; that conversation shows in **Kevin's line** (left box): Kevin's call and brief, the director's "On it", the hand-off to the worker, the worker's report, the director's report back, and Kevin crossing it off.
+- **Kevin gets people:** "get Margot" makes Kevin pull out their phone and call; the call shows in Kevin's line and the person walks over to Harm.
+- **"Name, come here"** (in any chat): that person stops what they're doing and walks over. **"Back to work"**: they go back inside their house (and don't stop to look at Harm on the way). Handled in the page itself: free, instant, works even without Claude.
+- **Meeting chat:** in a meeting, a box on the left with everyone's faces and names. Starts on **Everyone** (the room answers: 1 to 4 people, in their own voices); click a face to talk to just that person. Resizable (drag the corner) with a slider for bigger faces and names. Anyone who agrees to do something gets a real task.
+- **C: village talk log.** Only real conversations: when two villagers meet (the existing rule) and at least one has real work (a task, an open task, or one finished today). Nothing is logged when neither has real work.
+  - **Model (Harm's choice):** Harm's Claude plan, smallest tier (Harm picked this over a free local model or no AI). Off until Harm switches it on in the C log (the switch asks Claude's permission right then, on Harm's click). At most one conversation every 30 seconds; pauses 10 minutes if the usage limit is hit. While off: only the plain facts of what they asked each other (free).
+- **Promises always become tasks:** in chats and meetings, a quick check after each reply that sounds like a promise creates the task from Harm's words if they forgot.
+- **Toolbar:** new **Kevin** and **Log** buttons (for touch screens). The old key C ("Kevin makes a call") is gone.
+- Logs (Kevin's line, village talk, meeting chat) are kept in the page's own storage.
+- Tested in the workspace with stand-ins for Claude: T, M M, single M, come here / back to work (walks over, walks home inside), Kevin's phone call, Kevin's line, village talk, meeting chat (everyone and one person), face size, no errors. **Not published yet:** Harm declined the publish on 2026-10-31; waiting for Harm's go.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
@@ -278,6 +292,7 @@ One Artlist image per house. Every room:
 - **Face portraits batch (2026-10-31):** 19 portraits (Kevin, 9 directors, 9 workers), Nano Banana 2 Lite, 1K, from each character's own sheet. **950 credits** (approved by Harm). All matched their characters. Several came out small in the middle of the square, and Nova's and Felix's sat inside a faint inner box: fixed for free by cropping (`tools/crop_portraits.py`, Nova cropped by hand). Originals in `art/portraits/`, game copies in `assets/portraits/<id>.jpg`, overview `art/portraits/portraits-overview.jpg`.
 - **Seated poses batch (2026-10-31):** 10 seated sheets (Kevin + 9 directors), Nano Banana 2, 2K, from each character's own sheet. **1,300 credits** (approved by Harm). All 10 usable. Margot, Rafael and Rosie came back with 6 or 8 poses instead of a 2 × 2 grid, and Kevin's and Leo's side views both faced right (as Harm's did). Fixed for free: `tools/cut_seated.py` now finds every figure on its own, picks the right ones and mirrors where needed. Strips in `assets/characters/<id>-seated.png`, overview `art/characters/seated-overview.jpg`. Tested in the game: everyone sits at the table with legs under it, the call panel shows Kevin's portrait, End meeting sends everyone home.
 - **Office build (2026-10-31, evening):** to-do list, team access to Gmail (read + drafts) and Calendar (read + add with Harm's OK), chats that create tasks, PDF task reports. No Artlist credits. Published to the village page.
+- **Talking build (2026-10-31, late evening):** T to talk, M M for Kevin, Kevin's line, come here / back to work, meeting chat, village talk log (C). No Artlist credits. Built and tested; publish declined by Harm for now.
 
 ## Open questions
 

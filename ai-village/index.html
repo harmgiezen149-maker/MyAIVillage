@@ -129,7 +129,7 @@
   #todo-pop p { margin: 4px 0; }
   #todo-pop ol, #todo-pop ul { margin: 4px 0; padding-left: 18px; }
   /* ---------- talking to someone ---------- */
-  #chat { left: 16px; bottom: 16px; width: min(380px, calc(100vw - 32px)); height: min(460px, calc(100vh - 120px)); }
+  #chat { right: 16px; bottom: 16px; width: min(380px, calc(100vw - 32px)); height: min(500px, calc(100vh - 150px)); }
   #chat-face { width: 44px; height: 44px; border-radius: 8px; border: 2px solid var(--accent); object-fit: cover; }
   #chat-who { flex: 1; min-width: 0; }
   #chat-name { color: var(--accent); font-size: 16px; }
@@ -140,7 +140,45 @@
   .msg.them { align-self: flex-start; background: rgba(0,0,0,.3); border: 1px solid rgba(242,193,78,.2); border-bottom-left-radius: 3px; }
   .msg.hint { align-self: center; color: var(--muted); font-size: 13px; text-align: center; max-width: 100%; }
   #chat-form { display: flex; gap: 6px; padding: 8px 12px 12px; border-top: 1px solid var(--panel-edge); }
-  @media (max-width: 560px) { #todo { top: 112px; } #chat { height: 50vh; } #place { top: 108px; } #controls button { padding: 6px 9px; } }
+  /* ---------- the left box: meeting, Kevin's line, village talk ---------- */
+  #dock { left: 16px; top: 96px; width: min(400px, calc(100vw - 32px)); height: min(560px, calc(100vh - 150px));
+    resize: both; overflow: hidden; min-width: 260px; min-height: 260px; max-width: calc(100vw - 32px); max-height: calc(100vh - 112px);
+    --face: 61px; --name: 15.5px; }
+  .tabs { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+  .tabs button { font-size: 13px; padding: 5px 10px; border-radius: 7px; }
+  .tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .tabs button.fresh::after { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: 1px; }
+  .tabs button[hidden] { display: none; }
+  .pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .pane[hidden] { display: none; }
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .face { width: 34px; height: 34px; border-radius: 7px; border: 1.5px solid var(--accent); object-fit: cover; flex: none; background: rgba(0,0,0,.3); }
+  .face.sm { width: 26px; height: 26px; border-width: 1px; }
+  .entry { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; }
+  .entry .who { color: var(--accent); font-size: 13px; }
+  .entry .who span { color: var(--muted); font-size: 11.5px; }
+  .entry .said { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .entry.call .who { color: #ffd84a; }
+  .convo { border: 1px solid rgba(242,193,78,.18); border-radius: 9px; padding: 7px 9px; font-size: 13.5px; background: rgba(0,0,0,.18); }
+  .convo-head { display: flex; gap: 4px; align-items: center; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  .convo-head span { margin-left: 4px; }
+  .convo .said { margin-top: 2px; }
+  .convo .said b { color: var(--accent); font-weight: normal; }
+  .pane-bar { display: flex; gap: 8px; align-items: center; padding: 8px 12px 0; font-size: 12px; color: var(--muted); }
+  #meet-roster { display: flex; flex-wrap: wrap; gap: 6px; overflow-y: auto; max-height: 46%; padding: 10px 12px 8px; border-bottom: 1px solid rgba(242,193,78,.18); flex: none; }
+  .chip { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px; border-radius: 9px; background: rgba(0,0,0,.22); flex: none; min-width: calc(var(--face) + 12px); }
+  .chip .face { width: var(--face); height: var(--face); }
+  .chip .face.all { display: grid; place-items: center; color: var(--accent); font-size: calc(var(--name) * 1.05); }
+  .chip .nm { font-size: var(--name); color: var(--text); white-space: nowrap; }
+  .chip.worker .nm { color: #ffd84a; }
+  .chip.on { background: var(--accent); border-color: var(--accent); }
+  .chip.on .nm { color: var(--accent-ink); }
+  .msg.with-face { display: flex; gap: 8px; align-items: flex-start; }
+  .msg .to { font-size: 11px; opacity: .75; }
+  .dock-form { display: flex; gap: 6px; padding: 8px 12px 12px; border-top: 1px solid var(--panel-edge); flex: none; }
+  #face-size { width: 110px; accent-color: #f2c14e; }
+  #village-toggle { white-space: nowrap; flex: none; }
+  @media (max-width: 560px) { #dock { top: 150px; } #todo { top: 112px; } #chat { height: 50vh; } #place { top: 108px; } #controls button { padding: 6px 9px; } }
   #controls { flex-wrap: wrap; justify-content: flex-end; max-width: calc(100vw - 32px); }
   body.editing #view { cursor: crosshair; }
   body.editing #help { display: none; }
@@ -156,10 +194,12 @@
   <button id="zoom-in" aria-label="Zoom in">+</button>
   <button id="sound" aria-pressed="true">Sound on</button>
   <button id="todo-btn" aria-pressed="false" aria-controls="todo" title="Your to-do list: Kevin passes each task to the right director">To-do <span id="todo-count" hidden></span></button>
+  <button id="kevin-btn" title="Talk to Kevin (press M twice)">Kevin</button>
+  <button id="log-btn" title="Kevin's line and village talk (C)">Log</button>
   <button id="meeting" aria-pressed="false" title="Everyone to the Council Hall">Call meeting</button>
   <button id="edit" aria-pressed="false" title="Paint where he can walk (key E)">Edit map</button>
 </div>
-<div class="hud" id="help"><span>Walk: arrow keys / WASD or click · Zoom: mouse wheel · Walk into a door to enter · M: sound · C: Kevin makes a call · Call meeting: everyone to the Council Hall · Click someone to talk · E: edit map</span></div>
+<div class="hud" id="help"><span>Walk: arrow keys / WASD or click · Zoom: mouse wheel · Walk into a door to enter · T: talk to whoever is near · M M: Kevin · M: sound · C: village talk · Call meeting: everyone to the Council Hall · E: edit map</span></div>
 <div id="toast" role="status"></div>
 <div class="hud" id="call" role="status" aria-live="polite" hidden></div>
 <div id="hover-card" role="tooltip" hidden></div>
@@ -170,6 +210,27 @@
   <ul id="todo-list"></ul>
 </div>
 <div id="todo-pop" role="tooltip" hidden></div>
+<div class="panel" id="dock" role="dialog" aria-label="Conversations" hidden>
+  <div class="panel-head">
+    <div class="tabs" role="tablist">
+      <button id="tab-meeting" role="tab" aria-selected="false" hidden>Meeting</button>
+      <button id="tab-line" role="tab" aria-selected="true">Kevin's line</button>
+      <button id="tab-village" role="tab" aria-selected="false">Village talk</button>
+    </div>
+    <button id="dock-close" class="small" style="margin:0">Close</button>
+  </div>
+  <div class="pane" id="pane-meeting" hidden>
+    <div class="pane-bar"><label for="face-size">Faces &amp; names</label><input id="face-size" type="range" min="1" max="3" step="0.25" value="1.5"><span>drag the corner to resize</span></div>
+    <div id="meet-roster"></div>
+    <div class="scroll" id="meet-log" aria-live="polite"></div>
+    <div class="dock-form"><input id="meet-input" type="text" placeholder="Say something to everyone…" aria-label="Say something in the meeting" autocomplete="off"><button id="meet-send" class="primary">Send</button></div>
+  </div>
+  <div class="pane" id="pane-line" hidden><div class="scroll" id="line-log" aria-live="polite"></div></div>
+  <div class="pane" id="pane-village" hidden>
+    <div class="pane-bar"><button id="village-toggle" class="small" aria-pressed="false" style="margin:0">Village talk: off</button><span>Real conversations only · smallest Claude model on your plan</span></div>
+    <div class="scroll" id="village-log" aria-live="polite"></div>
+  </div>
+</div>
 <div class="panel" id="chat" role="dialog" aria-label="Conversation" hidden>
   <div class="panel-head"><img id="chat-face" alt=""><div id="chat-who"><div id="chat-name"></div><div id="chat-role"></div></div><button id="chat-close" class="small" style="margin:0">Close</button></div>
   <div id="chat-log" aria-live="polite"></div>
@@ -213,5 +274,6 @@
 <script src="game/meeting.js"></script>
 <script src="game/report.js"></script>
 <script src="game/office.js"></script>
+<script src="game/talk.js"></script>
 </body>
 </html>

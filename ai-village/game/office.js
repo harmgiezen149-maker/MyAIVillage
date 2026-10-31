@@ -137,13 +137,15 @@ Pick the ONE director whose area fits best. Write them a short brief: what Harm 
 ${ACCESS_TEXT}
 
 Reply with only JSON: {"director": "<director id from the list>", "why": "<one sentence>", "brief": "<2-5 sentences>", "callLine": "<the first thing you say on the phone, one short sentence>"}`;
-    const out = await office.sample.json(prompt, { model: MODELS.kevin, modelTier: 'complex', effort: 'low', cache: false });
+    const out = await office.sample.json(prompt, { model: MODELS.kevin, modelTier: 'complex', cache: false });
     owner = DIRECTORS.some((d) => d.id === out.director) ? out.director : DIRECTORS[0].id;
     brief = String(out.brief || '');
     t.kevinWhy = String(out.why || '');
     logStep(t, 'kevin', `Kevin picked ${firstName(owner)}: ${t.kevinWhy}`);
-    startCall('kevin', owner, String(out.callLine || `Hi ${firstName(owner)}, Harm has something for you.`));
-    logStep(t, 'kevin', `Kevin called ${firstName(owner)}: "${out.callLine || ''}"`);
+    const callLine = String(out.callLine || `Hi ${firstName(owner)}, Harm has something for you.`);
+    startCall('kevin', owner, callLine);
+    logStep(t, 'kevin', `Kevin called ${firstName(owner)}: "${callLine}"`);
+    lineAdd('kevin', owner, `${callLine} ${brief}`.trim(), 'call', t.id);
   } else {
     brief = `Harm asked ${firstName(owner)} directly.`;
   }
@@ -264,7 +266,8 @@ const RESULT_SHAPE = `When you are finished, reply with only JSON:
  "summary": "<2-4 sentences for Harm: what was done and the outcome>",
  "whatWasDone": ["<each concrete step, past tense, specific>", "..."],
  "results": [{"title": "<short>", "body": "<the actual result: findings, the text of a draft, the proposed event, numbers, links>"}],
- "noteForHarm": "<anything Harm must do next, e.g. send the draft or approve the event; empty if nothing>"}`;
+ "noteForHarm": "<anything Harm must do next, e.g. send the draft or approve the event; empty if nothing>",
+ "reportToKevin": "<what you tell Kevin when you report back: 1-2 sentences in your own voice>"}`;
 
 // The director does the task, or hands it to their worker and checks the work.
 async function directorWorks(t) {
@@ -273,6 +276,8 @@ async function directorWorks(t) {
   t.status = 'working';
   busyWith(d, t);
   logStep(t, d.id, `${firstName(d.id)} is on it.`);
+  if (t.askedPerson === d.id || t.askedPerson === w.id) lineAdd(d.id, 'kevin', `Kevin, Harm asked ${t.askedPerson === d.id ? 'me' : firstName(w.id)} directly: "${t.text}". I'm on it.`, 'say', t.id);
+  else lineAdd(d.id, 'kevin', 'On it, Kevin.', 'say', t.id);
   await saveTask(t);
 
   const tools = teamTools(t, d.id).concat([
@@ -299,13 +304,14 @@ ${ACCESS_TEXT}
 
 Do the task properly with the tools: do it yourself, or hand it (or a part) to ${firstName(w.id)} with hand_to_worker and then check what comes back. Use note to tell Harm what you're doing at each main step. Keep it to what the task needs.
 ${RESULT_SHAPE}`;
-  const out = await office.sample.json(prompt, { model: MODELS.director, modelTier: 'complex', effort: 'medium', tools });
+  const out = await office.sample.json(prompt, { model: MODELS.director, modelTier: 'complex', tools });
   t.summary = String(out.summary || '');
   t.whatWasDone = Array.isArray(out.whatWasDone) ? out.whatWasDone.map(String) : [];
   t.results = Array.isArray(out.results) ? out.results.map((r) => ({ title: String(r.title || ''), body: String(r.body || '') })) : [];
   t.noteForHarm = String(out.noteForHarm || '');
   t.outcome = out.status === 'could_not' ? 'could_not' : 'done';
   logStep(t, d.id, `${firstName(d.id)} finished: ${t.summary}`);
+  lineAdd(d.id, 'kevin', String(out.reportToKevin || t.summary || 'Done.'), 'say', t.id);
   t.status = t.approvals.some((a) => a.status === 'pending') ? 'needs_harm' : 'finishing';
   await saveTask(t);
 }
@@ -315,6 +321,7 @@ async function workerDoes(t, d, w, instructions, ctx) {
   busyWith(w, t);
   startCall(d.id, w.id, `${firstName(w.id)}, can you take this?`);
   logStep(t, d.id, `${firstName(d.id)} handed it to ${firstName(w.id)}: ${instructions}`);
+  lineAdd(d.id, w.id, instructions, 'call', t.id);
   await saveTask(t);
   const prompt = `You are ${w.name}, worker at the ${d.building.name} in Harm's AI village (${w.bio}). Your director ${d.name} gave you this job:
 ${instructions}
@@ -324,8 +331,9 @@ Today is ${today()}.
 ${ACCESS_TEXT}
 
 Do it with the tools. Use note for your main steps. When done, reply with a clear report for ${firstName(d.id)}: what you did, what you found or made (include draft subjects, event details, key facts), and anything you couldn't do.`;
-  const { text } = await office.sample(prompt, { model: MODELS.worker, modelTier: 'default', effort: 'medium', tools: teamTools(t, w.id), signal: ctx && ctx.signal });
+  const { text } = await office.sample(prompt, { model: MODELS.worker, modelTier: 'default', tools: teamTools(t, w.id), signal: ctx && ctx.signal });
   logStep(t, w.id, `${firstName(w.id)} reported back to ${firstName(d.id)}.`);
+  lineAdd(w.id, d.id, text.slice(0, 600), 'say', t.id);
   t.workerReports = (t.workerReports || []).concat([{ at: nowStamp(), text: text.slice(0, 6000) }]);
   await saveTask(t);
   logStep(t, d.id, `${firstName(d.id)} is checking ${firstName(w.id)}'s work.`);
@@ -339,6 +347,7 @@ async function finishIfReady(t) {
   t.status = 'done';
   t.doneAt = nowStamp();
   logStep(t, 'kevin', `Kevin crossed it off the list.`);
+  lineAdd('kevin', 'harm', `Done: ${t.text}. It's crossed off your list.`, 'say', t.id);
   await saveTask(t);
   releasePeople(t);
   toast(`Done: ${t.text}`);
@@ -387,74 +396,6 @@ async function offerReport(t) {
   } catch (e) {
     if (e && e.code === 'declined') return;
     toast('Could not make the report: ' + (e && (e.message || e.code)));
-  }
-}
-
-// ---------- talking to people ----------
-
-const CHAT_LIMIT = 24;
-async function openChat(personId) {
-  const p = personById(personId);
-  if (!p) return;
-  office.chat = { id: personId, turns: [], busy: false };
-  if (office.db) {
-    try { const snap = await office.db.doc('chats/' + personId).get(); if (snap.exists) office.chat.turns = (snap.data().turns || []).slice(-CHAT_LIMIT); } catch (e) { /* new chat */ }
-  }
-  renderChat();
-  document.getElementById('chat').hidden = false;
-  document.getElementById('chat-input').focus();
-}
-
-function personaFor(id) {
-  if (id === 'kevin') return { model: MODELS.kevin, text: `You are Kevin (they/them), Chief of Staff to Harm (the Chief Human Officer) in Harm's AI village. ${KEVIN_BIO} You take Harm's orders and pass them on to the right director. The directors:\n${rosterText()}` };
-  const r = residents.find((x) => x.id === id);
-  if (r.role === 'Director') return { model: MODELS.director, text: `You are ${r.name}, director of the ${r.building.name} in Harm's AI village. ${r.bio} You report to Kevin (Chief of Staff), who reports to Harm. Your worker is ${r.workerRef.name}.` };
-  return { model: MODELS.worker, text: `You are ${r.name}, worker (intern) at the ${r.building.name} in Harm's AI village. ${r.bio} Your director is ${r.boss.name}; every job you do is checked by them.` };
-}
-
-function openTasksFor(id) {
-  return [...office.tasks.values()].filter((t) => t.status !== 'done' && (t.owner === id || t.worker === id || (id === 'kevin'))).slice(0, 8)
-    .map((t) => `- "${t.text}" (${statusText(t)})`).join('\n') || '- none';
-}
-
-async function sendChat() {
-  const c = office.chat;
-  const box = document.getElementById('chat-input');
-  const said = box.value.trim();
-  if (!c || c.busy || !said) return;
-  if (!office.sample) { toast('Talking needs Claude, which is not available in this view.'); return; }
-  box.value = '';
-  c.turns.push({ role: 'user', content: said });
-  c.busy = true; c.streaming = '…'; renderChat();
-  const persona = personaFor(c.id);
-  let created = null;
-  const tools = [{ name: 'create_task', description: "Put a task on Harm's to-do list for YOU to do. Call this whenever you agree to do something Harm asks. Use Harm's own words. Returns 'created'.",
-    inputSchema: { type: 'object', properties: { task: { type: 'string' } }, required: ['task'] },
-    execute: async ({ task }) => { created = await makeChatTask(c.id, String(task), said, false); return 'created'; } }];
-  const rules = `${persona.text}
-
-Harm is talking to you in the village. Today is ${today()}. Answer in character: warm, short, plain words (2-4 sentences).
-${ACCESS_TEXT}
-Your open tasks:
-${openTasksFor(c.id)}
-
-IMPORTANT: if Harm asks you to do something and you agree ("on it", "I'll do it", "will do"), call create_task with Harm's request in Harm's words BEFORE you reply, so a real task exists. Don't pretend to have done work you haven't done; the actual work starts once the task exists.`;
-  const turns = [{ role: 'user', content: rules }, ...c.turns.slice(-CHAT_LIMIT)];
-  try {
-    const { text } = await office.sample(turns, { model: persona.model, modelTier: personById(c.id).role === 'Worker' ? 'default' : 'complex', effort: 'low', tools, onText: ({ text }) => { c.streaming = text; renderChat(); } });
-    c.turns.push({ role: 'assistant', content: text });
-    // A promise to do something must always become a real task, even if they forgot to create it.
-    if (!created) {
-      const check = await office.sample.json(`Harm said to ${personById(c.id).name}: "${said}"\n${personById(c.id).name} replied: "${text}"\n\nDid they agree or promise to do something for Harm (e.g. "on it", "I'll do it", "will do", "sure, I'll...")? Reply with only JSON: {"committed": true|false, "task": "<if committed: the task in Harm's own words, as a short to-do line>"}`, { modelTier: 'quick', cache: false }).catch(() => null);
-      if (check && check.committed && check.task) created = await makeChatTask(c.id, String(check.task), said, true);
-    }
-    if (created) c.turns.push({ role: 'assistant', content: `📋 Added to your to-do list: "${created.text}"` });
-  } catch (e) {
-    c.turns.push({ role: 'assistant', content: '(' + sampleErrorText(e) + ')' });
-  } finally {
-    c.busy = false; c.streaming = null;
-    renderChat();
-    if (office.db) office.db.doc('chats/' + c.id).set({ turns: c.turns.slice(-CHAT_LIMIT), updatedAt: nowStamp() }).catch(() => {});
   }
 }
 
@@ -549,27 +490,6 @@ function showDone(t, li) {
 }
 function hideDone() { office.hoverId = null; document.getElementById('todo-pop').hidden = true; }
 
-function renderChat() {
-  const c = office.chat;
-  if (!c) return;
-  const p = personById(c.id);
-  document.getElementById('chat-face').src = `assets/portraits/${c.id}.jpg`;
-  document.getElementById('chat-name').textContent = p.name;
-  document.getElementById('chat-role').textContent = c.id === 'kevin' ? 'Chief of Staff' : roleLabel(p);
-  const log = document.getElementById('chat-log');
-  log.innerHTML = '';
-  for (const turn of c.turns) {
-    const div = document.createElement('div');
-    div.className = 'msg ' + (turn.role === 'user' ? 'me' : 'them');
-    div.textContent = turn.content;
-    log.appendChild(div);
-  }
-  if (c.streaming) { const div = document.createElement('div'); div.className = 'msg them'; div.textContent = c.streaming; log.appendChild(div); }
-  if (!c.turns.length && !c.streaming) log.innerHTML = `<div class="msg hint">Say hello, or ask ${esc(p.name.split(' ')[0])} to do something. If they say they'll do it, it goes on your to-do list.</div>`;
-  log.scrollTop = log.scrollHeight;
-  document.getElementById('chat-send').disabled = c.busy;
-}
-
 // ---------- wiring ----------
 
 document.getElementById('todo-btn').addEventListener('click', () => {
@@ -582,14 +502,15 @@ document.getElementById('todo-close').addEventListener('click', () => { document
 const todoInput = document.getElementById('todo-input');
 todoInput.addEventListener('keydown', (e) => {
   e.stopPropagation();
+  if (e.key === 'Escape') { document.getElementById('todo-close').click(); return; }
   if (e.key === 'Enter' && todoInput.value.trim()) { createTask(todoInput.value, 'todo'); todoInput.value = ''; }
 });
 document.getElementById('todo-add').addEventListener('click', () => { if (todoInput.value.trim()) { createTask(todoInput.value, 'todo'); todoInput.value = ''; todoInput.focus(); } });
 
 const chatInput = document.getElementById('chat-input');
-chatInput.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } });
-document.getElementById('chat-send').addEventListener('click', sendChat);
-document.getElementById('chat-close').addEventListener('click', () => { document.getElementById('chat').hidden = true; office.chat = null; canvas.focus(); });
+chatInput.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } if (e.key === 'Escape') closeChat(); });
+document.getElementById('chat-send').addEventListener('click', () => sendChat());   // sendChat lives in game/talk.js
+document.getElementById('chat-close').addEventListener('click', () => closeChat());
 
 // Click on someone in the village to talk to them (instead of walking there).
 canvas.addEventListener('pointerdown', (e) => {
