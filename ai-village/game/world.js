@@ -69,6 +69,14 @@ const BUILDINGS = [
   { id: 'guest-cottage', name: 'Guest Cottage', job: 'Spare for a future agent', door: [1045, 1408], room: null },
 ];
 
+// The Chief Human Officer's walking sheet (tools/cut_character.py):
+// rows walk down, right, left, up; columns left foot forward, standing, right foot forward.
+const WALK_SHEET = {
+  image: 'char:harm', src: 'assets/characters/harm-walk.png',
+  frameW: 192, frameH: 256, foot: 244, figure: 236,
+  rows: { down: 0, right: 1, left: 2, up: 3 },
+};
+
 const START = [1200, 1060]; // the CEO starts just below the fountain
 
 // Props from the prop sheet: [image, x, y (feet), width, solid?]

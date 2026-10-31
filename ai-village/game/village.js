@@ -19,6 +19,7 @@ function loadImage(key, src) {
 const propNames = new Set([...MAP_PROPS.map((p) => p[0]), ...Object.values(ROOMS).flatMap((r) => (r.props || []).map((p) => p[0]))]);
 const loading = Promise.all([
   loadImage('map', MAP.image),
+  loadImage(WALK_SHEET.image, WALK_SHEET.src),
   ...Object.keys(ROOMS).map((id) => loadImage('room:' + id, `assets/rooms/${id}.jpg`)),
   ...[...propNames].map((n) => loadImage('prop:' + n, `assets/props/${n}.png`)),
 ]);
@@ -29,7 +30,7 @@ const ROOM_W = 1200, ROOM_H = 896;
 const state = {
   scene: 'map',        // 'map' or a room id
   building: null,
-  player: { x: START[0], y: START[1], facing: 1, step: 0, moving: false },
+  player: { x: START[0], y: START[1], facing: 1, dir: 'down', step: 0, moving: false },
   target: null,
   camera: { x: START[0], y: START[1], zoom: 1 },
   zoomFactor: { map: 1.8, room: 1 },
@@ -138,6 +139,7 @@ function update(dt) {
     else if (canStand(p.x, p.y + my)) { p.y += my; p.moving = true; }
     else state.target = null;
     if (Math.abs(dx) > 0.2) p.facing = dx > 0 ? 1 : -1;
+    p.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
   }
   p.step = p.moving ? p.step + dt * 9 : 0;
 
@@ -409,7 +411,27 @@ function drawJukeboxLife() {
 
 // ---------- the CEO (a stand-in until the real characters arrive) ----------
 
+const WALK_CYCLE = [0, 1, 2, 1];
+
 function drawCEO(g = ctx) {
+  const img = images[WALK_SHEET.image];
+  if (!img) { drawStandIn(g); return; }
+  const p = state.player, S = WALK_SHEET;
+  const scale = personHeight() / S.figure;
+  const col = p.moving ? WALK_CYCLE[Math.floor(p.step / 1.25) % 4] : 1;
+  const row = S.rows[p.dir];
+  g.save();
+  g.fillStyle = 'rgba(40,25,10,0.28)';
+  g.beginPath();
+  g.ellipse(p.x, p.y, S.frameW * scale * 0.2, S.frameW * scale * 0.06, 0, 0, Math.PI * 2);
+  g.fill();
+  g.drawImage(img, col * S.frameW, row * S.frameH, S.frameW, S.frameH,
+    p.x - (S.frameW * scale) / 2, p.y - S.foot * scale, S.frameW * scale, S.frameH * scale);
+  g.restore();
+}
+
+// The simple drawn figure, used only if the walking sheet is missing.
+function drawStandIn(g = ctx) {
   const p = state.player;
   const H = personHeight();
   const u = H / 46;
@@ -472,7 +494,7 @@ function drawCEO(g = ctx) {
 // The CEO, with whatever he is under or behind showing through.
 function drawCEOInPlace() {
   const p = state.player, H = personHeight();
-  const bbox = { x: p.x - H * 0.35, y: p.y - H * 1.05, w: H * 0.7, h: H * 1.2 };
+  const bbox = { x: p.x - H * 0.45, y: p.y - H * 1.06, w: H * 0.9, h: H * 1.13 };
   drawWithCover(ctx, layerFor(state.scene), bbox, p.y, drawCEO);
 }
 
