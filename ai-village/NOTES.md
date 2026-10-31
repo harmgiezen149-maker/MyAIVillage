@@ -119,6 +119,8 @@ One Artlist image per house. Every room:
   - The 3 frames in each row: left foot forward, standing, right foot forward.
   - Big, obvious stride: legs clearly different in each frame and arms swinging, so they don't look like they're gliding.
   - Same person, same outfit, same size in all 12 frames.
+- **Harm's look (2026-10-31):** tough biker. Red-and-black checkered flannel over a black T-shirt, sleeves rolled up; left arm a full tattoo sleeve, right arm bare with leather and silver bracelets; slightly ripped faded jeans; brown leather cowboy boots; small gold collar pin (in charge). Face, slicked-back hair and grey-streaked beard from his 3 photos (uploaded to his Artlist account with his yes).
+- **Harm's sheet v1:** Nano Banana Pro, 2K, 3:4, photos + Crier's Press as style reference. **160 credits.** Saved as `art/characters/harm-sheet-v1.png` (1792 × 2400). Check: grid, magenta background, likeness, outfit, tattoo side all right. Problems: rows 1 (toward) and 4 (away) have a tiny stride, almost gliding; the middle "standing" frame of rows 2 and 3 faces the camera instead of right/left.
 - **Every character after the first** is made by giving Artlist an existing character sheet as the reference and asking it to redraw it as a DIFFERENT person in the same style, same proportions and same grid. Never from words alone, or the proportions won't match the rest of the cast.
 
 ## How the build log works (2026-10-30)
