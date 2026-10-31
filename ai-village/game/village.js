@@ -167,6 +167,7 @@ function update(dt) {
       if (near && state.doorArmed) enterBuilding(near);
       if (!near) state.doorArmed = true;
       audio.setJukeboxDistance(Math.hypot(p.x - MAP_FX.jukebox[0], p.y - MAP_FX.jukebox[1]));
+      audio.setFountainDistance(Math.hypot(p.x - 1200, p.y - 860));   // the fountain in the square
     } else {
       const [ex, ey] = ROOMS[state.scene].exit;
       if (Math.abs(p.x - ex) < 55 && p.y > ey) leaveBuilding();

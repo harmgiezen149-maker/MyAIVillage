@@ -89,6 +89,13 @@ class VillageAudio {
     if (Math.abs(level - (this.jukeboxLevel || 0)) > 0.005) { this.jukeboxLevel = level; this.applyVolumes(); }
   }
 
+  // The water sound: soft everywhere, a bit fuller when the CEO stands by the fountain.
+  setFountainDistance(dist) {
+    if (!this.ctx || !this.near) return;
+    const near = this.indoors ? 0 : Math.max(0, 1 - dist / 380);
+    this.near.gain.setTargetAtTime(0.3 + near * near * 0.9, this.ctx.currentTime, 0.4);
+  }
+
   noiseBuffer(seconds) {
     const ctx = this.ctx;
     const buf = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate);
@@ -107,13 +114,15 @@ class VillageAudio {
     band.frequency.value = 380;
     band.Q.value = 0.6;
     const level = ctx.createGain();
-    level.gain.value = 0.018;
+    level.gain.value = 0.004;                 // Harm (2026-10-31): the rushing was far too loud; now a whisper
     const sway = ctx.createOscillator();   // the breeze rises and falls
     sway.frequency.value = 0.07;
     const swayDepth = ctx.createGain();
-    swayDepth.gain.value = 0.008;
+    swayDepth.gain.value = 0.002;
     sway.connect(swayDepth).connect(level.gain);
-    src.connect(band).connect(level).connect(this.outdoor);
+    this.near = ctx.createGain();             // a little louder only right by the fountain (setFountainDistance)
+    this.near.gain.value = 0.3;
+    src.connect(band).connect(level).connect(this.near).connect(this.outdoor);
     src.start();
     sway.start();
   }
