@@ -48,7 +48,7 @@ function fitZoom() {
   return Math.min(canvas.clientWidth / w, canvas.clientHeight / h);
 }
 function personHeight() {
-  return state.scene === 'map' ? 46 : ROOM_H / 12;   // indoors: one twelfth of the room
+  return state.scene === 'map' ? 92 : ROOM_H / 12;   // town: twice the first size (Harm); indoors: one twelfth of the room
 }
 
 // ---------- where he can stand ----------
