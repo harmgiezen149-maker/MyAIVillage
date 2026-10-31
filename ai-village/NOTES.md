@@ -215,7 +215,7 @@ One Artlist image per house. Every room:
 - **Promises always become tasks:** in chats and meetings, a quick check after each reply that sounds like a promise creates the task from Harm's words if they forgot.
 - **Toolbar:** new **Kevin** and **Log** buttons (for touch screens). The old key C ("Kevin makes a call") is gone.
 - Logs (Kevin's line, village talk, meeting chat) are kept in the page's own storage.
-- Tested in the workspace with stand-ins for Claude: T, M M, single M, come here / back to work (walks over, walks home inside), Kevin's phone call, Kevin's line, village talk, meeting chat (everyone and one person), face size, no errors. **Not published yet:** Harm declined the publish on 2026-10-31; waiting for Harm's go.
+- Tested in the workspace with stand-ins for Claude: T, M M, single M, come here / back to work (walks over, walks home inside), Kevin's phone call, Kevin's line, village talk, meeting chat (everyone and one person), face size, no errors. Published after Harm approved it (2026-10-31).
 
 ## How the build log works (2026-10-30)
 
@@ -292,7 +292,7 @@ One Artlist image per house. Every room:
 - **Face portraits batch (2026-10-31):** 19 portraits (Kevin, 9 directors, 9 workers), Nano Banana 2 Lite, 1K, from each character's own sheet. **950 credits** (approved by Harm). All matched their characters. Several came out small in the middle of the square, and Nova's and Felix's sat inside a faint inner box: fixed for free by cropping (`tools/crop_portraits.py`, Nova cropped by hand). Originals in `art/portraits/`, game copies in `assets/portraits/<id>.jpg`, overview `art/portraits/portraits-overview.jpg`.
 - **Seated poses batch (2026-10-31):** 10 seated sheets (Kevin + 9 directors), Nano Banana 2, 2K, from each character's own sheet. **1,300 credits** (approved by Harm). All 10 usable. Margot, Rafael and Rosie came back with 6 or 8 poses instead of a 2 × 2 grid, and Kevin's and Leo's side views both faced right (as Harm's did). Fixed for free: `tools/cut_seated.py` now finds every figure on its own, picks the right ones and mirrors where needed. Strips in `assets/characters/<id>-seated.png`, overview `art/characters/seated-overview.jpg`. Tested in the game: everyone sits at the table with legs under it, the call panel shows Kevin's portrait, End meeting sends everyone home.
 - **Office build (2026-10-31, evening):** to-do list, team access to Gmail (read + drafts) and Calendar (read + add with Harm's OK), chats that create tasks, PDF task reports. No Artlist credits. Published to the village page.
-- **Talking build (2026-10-31, late evening):** T to talk, M M for Kevin, Kevin's line, come here / back to work, meeting chat, village talk log (C). No Artlist credits. Built and tested; publish declined by Harm for now.
+- **Talking build (2026-10-31, late evening):** T to talk, M M for Kevin, Kevin's line, come here / back to work, meeting chat, village talk log (C). No Artlist credits. Built, tested and published (Harm approved the publish).
 
 ## Open questions
 
