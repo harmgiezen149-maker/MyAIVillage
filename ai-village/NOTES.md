@@ -83,6 +83,10 @@ One Artlist image per house. Every room:
 - **Job:** each room obviously belongs to its job, with **one desk and chair** where its owner sits.
 - **Process:** low-resolution drafts first, shown to Harm before spending on full-quality versions.
 
+## World rules (Harm)
+
+- **Always daytime (2026-10-31):** It is always daytime in the village. No night, no sleeping. People are always up and out.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
