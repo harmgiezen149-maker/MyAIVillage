@@ -109,6 +109,11 @@ Each building's outside matches its agent's job (medieval version of the job, sy
 - **Claude usage:** start _not yet reported_ / end _open_
 - **Built:**
   - Job-themed town map: one 2K edit of the 4:3 map giving every building its agent's look (see "Agents and their buildings"). Nano Banana 2, **130 credits**. Balance after: 23,480.
+    - Uploaded by Harm, saved as `art/maps/town-jobs-4x3.png` (2400 × 1792).
+    - The edit added buildings: now 13 houses + town hall + a separate teal market stall (was 10 houses). New plain tile house far top-left; new carrier's depot bottom-left; artisan's workshop is a new house far right.
+    - Job looks that came out right: Post House, Crier's Press (glowing orb), Scholar's Tower (telescope), Counting House (gilded disc), Carrier's Depot, Herald's Lodge, Bard's House (bandstand), Artisan's Workshop + stall, Council Hall banners and clock. Family items got split between the lower-left cottage and the bottom-middle cottage.
+    - Door check (Harm's rule: clear path to every front door, nothing in front of a door): blocked = depot (cart wheel), counting house (crate on steps), crier's press (paper stacks), workshop (workbench), family cottage lower-left (flower beds), post house (letter chest tight against door). No door at all = the two tall tile houses left and right of the square (fronts still hidden).
+- **Rule (Harm, 2026-10-31):** Every house must have a clear path to its front door. Nothing may sit in front of a door; trees or objects blocking a path get removed. People must be able to walk in and out of every house.
 
 ## Open questions
 
