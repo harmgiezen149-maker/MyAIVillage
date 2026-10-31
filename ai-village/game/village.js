@@ -149,6 +149,7 @@ function update(dt) {
   }
   p.step = p.moving ? p.step + dt * 9 : 0;
   updateKevin(dt);
+  if (typeof updateResidents === 'function') updateResidents(dt);
 
   // doors
   if (state.fade <= 0) {
@@ -614,7 +615,9 @@ function drawTown() {
   const things = MAP_PROPS.map((p) => ({ y: p[2], draw: () => drawProp(p) }));
   things.push({ y: state.player.y, draw: drawCEOInPlace });
   things.push({ y: state.kevin.y - 0.01, draw: drawKevinInPlace });
+  if (typeof residentsHere === 'function') for (const r of residentsHere()) things.push({ y: r.y, draw: () => drawResidentInPlace(r) });
   things.sort((a, b) => a.y - b.y).forEach((t) => t.draw());
+  if (typeof drawNameTags === 'function') drawNameTags();
   drawJukeboxLife();
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
@@ -637,7 +640,9 @@ function drawRoom(id) {
   const things = (room.props || []).map((p) => ({ y: p[2], draw: () => drawProp(p) }));
   things.push({ y: state.player.y, draw: drawCEOInPlace });
   things.push({ y: state.kevin.y - 0.01, draw: drawKevinInPlace });
+  if (typeof residentsHere === 'function') for (const r of residentsHere()) things.push({ y: r.y, draw: () => drawResidentInPlace(r) });
   things.sort((a, b) => a.y - b.y).forEach((t) => t.draw());
+  if (typeof drawNameTags === 'function') drawNameTags();
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   (room.glows || []).forEach(([x, y, r, color], i) => drawGlow(x, y, r * 1.8 * flicker(i * 1.9, 1.2), color || '255,200,110', 0.45));

@@ -12,6 +12,7 @@ FOOT = 244                       # foot line inside each packed frame
 
 src, out = sys.argv[1], sys.argv[2]
 mirrors = [a.split('=') for a in sys.argv[3:] if '=' in a]
+no_shadow = '--no-shadow' in sys.argv   # drop darker magenta shadows the AI painted under the feet
 
 sheet = Image.open(src).convert('RGB')
 fw, fh = sheet.width / COLS, sheet.height / ROWS
@@ -37,6 +38,9 @@ def cut(r, c):
     if bg[0] > 150 and bg[2] > 150 and bg[1] < 110:
         # a true magenta background never appears in clothes or skin, so gaps between arm and body go too
         inside &= dist >= 60
+        if no_shadow:
+            r_, g_, b_ = im[..., 0], im[..., 1], im[..., 2]
+            inside &= ~((np.minimum(r_, b_) - g_ > 70) & (np.abs(r_ - b_) < 70))
     figure = Image.fromarray((inside * 255).astype(np.uint8))
     # biggest blob only (drop specks), then a soft one-pixel edge
     keep = figure.copy()

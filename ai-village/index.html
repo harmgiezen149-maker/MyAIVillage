@@ -57,6 +57,12 @@
   button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
   button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
   .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  #names-panel summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+  #names { display: grid; gap: 4px; max-height: 40vh; overflow-y: auto; margin-top: 6px; }
+  .name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: center; }
+  .name-row .role { font-size: 12px; color: var(--muted); }
+  .name-row .role.worker { color: #ffd84a; }
+  .name-row input { font: inherit; font-size: 13px; color: var(--text); background: rgba(0,0,0,.3); border: 1px solid var(--panel-edge); border-radius: 6px; padding: 4px 6px; min-width: 0; }
   body.editing #view { cursor: crosshair; }
   body.editing #help { display: none; }
   @media (max-width: 560px) { #help { display: none; } #place-name { font-size: 16px; } }
@@ -86,6 +92,11 @@
   </div>
   <div class="hint">Drag to paint · Shift-drag or right-drag to look around · keys 1–5 tools, [ ] brush size · walk to try it</div>
   <div class="hint" id="editor-status" role="status"></div>
+  <details id="names-panel">
+    <summary>Names</summary>
+    <div id="names"></div>
+    <div class="hint" id="names-status" role="status"></div>
+  </details>
 </div>
 
 <div id="intro">
@@ -102,5 +113,6 @@
 <script src="game/audio.js"></script>
 <script src="game/village.js"></script>
 <script src="game/editor.js"></script>
+<script src="game/residents.js"></script>
 </body>
 </html>
