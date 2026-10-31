@@ -48,7 +48,7 @@ Running log of every decision made during the build. Newest entries at the botto
 - For the modern-look drafts, the style guide's pixel-art lines were left out; the warm palette, three-quarter view, upper-left light and no-text rules were kept.
 - Once Harm picks a look, `STYLE_GUIDE.md` gets rewritten to match (with Harm's yes).
 - **Done:** `STYLE_GUIDE.md` rewritten for HD-2D and approved by Harm as written. The old pixel-art paragraph is kept below it as a record. From now on, every art prompt uses the HD-2D paragraph word for word.
-- Open check: confirm draft 1 actually has outlines; if not, drop "subtle dark outlines".
+- Outline check done: the 4K map has dark outlines, so "subtle dark outlines" stays.
 
 ## Look chosen (2026-10-30)
 
@@ -81,7 +81,8 @@ Running log of every decision made during the build. Newest entries at the botto
   - Town map batch: 5 versions, one per period (Ancient Rome, Medieval Europe, Edo Japan, Victorian England, Wild West). Nano Banana 2, 2K, square. 130 credits each, **650 credits total** (approved by Harm). Balance after: 690.
     - Images live in Harm's Artlist generations. Download into the workspace was blocked by the session's network policy (Artlist hosts not on the allowed list).
   - Modern-look drafts: Harm found map 2 too pixelated and wants a more modern RPG feel. 5 low-res drafts redrawing map 2 with the same layout (HD-2D, hand-painted, modern hi-res pixel art, cel-shaded 3D, cozy miniature diorama). Same prompts also asked for a fountain instead of the well, visible doors on the two hidden houses, and removing the stray object. Nano Banana 2 Lite, 1K. 50 credits each, **250 credits total** (approved by Harm). Balance after: 440.
-  - Harm picked **draft 1: HD-2D**. Redrawn at 4K (4096 × 4096) from draft 1, Nano Banana 2, **200 credits** (approved by Harm). Download still blocked; waiting for Harm to upload it or allow the Artlist host.
+  - Harm picked **draft 1: HD-2D**. Redrawn at 4K (4096 × 4096) from draft 1, Nano Banana 2, **200 credits** (approved by Harm). Uploaded by Harm and saved as `art/maps/town-hd2d-4k.png` (4096 × 4096).
+    - Check: fountain ✓ (well replaced), stray yellow object gone ✓, 10 houses and town hall unchanged ✓, no people or text ✓, dark outlines present ✓ (so the style guide's outline line stays). Added extras: flower beds and benches. Still wrong: the two tall tile-roof houses (far left and far right) still have their front walls hidden behind thatched cottages. Look is still quite close to pixel art, with softer light and a sunlit glow upper left.
   - 4:3 town map for desktop screens: redrawn from the 4K HD-2D map with the new style guide, town kept centered, extra grass and trees on the sides. Nano Banana 2, 2K (2048 × 1536), **130 credits** (approved by Harm). This is the main town map from now on.
 
 ## Open questions
