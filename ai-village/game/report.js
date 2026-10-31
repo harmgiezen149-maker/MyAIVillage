@@ -11,7 +11,7 @@ let pdfReady = null;
 function loadScriptOnce(src) {
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
-    s.src = src; s.onload = resolve; s.onerror = () => reject(new Error('Could not load ' + src));
+    s.src = src; s.onload = resolve; s.onerror = () => reject(new Error('Kon niet laden: ' + src));
     document.head.appendChild(s);
   });
 }
@@ -41,29 +41,29 @@ async function portraitData(id) {
 
 function whoName(id) {
   if (id === 'harm') return 'Harm';
-  if (id === 'office') return 'Village';
+  if (id === 'office') return 'Dorp';
   const p = typeof personById === 'function' ? personById(id) : null;
   return p ? p.name : String(id || '');
 }
 function whoRole(id) {
   if (id === 'harm') return 'Chief Human Officer';
-  if (id === 'kevin') return 'Chief of Staff';
+  if (id === 'kevin') return 'Stafchef';
   const p = typeof personById === 'function' ? personById(id) : null;
   if (!p) return '';
-  return p.role === 'Director' ? `Director, ${p.building.name}` : `Worker, ${p.building.name}`;
+  return p.role === 'Director' ? `Directeur, ${p.building.job.toLowerCase()}` : `Stagiair, ${p.building.name}`;
 }
 
 function niceDate(iso) {
   if (!iso) return '';
-  return new Date(iso).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleString('nl-NL', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
-function clock(iso) { return iso ? new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''; }
+function clock(iso) { return iso ? new Date(iso).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''; }
 function duration(a, b) {
   if (!a || !b) return '';
   const s = Math.max(0, Math.round((new Date(b) - new Date(a)) / 1000));
   if (s < 60) return `${s} sec`;
   const m = Math.round(s / 60);
-  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`;
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} u ${m % 60} min`;
 }
 
 // A section title stays on the same page as the first thing under it.
@@ -106,7 +106,7 @@ async function makeTaskReport(t) {
   const drafts = t.drafts || [], approvals = t.approvals || [], log = t.log || [];
   const toolsUsed = log.filter((l) => l.tool).length;
 
-  const pill = { table: { body: [[{ text: couldNot ? 'COULD NOT FINISH' : done ? 'DONE' : 'IN PROGRESS', bold: true, fontSize: 8.5, characterSpacing: 1.2,
+  const pill = { table: { body: [[{ text: couldNot ? 'NIET GELUKT' : done ? 'KLAAR' : 'BEZIG', bold: true, fontSize: 8.5, characterSpacing: 1.2,
     color: '#ffffff', fillColor: couldNot ? REPORT.red : done ? REPORT.green : REPORT.gold, margin: [8, 3, 8, 2] }]] }, layout: 'noBorders' };
 
   const people = {
@@ -128,28 +128,28 @@ async function makeTaskReport(t) {
     { columns: [
       { width: 'auto', stack: [pill] },
       { width: '*', text: [
-        { text: 'Added ', color: REPORT.soft }, niceDate(t.createdAt),
-        ...(t.doneAt ? [{ text: '   ·   Done ', color: REPORT.soft }, niceDate(t.doneAt), { text: '   ·   ', color: REPORT.soft }, duration(t.createdAt, t.doneAt)] : []),
+        { text: 'Toegevoegd ', color: REPORT.soft }, niceDate(t.createdAt),
+        ...(t.doneAt ? [{ text: '   ·   Klaar ', color: REPORT.soft }, niceDate(t.doneAt), { text: '   ·   ', color: REPORT.soft }, duration(t.createdAt, t.doneAt)] : []),
       ], fontSize: 9, color: REPORT.ink, margin: [10, 3, 0, 0] },
     ] },
-    { text: t.from === 'chat' ? `Harm asked ${whoName(t.askedPerson)} in person: "${pdfText(t.words)}"` : 'From Harm\'s to-do list.',
+    { text: t.from === 'chat' ? `Harm vroeg het ${whoName(t.askedPerson)} persoonlijk: "${pdfText(t.words)}"` : 'Van Harms takenlijst.',
       fontSize: 9, italics: true, color: REPORT.soft, margin: [0, 8, 0, 0] },
     { table: { widths: ['*', '*', '*', '*'], body: [[
-      statTile(log.length, 'steps logged'), statTile(toolsUsed, 'look-ups in mail, calendar & apps'),
-      statTile(drafts.length, drafts.length === 1 ? 'draft written' : 'drafts written'), statTile(approvals.length, 'calendar & app changes'),
+      statTile(log.length, 'stappen vastgelegd'), statTile(toolsUsed, 'keer gezocht in mail, agenda & apps'),
+      statTile(drafts.length, drafts.length === 1 ? 'concept geschreven' : 'concepten geschreven'), statTile(approvals.length, 'agenda- & app-wijzigingen'),
     ]] }, layout: { hLineColor: () => REPORT.line, vLineColor: () => REPORT.line, hLineWidth: () => 0.8, vLineWidth: () => 0.8 }, margin: [0, 16, 0, 0] },
 
-    titled('In short', callout([{ text: pdfText(t.summary) || 'The team finished this task.', fontSize: 11.5, lineHeight: 1.35, color: REPORT.ink }], REPORT.goldLight, REPORT.gold)),
+    titled('In het kort', callout([{ text: pdfText(t.summary) || 'Het team heeft deze taak afgerond.', fontSize: 11.5, lineHeight: 1.35, color: REPORT.ink }], REPORT.goldLight, REPORT.gold)),
 
-    ...(t.noteForHarm ? [titled('For you', callout([{ text: pdfText(t.noteForHarm), fontSize: 11, bold: true, color: REPORT.ink, lineHeight: 1.3 }], '#eef3e6', REPORT.green))] : []),
+    ...(t.noteForHarm ? [titled('Voor jou', callout([{ text: pdfText(t.noteForHarm), fontSize: 11, bold: true, color: REPORT.ink, lineHeight: 1.3 }], '#eef3e6', REPORT.green))] : []),
 
-    titled('Who handled it', people),
+    titled('Wie het deden', people),
   ];
 
-  if (t.kevinWhy) content.push({ text: [{ text: 'Why this director: ', bold: true }, pdfText(t.kevinWhy)], fontSize: 9, color: REPORT.soft, margin: [0, 10, 0, 0] });
+  if (t.kevinWhy) content.push({ text: [{ text: 'Waarom deze directeur: ', bold: true }, pdfText(t.kevinWhy)], fontSize: 9, color: REPORT.soft, margin: [0, 10, 0, 0] });
 
   if ((t.whatWasDone || []).length) {
-    content.push(sectionTitle('What was done'));
+    content.push(sectionTitle('Wat er is gedaan'));
     content.push({ table: { widths: [22, '*'], body: t.whatWasDone.map((step, i) => [
       { text: String(i + 1), bold: true, color: REPORT.gold, fontSize: 11, alignment: 'right', margin: [0, 1, 6, 0] },
       { text: pdfText(step), fontSize: 10.5, lineHeight: 1.3, color: REPORT.ink, margin: [0, 1, 0, 5] },
@@ -157,41 +157,41 @@ async function makeTaskReport(t) {
   }
 
   if ((t.results || []).length) {
-    t.results.forEach((r, i) => { const c = card(r.title || 'Result', [{ text: pdfText(r.body), fontSize: 10, lineHeight: 1.35, color: REPORT.ink }]); content.push(i ? c : titled('Results', c)); });
+    t.results.forEach((r, i) => { const c = card(r.title || 'Resultaat', [{ text: pdfText(r.body), fontSize: 10, lineHeight: 1.35, color: REPORT.ink }]); content.push(i ? c : titled('Resultaten', c)); });
   }
 
   if (drafts.length) {
-    drafts.forEach((d, i) => { const c = card(d.subject || '(no subject)', [
-      { text: [{ text: 'To: ', color: REPORT.soft }, (d.to || []).join(', ') || '(reply in the same thread)', { text: '   ·   written by ', color: REPORT.soft }, whoName(d.by)], fontSize: 9, margin: [0, 0, 0, 6] },
+    drafts.forEach((d, i) => { const c = card(d.subject || '(geen onderwerp)', [
+      { text: [{ text: 'Aan: ', color: REPORT.soft }, (d.to || []).join(', ') || '(antwoord in hetzelfde gesprek)', { text: '   ·   geschreven door ', color: REPORT.soft }, whoName(d.by)], fontSize: 9, margin: [0, 0, 0, 6] },
       { text: pdfText(d.body), fontSize: 9.5, lineHeight: 1.35, color: REPORT.ink },
-      ...(d.url ? [{ text: 'Open the draft in Gmail', link: d.url, color: REPORT.gold, decoration: 'underline', fontSize: 9, margin: [0, 6, 0, 0] }] : []),
-      { text: 'Not sent. It is in your Drafts folder for you to check and send.', fontSize: 8, italics: true, color: REPORT.soft, margin: [0, 4, 0, 0] },
-    ]); content.push(i ? c : titled('Drafts waiting in your Gmail', c)); });
+      ...(d.url ? [{ text: 'Open het concept in Gmail', link: d.url, color: REPORT.gold, decoration: 'underline', fontSize: 9, margin: [0, 6, 0, 0] }] : []),
+      { text: 'Niet verstuurd. Het staat in je map Concepten, zodat jij het kunt nakijken en versturen.', fontSize: 8, italics: true, color: REPORT.soft, margin: [0, 4, 0, 0] },
+    ]); content.push(i ? c : titled('Concepten in je Gmail', c)); });
   }
 
   if (approvals.length) {
-    content.push(titled('Calendar and app changes', { table: { widths: ['*', 'auto', 'auto'], headerRows: 1, body: [
-      ['What', 'When', 'Status'].map((h) => ({ text: h, bold: true, fontSize: 8.5, color: REPORT.soft, margin: [0, 2, 0, 2] })),
+    content.push(titled('Agenda- en app-wijzigingen', { table: { widths: ['*', 'auto', 'auto'], headerRows: 1, body: [
+      ['Wat', 'Wanneer', 'Status'].map((h) => ({ text: h, bold: true, fontSize: 8.5, color: REPORT.soft, margin: [0, 2, 0, 2] })),
       ...approvals.map((a) => [
         { stack: [{ text: pdfText(a.kind === 'app' ? `${a.app}: ${a.what}` : (a.payload.summary || a.what)), fontSize: 10, color: REPORT.ink },
           ...(a.kind !== 'app' && a.what && a.payload.summary ? [{ text: pdfText(a.what), fontSize: 8.5, color: REPORT.soft }] : []),
-          ...(a.url ? [{ text: 'Open in Google Calendar', link: a.url, color: REPORT.gold, decoration: 'underline', fontSize: 8.5 }] : [])] },
+          ...(a.url ? [{ text: 'Openen in Google Agenda', link: a.url, color: REPORT.gold, decoration: 'underline', fontSize: 8.5 }] : [])] },
         { text: a.kind === 'app' ? '' : (a.payload.startTime || '').replace('T', ' ').slice(0, 16) + (a.payload.endTime ? ' – ' + a.payload.endTime.slice(11, 16) : ''), fontSize: 9.5, color: REPORT.ink },
-        { text: a.status === 'done' ? 'Saved (you approved)' : a.status === 'declined' ? 'Declined by you' : 'Waiting for you', fontSize: 9.5,
+        { text: a.status === 'done' ? 'Gedaan (jij keurde goed)' : a.status === 'declined' ? 'Door jou afgewezen' : 'Wacht op jou', fontSize: 9.5,
           color: a.status === 'done' ? REPORT.green : a.status === 'declined' ? REPORT.red : REPORT.gold, bold: true },
       ]),
     ] }, layout: { hLineColor: () => REPORT.line, vLineWidth: () => 0, hLineWidth: (i) => (i === 0 ? 0 : 0.8), paddingTop: () => 6, paddingBottom: () => 6 } }));
   }
 
   if ((t.workerReports || []).length) {
-    t.workerReports.forEach((w, i) => { const c = callout([{ text: pdfText(w.text).slice(0, 3500), fontSize: 9.5, lineHeight: 1.35, color: REPORT.ink }], REPORT.paper, REPORT.line); content.push(i ? c : titled(`${whoName(t.worker)}'s report to ${whoName(t.owner)}`, c)); });
-    content.push({ text: `${whoName(t.owner)} checked this work before it counted.`, fontSize: 8.5, italics: true, color: REPORT.soft, margin: [0, 2, 0, 0] });
+    t.workerReports.forEach((w, i) => { const c = callout([{ text: pdfText(w.text).slice(0, 3500), fontSize: 9.5, lineHeight: 1.35, color: REPORT.ink }], REPORT.paper, REPORT.line); content.push(i ? c : titled(`Verslag van ${whoName(t.worker)} aan ${whoName(t.owner)}`, c)); });
+    content.push({ text: `${whoName(t.owner)} controleerde dit werk voordat het telde.`, fontSize: 8.5, italics: true, color: REPORT.soft, margin: [0, 2, 0, 0] });
   }
 
 
   content.push({ table: { widths: [52, 92, '*'], headerRows: 2, keepWithHeaderRows: 1, dontBreakRows: true, body: [
-    [{ ...sectionTitle('Everything we did, step by step'), colSpan: 3, margin: [-6, 16, 0, 2] }, {}, {}],
-    ['Time', 'Who', 'What happened'].map((h) => ({ text: h, bold: true, fontSize: 8.5, color: REPORT.soft })),
+    [{ ...sectionTitle('Alles wat we deden, stap voor stap'), colSpan: 3, margin: [-6, 16, 0, 2] }, {}, {}],
+    ['Tijd', 'Wie', 'Wat er gebeurde'].map((h) => ({ text: h, bold: true, fontSize: 8.5, color: REPORT.soft })),
     ...log.map((l) => [
       { text: clock(l.at), fontSize: 8.5, color: REPORT.soft },
       { text: whoName(l.who), fontSize: 8.5, bold: true, color: REPORT.ink },
@@ -200,13 +200,13 @@ async function makeTaskReport(t) {
     ]),
   ] }, layout: { fillColor: (i) => (i > 1 && i % 2 === 1 ? '#f6eedc' : null), hLineWidth: () => 0, vLineWidth: () => 0, paddingTop: () => 5, paddingBottom: () => 5, paddingLeft: () => 6, paddingRight: () => 6 } });
 
-  content.push({ text: 'How this was done: Kevin and the directors think on Opus 5.5 (with an advisor on Fable 5.1), workers on Sonnet 5.5, all on Harm\'s own Claude plan. Gmail: read and drafts only, nothing sent. Calendar: changes only after Harm\'s Approve.',
+  content.push({ text: 'Zo is het gedaan: Kevin en de directeuren denken met Opus 5.5 (met een adviseur op Fable 5.1), de stagiairs met Sonnet 5.5, allemaal op Harms eigen Claude-abonnement. Gmail: alleen lezen en concepten, niets verstuurd. Agenda en apps: wijzigingen alleen na Harms Goedkeuren.',
     fontSize: 7.5, color: REPORT.soft, italics: true, margin: [0, 18, 0, 0] });
 
   const doc = {
     pageSize: 'A4',
     pageMargins: [48, 92, 48, 56],
-    info: { title: `Task report: ${pdfText(t.text)}`, author: 'My AI Village', subject: 'Task report' },
+    info: { title: `Taakrapport: ${pdfText(t.text)}`, author: 'Mijn AI-dorp', subject: 'Taakrapport' },
     defaultStyle: { font: 'Roboto', fontSize: 10, color: REPORT.ink },
     background: (page, size) => [
       { canvas: [
@@ -217,14 +217,14 @@ async function makeTaskReport(t) {
     ],
     header: (page) => (page === 1
       ? { columns: [
-        { text: [{ text: 'MY AI VILLAGE', bold: true, color: REPORT.gold, characterSpacing: 2.4 }, { text: '   ·   TASK REPORT', color: '#e8d7b6', characterSpacing: 1.6 }], fontSize: 10 },
+        { text: [{ text: 'MIJN AI-DORP', bold: true, color: REPORT.gold, characterSpacing: 2.4 }, { text: '   ·   TAAKRAPPORT', color: '#e8d7b6', characterSpacing: 1.6 }], fontSize: 10 },
         { text: niceDate(t.doneAt || t.updatedAt || t.createdAt), alignment: 'right', fontSize: 8.5, color: '#e8d7b6' },
       ], margin: [48, 27, 48, 0] }
       : { columns: [
-        { text: [{ text: 'MY AI VILLAGE', bold: true, color: REPORT.gold, characterSpacing: 2 }, { text: '  ·  ' + pdfText(t.text).slice(0, 70), color: REPORT.soft }], fontSize: 8 },
+        { text: [{ text: 'MIJN AI-DORP', bold: true, color: REPORT.gold, characterSpacing: 2 }, { text: '  ·  ' + pdfText(t.text).slice(0, 70), color: REPORT.soft }], fontSize: 8 },
       ], margin: [48, 44, 48, 0] }),
     footer: (page, pages) => ({ columns: [
-      { text: `Made by the village for Harm · ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`, fontSize: 7.5, color: REPORT.soft },
+      { text: `Gemaakt door het dorp voor Harm · ${new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}`, fontSize: 7.5, color: REPORT.soft },
       { text: `${page} / ${pages}`, alignment: 'right', fontSize: 7.5, color: REPORT.soft },
     ], margin: [48, 22, 48, 0] }),
     content,

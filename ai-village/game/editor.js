@@ -2,11 +2,11 @@
 // Corrections are saved into the page's own storage on claude.ai, where Claude can read them.
 
 const TOOLS = [
-  { key: '1', label: 'Walkable', layer: 'walk', value: 1, color: '60,200,90' },
-  { key: '2', label: 'Blocked', layer: 'walk', value: 0, color: '230,60,50' },
-  { key: '3', label: 'Under', hint: 'always over him: tree tops, roofs', layer: 'cover', value: 1, color: '70,140,255' },
-  { key: '4', label: 'Behind', hint: 'over him when he walks behind it', layer: 'cover', value: 2, color: '255,200,0' },
-  { key: '5', label: 'No cover', layer: 'cover', value: 0, color: '255,255,255' },
+  { key: '1', label: 'Begaanbaar', layer: 'walk', value: 1, color: '60,200,90' },
+  { key: '2', label: 'Geblokkeerd', layer: 'walk', value: 0, color: '230,60,50' },
+  { key: '3', label: 'Eronder', hint: 'altijd boven hem: boomkruinen, daken', layer: 'cover', value: 1, color: '70,140,255' },
+  { key: '4', label: 'Erachter', hint: 'boven hem als hij erachter loopt', layer: 'cover', value: 2, color: '255,200,0' },
+  { key: '5', label: 'Geen dekking', layer: 'cover', value: 0, color: '255,255,255' },
 ];
 
 const editor = {
@@ -34,7 +34,7 @@ function setEditing(on) {
   document.getElementById('edit').setAttribute('aria-pressed', String(on));
   document.body.classList.toggle('editing', on);
   editor.tintDirty = true;
-  if (on) setStatus(editor.changed.size ? 'Unsaved changes' : 'Paint, then walk around to try it.');
+  if (on) setStatus(editor.changed.size ? 'Niet opgeslagen wijzigingen' : 'Schilder, en loop dan rond om het te proberen.');
 }
 
 function setTool(tool) {
@@ -84,7 +84,7 @@ function endStroke() {
     editor.changed.add(id);
     computeBaselines(layers[id]);
     if (typeof invalidateNav === 'function') invalidateNav(id);
-    setStatus('Unsaved changes');
+    setStatus('Niet opgeslagen wijzigingen');
   }
   editor.stroke = null;
 }
@@ -111,7 +111,7 @@ function resetPlace() {
   editor.undo = editor.undo.filter((s) => s.id !== id);
   editor.changed.add(id);
   editor.tintDirty = true;
-  setStatus('Back to the first version of this place. Save to keep it.');
+  setStatus('Terug naar de eerste versie van deze plek. Sla op om dat te bewaren.');
 }
 
 // ---------- drawing the layers ----------
@@ -243,9 +243,9 @@ function getDb() {
 }
 
 async function saveChanges() {
-  if (!editor.changed.size) { setStatus('Nothing new to save.'); return; }
+  if (!editor.changed.size) { setStatus('Niets nieuws om op te slaan.'); return; }
   const db = await getDb();
-  if (!db) { setStatus('Saving only works on the claude.ai page.'); return; }
+  if (!db) { setStatus('Opslaan werkt alleen op de claude.ai-pagina.'); return; }
   setStatus('Saving…');
   try {
     for (const id of [...editor.changed]) {
@@ -258,7 +258,7 @@ async function saveChanges() {
     }
     setStatus('Saved ✓ Tell Claude, and the changes go into the project.');
   } catch (err) {
-    setStatus(err && err.code === 'invalid_argument' ? "This page can't save for you." : 'Could not save just now. Try again in a moment.');
+    setStatus(err && err.code === 'invalid_argument' ? 'Deze pagina kan niet voor je opslaan.' : 'Opslaan lukte nu niet. Probeer het zo nog eens.');
   }
 }
 

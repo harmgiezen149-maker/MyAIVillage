@@ -104,7 +104,7 @@ function callResidents() {
 
 function startMeeting() {
   if (state.meeting || state.fade > 0) return;
-  toast('Everyone to the Council Hall.');
+  toast('Iedereen naar het Raadhuis.');
   transition(() => {
     state.meeting = true;
     state.scene = MEETING.room;
@@ -122,7 +122,7 @@ function startMeeting() {
     state.camera.x = ROOM_W / 2;
     state.camera.y = ROOM_H / 2;
     audio.setIndoors(true);
-    setPlace('Council Hall', 'Meeting · everyone is walking over');
+    setPlace('Raadhuis', 'Vergadering · iedereen loopt erheen');
     setMeetingButton();
     if (typeof meetingChatStarted === 'function') meetingChatStarted();
   });
@@ -150,7 +150,7 @@ function endMeeting() {
     state.camera.x = p.x;
     state.camera.y = p.y;
     audio.setIndoors(false);
-    setPlace('My AI Village', 'Town square');
+    setPlace('Mijn AI-dorp', 'Dorpsplein');
     setMeetingButton();
     if (typeof meetingChatEnded === 'function') meetingChatEnded();
   });
@@ -162,12 +162,12 @@ canvas.addEventListener('pointerleave', () => { state.pointer = null; });
 
 // Once everyone has arrived, the meeting is in progress.
 setInterval(() => {
-  if (state.meeting && placeJob.textContent.includes('walking') && residents.every((r) => !r.plan)) setPlace('Council Hall', 'Meeting in progress');
+  if (state.meeting && placeJob.textContent.includes('loopt') && residents.every((r) => !r.plan)) setPlace('Raadhuis', 'Vergadering bezig');
 }, 500);
 
 const meetingBtn = document.getElementById('meeting');
 function setMeetingButton() {
-  meetingBtn.textContent = state.meeting ? 'End meeting' : 'Call meeting';
+  meetingBtn.textContent = state.meeting ? 'Vergadering stoppen' : 'Vergadering';
   meetingBtn.setAttribute('aria-pressed', String(state.meeting));
 }
 meetingBtn.addEventListener('click', () => { (state.meeting ? endMeeting : startMeeting)(); canvas.focus(); });
@@ -184,10 +184,10 @@ function peopleOnCall() {
     for (const [id, other] of [[c.a, c.b], [c.b, c.a]]) {
       if (seen.has(id)) continue;
       seen.add(id);
-      list.push({ id, name: nameOf(id), job: (id === c.a ? 'Calling ' : 'Talking to ') + nameOf(other).split(' ')[0] });
+      list.push({ id, name: nameOf(id), job: (id === c.a ? 'Belt ' : 'In gesprek met ') + nameOf(other).split(' ')[0] });
     }
   }
-  if (kevinOnCall() && !seen.has('kevin')) list.push({ id: 'kevin', name: KEVIN.name, job: 'On a call · ' + KEVIN.job });
+  if (kevinOnCall() && !seen.has('kevin')) list.push({ id: 'kevin', name: KEVIN.name, job: 'Aan de telefoon · ' + KEVIN.job });
   return list;
 }
 

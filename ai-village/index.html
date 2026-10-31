@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="en">
+<html lang="nl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>My AI Village</title>
 <style>
   :root {
@@ -178,78 +178,110 @@
   .dock-form { display: flex; gap: 6px; padding: 8px 12px 12px; border-top: 1px solid var(--panel-edge); flex: none; }
   #face-size { width: 110px; accent-color: #f2c14e; }
   #village-toggle { white-space: nowrap; flex: none; }
-  @media (max-width: 560px) { #dock { top: 150px; } #todo { top: 112px; } #chat { height: 50vh; } #place { top: 108px; } #controls button { padding: 6px 9px; } }
   #controls { flex-wrap: wrap; justify-content: flex-end; max-width: calc(100vw - 32px); }
+  /* ---------- phones and small screens ---------- */
+  #more-btn { display: none; }
+  #chat-form input, #todo-form input, .dock-form input { min-width: 0; }
+  @media (hover: none) { #hover-card { display: none !important; } }
+  @media (max-width: 700px) {
+    #controls { top: max(8px, env(safe-area-inset-top)); right: 8px; left: auto; max-width: calc(100vw - 16px); gap: 6px; }
+    #controls .extra { display: none; }
+    #controls.open .extra { display: inline-block; }
+    #more-btn { display: inline-block; }
+    #controls button { padding: 7px 10px; font-size: 14px; }
+    #place { top: auto; bottom: max(10px, env(safe-area-inset-bottom)); left: 8px; padding: 5px 10px; max-width: 60vw; }
+    #place-name { font-size: 15px; }
+    #place-job { font-size: 12px; }
+    .panel { left: 0 !important; right: 0 !important; top: auto !important; bottom: 0 !important; width: 100% !important; max-width: 100% !important;
+      border-radius: 16px 16px 0 0; resize: none !important; padding-bottom: env(safe-area-inset-bottom); min-width: 0 !important; }
+    #todo { max-height: 78vh; }
+    #chat { height: 72vh !important; }
+    #dock { height: 78vh !important; min-height: 0; max-height: 85vh; }
+    .panel input, .panel textarea { font-size: 16px; }    /* no zoom-in on focus */
+    .panel-head h2 { font-size: 18px; }
+    button.small { padding: 7px 11px; font-size: 13px; }
+    .tabs button { padding: 7px 10px; }
+    .desktop-only { display: none; }
+    #todo-pop { left: 8px !important; right: 8px; width: auto; top: max(60px, env(safe-area-inset-top)) !important; max-height: 60vh; z-index: 30; }
+    #call { top: 56px; bottom: auto; max-width: calc(100vw - 16px); }
+    .caller { padding: 6px 10px 6px 6px; }
+    .caller img, .caller .initials { width: 44px; height: 44px; }
+    #editor { top: 104px; left: 8px; right: 8px; max-width: none; max-height: 60vh; overflow-y: auto; }
+    #toast { bottom: auto; top: 96px; z-index: 40; }
+    #intro .card { padding: 22px 18px; }
+  }
+  @media (max-width: 380px) { #controls button { padding: 6px 8px; font-size: 13px; } }
   body.editing #view { cursor: crosshair; }
   body.editing #help { display: none; }
   @media (max-width: 560px) { #help { display: none; } #place-name { font-size: 16px; } }
 </style>
 </head>
 <body>
-<canvas id="view" tabindex="0" aria-label="The village. Use the arrow keys or WASD to walk, or click where you want to go."></canvas>
+<canvas id="view" tabindex="0" aria-label="Het dorp. Loop met de pijltjestoetsen of WASD, of klik of tik waar je heen wilt."></canvas>
 
-<div class="hud" id="place"><div id="place-name">My AI Village</div><div id="place-job">Town square</div></div>
+<div class="hud" id="place"><div id="place-name">Mijn AI-dorp</div><div id="place-job">Dorpsplein</div></div>
 <div class="hud" id="controls">
-  <button id="zoom-out" aria-label="Zoom out">−</button>
-  <button id="zoom-in" aria-label="Zoom in">+</button>
-  <button id="sound" aria-pressed="true">Sound on</button>
-  <button id="todo-btn" aria-pressed="false" aria-controls="todo" title="Your to-do list: Kevin passes each task to the right director">To-do <span id="todo-count" hidden></span></button>
-  <button id="kevin-btn" title="Talk to Kevin (press M twice)">Kevin</button>
-  <button id="log-btn" title="Kevin's line and village talk (C)">Log</button>
-  <button id="meeting" aria-pressed="false" title="Everyone to the Council Hall">Call meeting</button>
-  <button id="edit" aria-pressed="false" title="Paint where he can walk (key E)">Edit map</button>
+  <button id="todo-btn" aria-pressed="false" aria-controls="todo" title="Je takenlijst: Kevin geeft elke taak aan de juiste directeur">Taken <span id="todo-count" hidden></span></button>
+  <button id="kevin-btn" title="Praat met Kevin (twee keer M)">Kevin</button>
+  <button id="more-btn" aria-expanded="false" aria-controls="controls" title="Meer knoppen">☰ Meer</button>
+  <button id="zoom-out" class="extra" aria-label="Uitzoomen">−</button>
+  <button id="zoom-in" class="extra" aria-label="Inzoomen">+</button>
+  <button id="sound" class="extra" aria-pressed="true">Geluid aan</button>
+  <button id="log-btn" class="extra" title="De lijn van Kevin en dorpspraat (C)">Logboek</button>
+  <button id="meeting" class="extra" aria-pressed="false" title="Iedereen naar het Raadhuis">Vergadering</button>
+  <button id="edit" class="extra" aria-pressed="false" title="Schilder waar hij kan lopen (toets E)">Kaart bewerken</button>
 </div>
-<div class="hud" id="help"><span>Walk: arrow keys / WASD or click · Zoom: mouse wheel · Walk into a door to enter · T: talk to whoever is near · M M: Kevin · M: sound · C: village talk · Call meeting: everyone to the Council Hall · E: edit map</span></div>
+<div class="hud" id="help"><span>Lopen: pijltjes / WASD of klikken · Zoomen: muiswiel · Loop een deur in om naar binnen te gaan · T: praat met wie naast je staat · M M: Kevin · M: geluid · C: dorpspraat · Vergadering: iedereen naar het Raadhuis · E: kaart bewerken</span></div>
 <div id="toast" role="status"></div>
 <div class="hud" id="call" role="status" aria-live="polite" hidden></div>
 <div id="hover-card" role="tooltip" hidden></div>
-<div class="panel" id="todo" role="dialog" aria-label="To-do list" hidden>
-  <div class="panel-head"><h2>To-do</h2><button id="todo-close" class="small" aria-label="Close the to-do list" style="margin:0">Close</button></div>
-  <div id="todo-form"><input id="todo-input" type="text" placeholder="What needs doing?" aria-label="New task" autocomplete="off"><button id="todo-add" class="primary">Add</button></div>
-  <div id="todo-note">Loading…</div>
+<div class="panel" id="todo" role="dialog" aria-label="Takenlijst" hidden>
+  <div class="panel-head"><h2>Taken</h2><button id="todo-close" class="small" aria-label="Takenlijst sluiten" style="margin:0">Sluiten</button></div>
+  <div id="todo-form"><input id="todo-input" type="text" placeholder="Wat moet er gebeuren?" aria-label="Nieuwe taak" autocomplete="off" enterkeyhint="send"><button id="todo-add" class="primary">Toevoegen</button></div>
+  <div id="todo-note">Laden…</div>
   <ul id="todo-list"></ul>
 </div>
 <div id="todo-pop" role="tooltip" hidden></div>
-<div class="panel" id="dock" role="dialog" aria-label="Conversations" hidden>
+<div class="panel" id="dock" role="dialog" aria-label="Gesprekken" hidden>
   <div class="panel-head">
     <div class="tabs" role="tablist">
-      <button id="tab-meeting" role="tab" aria-selected="false" hidden>Meeting</button>
-      <button id="tab-line" role="tab" aria-selected="true">Kevin's line</button>
-      <button id="tab-village" role="tab" aria-selected="false">Village talk</button>
+      <button id="tab-meeting" role="tab" aria-selected="false" hidden>Vergadering</button>
+      <button id="tab-line" role="tab" aria-selected="true">Lijn van Kevin</button>
+      <button id="tab-village" role="tab" aria-selected="false">Dorpspraat</button>
     </div>
-    <button id="dock-close" class="small" style="margin:0">Close</button>
+    <button id="dock-close" class="small" style="margin:0">Sluiten</button>
   </div>
   <div class="pane" id="pane-meeting" hidden>
-    <div class="pane-bar"><label for="face-size">Faces &amp; names</label><input id="face-size" type="range" min="1" max="3" step="0.25" value="1.5"><span>drag the corner to resize</span></div>
+    <div class="pane-bar"><label for="face-size">Gezichten &amp; namen</label><input id="face-size" type="range" min="1" max="3" step="0.25" value="1.5"><span class="desktop-only">sleep de hoek om groter te maken</span></div>
     <div id="meet-roster"></div>
     <div class="scroll" id="meet-log" aria-live="polite"></div>
-    <div class="dock-form"><input id="meet-input" type="text" placeholder="Say something to everyone…" aria-label="Say something in the meeting" autocomplete="off"><button id="meet-send" class="primary">Send</button></div>
+    <div class="dock-form"><input id="meet-input" type="text" placeholder="Zeg iets tegen iedereen…" aria-label="Zeg iets in de vergadering" autocomplete="off" enterkeyhint="send"><button id="meet-send" class="primary">Stuur</button></div>
   </div>
   <div class="pane" id="pane-line" hidden><div class="scroll" id="line-log" aria-live="polite"></div></div>
   <div class="pane" id="pane-village" hidden>
-    <div class="pane-bar"><button id="village-toggle" class="small" aria-pressed="false" style="margin:0">Village talk: off</button><span>Real conversations only · smallest Claude model on your plan</span></div>
+    <div class="pane-bar"><button id="village-toggle" class="small" aria-pressed="false" style="margin:0">Dorpspraat: uit</button><span>Alleen echte gesprekken · kleinste Claude-model op je abonnement</span></div>
     <div class="scroll" id="village-log" aria-live="polite"></div>
   </div>
 </div>
-<div class="panel" id="chat" role="dialog" aria-label="Conversation" hidden>
-  <div class="panel-head"><img id="chat-face" alt=""><div id="chat-who"><div id="chat-name"></div><div id="chat-role"></div></div><button id="chat-close" class="small" style="margin:0">Close</button></div>
+<div class="panel" id="chat" role="dialog" aria-label="Gesprek" hidden>
+  <div class="panel-head"><img id="chat-face" alt=""><div id="chat-who"><div id="chat-name"></div><div id="chat-role"></div></div><button id="chat-close" class="small" style="margin:0">Sluiten</button></div>
   <div id="chat-log" aria-live="polite"></div>
-  <div id="chat-form"><input id="chat-input" type="text" placeholder="Say something…" aria-label="Your message" autocomplete="off"><button id="chat-send" class="primary">Send</button></div>
+  <div id="chat-form"><input id="chat-input" type="text" placeholder="Zeg iets…" aria-label="Je bericht" autocomplete="off" enterkeyhint="send"><button id="chat-send" class="primary">Stuur</button></div>
 </div>
 
 <div class="hud" id="editor" hidden>
   <div class="row" id="tools"></div>
   <div class="row">
-    <label>Brush <input id="brush" type="range" min="1" max="16" value="3"></label>
-    <button id="undo" title="Ctrl/Cmd + Z">Undo</button>
-    <button id="reset-place" title="Back to the first version of this place">Reset place</button>
-    <button id="save" class="primary">Save</button>
-    <button id="done">Done</button>
+    <label>Penseel <input id="brush" type="range" min="1" max="16" value="3"></label>
+    <button id="undo" title="Ctrl/Cmd + Z">Ongedaan maken</button>
+    <button id="reset-place" title="Terug naar de eerste versie van deze plek">Plek herstellen</button>
+    <button id="save" class="primary">Opslaan</button>
+    <button id="done">Klaar</button>
   </div>
-  <div class="hint">Drag to paint · Shift-drag or right-drag to look around · keys 1–5 tools, [ ] brush size · walk to try it</div>
+  <div class="hint">Sleep om te schilderen · Shift-slepen of rechts-slepen om rond te kijken · toetsen 1–5 gereedschap, [ ] penseelgrootte · loop rond om te proberen</div>
   <div class="hint" id="editor-status" role="status"></div>
   <details id="names-panel">
-    <summary>Names</summary>
+    <summary>Namen</summary>
     <div id="names"></div>
     <div class="hint" id="names-status" role="status"></div>
   </details>
@@ -257,9 +289,9 @@
 
 <div id="intro">
   <div class="card">
-    <h1>My AI Village</h1>
-    <p>Always daytime. Everyone is up and out.</p>
-    <button id="enter" disabled>Loading…</button>
+    <h1>Mijn AI-dorp</h1>
+    <p>Altijd dag. Iedereen is op en buiten.</p>
+    <button id="enter" disabled>Laden…</button>
   </div>
 </div>
 

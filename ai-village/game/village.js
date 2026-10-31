@@ -38,6 +38,7 @@ const state = {
   target: null,
   camera: { x: START[0], y: START[1], zoom: 1 },
   zoomFactor: { map: 1.8, room: 1 },
+  zoomDefault: { map: 1.8 },
   doorArmed: true,
   fade: 0,
   time: 0,
@@ -49,7 +50,11 @@ function sceneSize() {
 }
 function fitZoom() {
   const [w, h] = sceneSize();
-  return Math.min(canvas.clientWidth / w, canvas.clientHeight / h);
+  const contain = Math.min(canvas.clientWidth / w, canvas.clientHeight / h);
+  const cover = Math.max(canvas.clientWidth / w, canvas.clientHeight / h);
+  // On a tall phone screen "contain" leaves the town a thin strip: then start closer, so it fills the screen
+  // (with the default zoom it exactly covers it) and the camera follows Harm. On a wide screen nothing changes.
+  return Math.max(contain, cover / (state.scene === 'map' ? state.zoomDefault.map : 1.6));
 }
 function personHeight() {
   return state.scene === 'map' ? 92 : ROOM_H / 6;    // town: twice the first size; indoors: one sixth of the room, to match the furniture (Harm)
@@ -75,7 +80,7 @@ function canStand(x, y) {
 
 function enterBuilding(b) {
   if (!b.room) {
-    toast(`${b.name} — ${b.job}. It's empty for now.`);
+    toast(`${b.name} — ${b.job}. Hier woont nog niemand.`);
     state.doorArmed = false;
     return;
   }
@@ -108,7 +113,7 @@ function leaveBuilding() {
     state.camera.x = state.player.x;
     state.camera.y = state.player.y;
     audio.setIndoors(false);
-    setPlace('My AI Village', 'Town square');
+    setPlace('Mijn AI-dorp', 'Dorpsplein');
   });
 }
 
@@ -176,7 +181,7 @@ function update(dt) {
   if (state.cameraFree) { updateParticles(dt); return; }
   const viewW = canvas.clientWidth / cam.zoom, viewH = canvas.clientHeight / cam.zoom;
   let cx = state.scene === 'map' ? p.x : cam.x, cy = state.scene === 'map' ? p.y : cam.y;
-  if (state.scene !== 'map' && cam.zoom > fitZoom() * 1.05) { cx = p.x; cy = p.y; }
+  if (state.scene !== 'map' && (cam.zoom > fitZoom() * 1.05 || viewW < w * 0.98 || viewH < h * 0.98)) { cx = p.x; cy = p.y; }
   cx = viewW >= w ? w / 2 : Math.min(Math.max(cx, viewW / 2), w - viewW / 2);
   cy = viewH >= h ? h / 2 : Math.min(Math.max(cy, viewH / 2), h - viewH / 2);
   cam.x += (cx - cam.x) * Math.min(1, dt * 6);
@@ -707,7 +712,35 @@ canvas.addEventListener('wheel', (e) => {
   e.preventDefault();
   zoomBy(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.offsetX, e.offsetY);
 }, { passive: false });
+// Two fingers on a phone: pinch to zoom (and don't walk anywhere). Registered first, so it wins.
+const touches = new Map();
+let pinch = null;
 canvas.addEventListener('pointerdown', (e) => {
+  if (e.pointerType !== 'touch') return;
+  touches.set(e.pointerId, [e.offsetX, e.offsetY]);
+  if (touches.size >= 2) {
+    const [a, b] = [...touches.values()];
+    pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) };
+    state.target = null;
+    e.stopImmediatePropagation();
+  }
+}, true);
+canvas.addEventListener('pointermove', (e) => {
+  if (!touches.has(e.pointerId)) return;
+  touches.set(e.pointerId, [e.offsetX, e.offsetY]);
+  if (!pinch || touches.size < 2) return;
+  const [a, b] = [...touches.values()];
+  const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+  if (pinch.d > 10 && d > 10) zoomBy(d / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+  pinch.d = d;
+  state.target = null;
+});
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) canvas.addEventListener(ev, (e) => {
+  touches.delete(e.pointerId);
+  if (touches.size < 2) pinch = null;
+});
+canvas.addEventListener('pointerdown', (e) => {
+  if (pinch) return;
   state.target = screenToWorld(e.offsetX, e.offsetY);
 });
 window.addEventListener('resize', () => {
@@ -718,7 +751,7 @@ const soundBtn = document.getElementById('sound');
 function toggleSound() {
   audio.setMuted(!audio.muted);
   soundBtn.setAttribute('aria-pressed', String(!audio.muted));
-  soundBtn.textContent = audio.muted ? 'Sound off' : 'Sound on';
+  soundBtn.textContent = audio.muted ? 'Geluid uit' : 'Geluid aan';
 }
 soundBtn.addEventListener('click', toggleSound);
 document.getElementById('zoom-in').addEventListener('click', () => zoomBy(1.25));
@@ -734,7 +767,7 @@ document.getElementById('enter').addEventListener('click', () => {
 
 loading.then(() => {
   document.getElementById('enter').disabled = false;
-  document.getElementById('enter').textContent = 'Enter the village';
+  document.getElementById('enter').textContent = 'Het dorp in';
   state.camera.zoom = fitZoom() * state.zoomFactor.map;
   let last = performance.now();
   function frame(now) {

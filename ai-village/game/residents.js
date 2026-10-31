@@ -13,43 +13,43 @@
 
 const DIRECTORS = [
   { id: 'margot-finch', name: 'Margot Finch', house: 'post-house',
-    bio: 'Runs the Post House: keeps your inbox and email sorted and answered.',
+    bio: 'Leidt het Posthuis: houdt je inbox en e-mail op orde en beantwoord.',
     seat: { seat: [938, 520], dir: 'left', desk: [660, 404, 191, 241] },
-    worker: { id: 'juno-park', name: 'Juno Park', bio: "Margot's intern: helps sort the inbox and draft replies.", spot: [400, 470], dir: 'up' } },
+    worker: { id: 'juno-park', name: 'Juno Park', bio: 'Stagiair van Margot: helpt de inbox sorteren en antwoorden opstellen.', spot: [400, 470], dir: 'up' } },
   { id: 'theo-ashworth', name: 'Theo Ashworth', house: 'counting-house',
-    bio: 'Runs the Counting House: looks after your money, bills and budgets.',
+    bio: 'Leidt het Rekenhuis: zorgt voor je geld, rekeningen en budgetten.',
     seat: { seat: [842, 385], dir: 'down', desk: [807, 413, 180, 213] },
-    worker: { id: 'felix-moss', name: 'Felix Moss', bio: "Theo's intern: keeps the receipts and numbers tidy.", spot: [430, 650], dir: 'up' } },
+    worker: { id: 'felix-moss', name: 'Felix Moss', bio: 'Stagiair van Theo: houdt bonnetjes en cijfers netjes bij.', spot: [430, 650], dir: 'up' } },
   { id: 'imani-okafor', name: 'Imani Okafor', house: 'scholars-tower',
-    bio: "Runs the Scholar's Tower: researches anything you want to know.",
+    bio: 'Leidt de Geleerdentoren: zoekt alles uit wat je wilt weten.',
     seat: { seat: [990, 420], dir: 'down', desk: [785, 403, 311, 219] },
-    worker: { id: 'iris-chen', name: 'Iris Chen', bio: "Imani's intern: finds sources and checks facts.", spot: [600, 420], dir: 'up' } },
+    worker: { id: 'iris-chen', name: 'Iris Chen', bio: 'Stagiair van Imani: zoekt bronnen en controleert feiten.', spot: [600, 420], dir: 'up' } },
   { id: 'rafael-moreno', name: 'Rafael Moreno', house: 'artisans-workshop',
-    bio: "Runs the Artisan's Workshop: designs and builds your products.",
+    bio: 'Leidt de Werkplaats: ontwerpt en bouwt je producten.',
     seat: { seat: [676, 575], dir: 'left', desk: [463, 577, 235, 185] },
-    worker: { id: 'otto-brandt', name: 'Otto Brandt', bio: "Rafael's intern: builds and tests product pieces.", spot: [560, 470], dir: 'left' } },
+    worker: { id: 'otto-brandt', name: 'Otto Brandt', bio: 'Stagiair van Rafael: bouwt en test onderdelen.', spot: [560, 470], dir: 'left' } },
   { id: 'rosie-bell', name: 'Rosie Bell', house: 'family-cottage',
-    bio: 'Runs the Family Cottage: keeps family plans, birthdays and get-togethers on track, and looks after the kookboek (recipes, week menu, shopping list).',
+    bio: 'Leidt het Familiehuisje: houdt familieplannen, verjaardagen en etentjes bij, en zorgt voor het kookboek (recepten, weekmenu, boodschappen).',
     seat: { seat: [861, 330], dir: 'up', desk: null },
-    worker: { id: 'daisy-quinn', name: 'Daisy Quinn', bio: "Rosie's intern: keeps the family calendar, the week menu and the shopping list up to date.", spot: [760, 520], dir: 'right' } },
+    worker: { id: 'daisy-quinn', name: 'Daisy Quinn', bio: 'Stagiair van Rosie: houdt de familieagenda, het weekmenu en de boodschappenlijst bij.', spot: [760, 520], dir: 'right' } },
   { id: 'jasper-vale', name: 'Jasper Vale', house: 'bards-house',
-    bio: "Runs the Bard's House: looks after your music, including darkglass (your bass presets and setlists).",
+    bio: 'Leidt het Bardenhuis: zorgt voor je muziek, ook darkglass (je baspresets en setlists).',
     seat: { seat: [333, 530], dir: 'left', desk: [109, 451, 185, 224] },
-    worker: { id: 'remy-dubois', name: 'Remy Dubois', bio: "Jasper's intern: keeps playlists, music notes and the darkglass setlists in order.", spot: [600, 520], dir: 'up' } },
+    worker: { id: 'remy-dubois', name: 'Remy Dubois', bio: 'Stagiair van Jasper: houdt playlists, muzieknotities en de darkglass-setlists op orde.', spot: [600, 520], dir: 'up' } },
   { id: 'nova-lindqvist', name: 'Nova Lindqvist', house: 'criers-press',
-    bio: "Runs the Crier's Press: follows the AI news and tells you what matters.",
+    bio: 'Leidt de Drukkerij: volgt het AI-nieuws en vertelt je wat ertoe doet.',
     seat: { seat: [995, 395], dir: 'down', desk: [785, 403, 311, 219] },
-    worker: { id: 'kai-tanaka', name: 'Kai Tanaka', bio: "Nova's intern: gathers the day's AI headlines.", spot: [470, 520], dir: 'up' } },
+    worker: { id: 'kai-tanaka', name: 'Kai Tanaka', bio: 'Stagiair van Nova: verzamelt de AI-koppen van de dag.', spot: [470, 520], dir: 'up' } },
   { id: 'leo-castellano', name: 'Leo Castellano', house: 'heralds-lodge',
-    bio: "Runs the Herald's Lodge: reaches out to people on your behalf.",
+    bio: 'Leidt het Herautenhuis: neemt namens jou contact op met mensen.',
     seat: { seat: [706, 335], dir: 'down', desk: [605, 359, 218, 120] },
-    worker: { id: 'sol-rivera', name: 'Sol Rivera', bio: "Leo's intern: keeps the contact lists and follow-ups going.", spot: [520, 420], dir: 'up' } },
+    worker: { id: 'sol-rivera', name: 'Sol Rivera', bio: 'Stagiair van Leo: houdt contactlijsten en opvolging bij.', spot: [520, 420], dir: 'up' } },
   { id: 'greta-holm', name: 'Greta Holm', house: 'carriers-depot',
-    bio: "Runs the Carrier's Depot: plans your logistics, deliveries and travel.",
+    bio: 'Leidt het Vrachtdepot: plant je logistiek, leveringen en reizen.',
     seat: { seat: [1000, 650], dir: 'left', desk: [758, 502, 262, 218] },
-    worker: { id: 'hugo-lind', name: 'Hugo Lind', bio: "Greta's intern: tracks parcels, bookings and timetables.", spot: [460, 580], dir: 'up' } },
+    worker: { id: 'hugo-lind', name: 'Hugo Lind', bio: 'Stagiair van Greta: volgt pakketjes, boekingen en dienstregelingen.', spot: [460, 580], dir: 'up' } },
 ];
-const KEVIN_BIO = 'Chief of Staff: your right hand. Takes your orders and passes them on to the directors.';
+const KEVIN_BIO = 'Stafchef: je rechterhand. Neemt je opdrachten aan en geeft ze door aan de directeuren.';
 
 const residents = [];
 for (const d of DIRECTORS) {
@@ -66,10 +66,10 @@ for (const d of DIRECTORS) {
 }
 
 function roleLabel(r) {
-  return r.role === 'Director' ? `Director · ${r.building.name}` : `Worker · ${r.building.name}`;
+  return r.role === 'Director' ? `Directeur · ${r.building.job}` : `Stagiair · ${r.building.name}`;
 }
 function reportsTo(r) {
-  return r.role === 'Director' ? `${KEVIN.name} (Chief of Staff)` : `${r.boss.name} (Director)`;
+  return r.role === 'Director' ? `${KEVIN.name} (stafchef)` : `${r.boss.name} (directeur, ${r.boss.building.job.toLowerCase()})`;
 }
 function heightIn(where) {
   return where === 'map' ? 92 : ROOM_H / 6;
@@ -397,7 +397,7 @@ function saveChatLog() {
 }
 function pairKey(a, b) { return [a.id, b.id].sort().join('|'); }
 function workingOn(r) {
-  return r.task || 'no tasks yet';
+  return r.task || 'nog geen taken';
 }
 
 function tryChat(w) {
@@ -415,7 +415,7 @@ function tryChat(w) {
       a.moving = false;
       setDirFrom(a, b.x - a.x, b.y - a.y);
       const time = new Date().toTimeString().slice(0, 5);
-      a.notes.push(`${time} · Asked ${b.name} what they're working on: ${workingOn(b)}.`);
+      a.notes.push(`${time} · ${b.name} gevraagd waar die mee bezig is: ${workingOn(b)}.`);
     }
     saveChatLog();
     if (typeof villageMet === 'function') villageMet(w, o);   // a real conversation for the village talk log (C)
@@ -529,26 +529,41 @@ function drawChatBubble(r) {
   ctx.restore();
 }
 
-// A small name tag over anyone the CEO walks up to (not during meetings: there the hover card shows who's who).
+// A name tag over anyone Harm walks up to (not during meetings: there the meeting box shows who's who).
+// Under the name: what they're for, so Harm knows whom to ask about what (Harm, 2026-10-31).
+function tagSubtitle(r) {
+  if (r.role === 'Kevin') return 'Stafchef · opdrachten';
+  if (r.role === 'Director') return r.building.job;
+  return 'stagiair van ' + r.boss.name.split(' ')[0];
+}
 function drawNameTags() {
   if (state.meeting) return;
   const H = personHeight();
   const p = state.player;
   const people = [...residentsHere(), { ...state.kevin, name: KEVIN.name, role: 'Kevin' }];
+  const z = state.camera.zoom || 1;
+  const big = Math.max(H * 0.16, 13 / z), small = Math.max(H * 0.12, 10.5 / z);   // never smaller than readable on screen
   ctx.save();
-  ctx.font = `${Math.max(9, H * 0.16)}px Georgia, serif`;
   ctx.textAlign = 'center';
   const placed = [];
   for (const r of people) {
     if (Math.hypot(r.x - p.x, r.y - p.y) > H * 1.6) continue;
-    const label = r.name, w = ctx.measureText(label).width + H * 0.2;
-    let y = r.y - H * (r.seated ? 0.95 : 1.12);
-    while (placed.some((t) => Math.abs(t.x - r.x) < (t.w + w) / 2 && Math.abs(t.y - y) < H * 0.25)) y -= H * 0.26;  // stack, don't overlap
+    const sub = tagSubtitle(r);
+    ctx.font = `${big}px Georgia, serif`;
+    const w1 = ctx.measureText(r.name).width;
+    ctx.font = `${small}px Georgia, serif`;
+    const w = Math.max(w1, ctx.measureText(sub).width) + big * 1.2, h = big * 1.15 + small * 1.35;
+    let y = r.y - H * (r.seated ? 0.95 : 1.12) - small * 1.3;
+    while (placed.some((t) => Math.abs(t.x - r.x) < (t.w + w) / 2 && Math.abs(t.y - y) < h + 2)) y -= h + 3;  // stack, don't overlap
     placed.push({ x: r.x, y, w });
-    ctx.fillStyle = 'rgba(32,22,14,0.82)';
-    ctx.fillRect(r.x - w / 2, y - H * 0.17, w, H * 0.23);
+    ctx.fillStyle = 'rgba(32,22,14,0.84)';
+    ctx.fillRect(r.x - w / 2, y - big * 1.0, w, h);
+    ctx.font = `${big}px Georgia, serif`;
     ctx.fillStyle = r.role === 'Worker' ? '#ffd84a' : '#f2c14e';
-    ctx.fillText(label, r.x, y);
+    ctx.fillText(r.name, r.x, y);
+    ctx.font = `${small}px Georgia, serif`;
+    ctx.fillStyle = '#e8d7b6';
+    ctx.fillText(sub, r.x, y + small * 1.25);
   }
   ctx.restore();
 }
@@ -557,11 +572,11 @@ function drawNameTags() {
 
 const hoverCard = document.getElementById('hover-card');
 function statusLine(r) {
-  if (r.inMeeting) return r.seated ? 'In the meeting' : 'On the way to the meeting';
-  if (r.chatting) return `Chatting with ${r.chatting.with.name.split(' ')[0]}`;
-  if (r.seated) return 'Working at the desk';
-  if (r.mode === 'work') return r.atWork ? 'Working' : 'Going to work';
-  return r.role === 'Director' ? 'Taking a break in the yard' : 'Taking a walk around town';
+  if (r.inMeeting) return r.seated ? 'In de vergadering' : 'Op weg naar de vergadering';
+  if (r.chatting) return `In gesprek met ${r.chatting.with.name.split(' ')[0]}`;
+  if (r.seated) return 'Aan het werk aan het bureau';
+  if (r.mode === 'work') return r.atWork ? 'Aan het werk' : 'Op weg naar het werk';
+  return r.role === 'Director' ? 'Pauze in de tuin' : 'Wandelt door het dorp';
 }
 function personAt(wx, wy) {
   const H = personHeight();
@@ -584,13 +599,13 @@ canvas.addEventListener('pointermove', (e) => {
   hoverCard.innerHTML = '';
   const add = (cls, text) => { const el = document.createElement('div'); el.className = cls; el.textContent = text; hoverCard.appendChild(el); return el; };
   add('hc-name' + (r.role === 'Worker' ? ' worker' : ''), r.name);
-  add('hc-role', isKevin ? 'Chief of Staff · Council Hall' : roleLabel(r));
+  add('hc-role', isKevin ? 'Stafchef · Raadhuis' : roleLabel(r) + (r.role === 'Director' ? ' · ' + r.building.name : ''));
   add('hc-bio', isKevin ? KEVIN_BIO : r.bio);
-  add('hc-reports', 'Reports to: ' + (isKevin ? 'Harm (Chief Human Officer)' : reportsTo(r)));
+  add('hc-reports', 'Rapporteert aan: ' + (isKevin ? 'Harm (Chief Human Officer)' : reportsTo(r)));
   if (!isKevin) {
-    add('hc-status', 'Now: ' + statusLine(r));
+    add('hc-status', 'Nu: ' + statusLine(r));
     const real = residents.find((x) => x.id === r.id);
-    if (real && real.notes.length) add('hc-notes', `Notes today: ${real.notes.length} · last: ${real.notes[real.notes.length - 1]}`);
+    if (real && real.notes.length) add('hc-notes', `Notities vandaag: ${real.notes.length} · laatste: ${real.notes[real.notes.length - 1]}`);
   }
   hoverCard.hidden = false;
   const pad = 14, cw = hoverCard.offsetWidth, ch = hoverCard.offsetHeight;
@@ -616,7 +631,7 @@ function renderNameList() {
   for (const r of residents) {
     const row = document.createElement('label');
     row.className = 'name-row';
-    row.innerHTML = `<span class="role ${r.role === 'Worker' ? 'worker' : ''}">${r.role === 'Worker' ? 'Worker' : 'Director'} · ${r.building.name}</span>`;
+    row.innerHTML = `<span class="role ${r.role === 'Worker' ? 'worker' : ''}">${r.role === 'Worker' ? 'Stagiair · ' + r.building.name : 'Directeur · ' + r.building.job}</span>`;
     const input = document.createElement('input');
     input.value = r.name;
     input.maxLength = 40;
@@ -635,14 +650,14 @@ function renderNameList() {
 async function saveNames() {
   const db = await getDb();
   const status = document.getElementById('names-status');
-  if (!db) { status.textContent = 'Name changed for now. Saving only works on the claude.ai page.'; return; }
+  if (!db) { status.textContent = 'Naam voorlopig aangepast. Opslaan werkt alleen op de claude.ai-pagina.'; return; }
   const names = {};
   for (const r of residents) names[r.id] = r.name;
   try {
     await db.doc('settings/names').set({ names, savedAt: new Date().toISOString() });
-    status.textContent = 'Names saved ✓';
+    status.textContent = 'Namen opgeslagen ✓';
   } catch (err) {
-    status.textContent = 'Could not save the names just now.';
+    status.textContent = 'De namen konden nu niet worden opgeslagen.';
   }
 }
 

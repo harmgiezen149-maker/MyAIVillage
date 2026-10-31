@@ -46,7 +46,9 @@ function rosterText() {
   }).join('\n');
 }
 
-const ACCESS_TEXT = `What the team can do with Harm's accounts:
+const LANG_TEXT = 'LANGUAGE: Harm speaks Dutch. Write everything Harm reads in natural Dutch (nl-NL): replies, notes, summaries, steps, results and to-do lines. An email draft goes in the language of the person it is for.';
+const ACCESS_TEXT = `${LANG_TEXT}
+What the team can do with Harm's accounts:
 - Gmail: search and read mail, and write DRAFTS (they land in Harm's Drafts folder). Nobody sends, deletes or labels mail.
 - Google Calendar: read events freely. To add or change an event, PROPOSE it; it is saved only after Harm clicks Approve. Nobody deletes events.
 - Harm's own apps (only the director who looks after the app and their worker have these tools):
@@ -82,8 +84,8 @@ async function createTask(text, from = 'todo', opts = {}) {
     status: 'new', owner: opts.owner || null, worker: null, askedPerson: opts.askedPerson || null,
     log: [], drafts: [], approvals: [], results: [], whatWasDone: [], summary: '',
   };
-  logStep(t, 'harm', from === 'todo' ? `Harm added "${t.text}" to the to-do list.` : `Harm asked ${firstName(opts.askedPerson)}: "${t.words}"`);
-  if (opts.autoCreated) logStep(t, 'office', `${firstName(opts.askedPerson)} said they'd do it, so the task was created from Harm's words.`);
+  logStep(t, 'harm', from === 'todo' ? `Harm zette "${t.text}" op de takenlijst.` : `Harm vroeg ${firstName(opts.askedPerson)}: "${t.words}"`);
+  if (opts.autoCreated) logStep(t, 'office', `${firstName(opts.askedPerson)} zei het te doen, dus de taak is gemaakt van Harms woorden.`);
   await saveTask(t);
   runTask(t);
   return t;
@@ -93,7 +95,7 @@ async function createTask(text, from = 'todo', opts = {}) {
 
 async function runTask(t) {
   if (office.running.has(t.id)) return;
-  if (!office.sample) { t.status = 'paused'; t.pauseReason = 'Claude is not available on this page view.'; await saveTask(t); return; }
+  if (!office.sample) { t.status = 'paused'; t.pauseReason = 'Claude is niet beschikbaar in deze weergave.'; await saveTask(t); return; }
   office.running.add(t.id);
   try {
     if (!t.owner || t.status === 'new') await kevinRoutes(t);
@@ -102,7 +104,7 @@ async function runTask(t) {
   } catch (e) {
     t.status = 'paused';
     t.pauseReason = sampleErrorText(e);
-    logStep(t, 'office', 'Paused: ' + t.pauseReason);
+    logStep(t, 'office', 'Gepauzeerd: ' + t.pauseReason);
     await saveTask(t);
   } finally {
     office.running.delete(t.id);
@@ -113,18 +115,18 @@ async function runTask(t) {
 
 function sampleErrorText(e) {
   const code = e && e.code;
-  if (code === 'not_granted') return 'Using Claude was not allowed for this page. Allow it when claude.ai asks, then click Continue.';
-  if (code === 'rate_limited') return 'Your Claude usage limit or the page\'s call limit was reached. Try Continue again a bit later.';
-  if (code === 'cancelled') return 'Stopped.';
-  if (code === 'session_expired') return 'Please sign in to claude.ai again, then click Continue.';
-  if (code === 'tools_unavailable') return 'This view of the page can\'t let Claude use tools. Open the village on claude.ai.';
-  return (e && e.message ? e.message : 'Something went wrong') + (code ? ` (${code})` : '');
+  if (code === 'not_granted') return 'Claude mocht niet gebruikt worden op deze pagina. Sta het toe als claude.ai erom vraagt en klik dan op Verder.';
+  if (code === 'rate_limited') return 'Je Claude-gebruikslimiet of de limiet van de pagina is bereikt. Probeer Verder straks nog eens.';
+  if (code === 'cancelled') return 'Gestopt.';
+  if (code === 'session_expired') return 'Log opnieuw in op claude.ai en klik dan op Verder.';
+  if (code === 'tools_unavailable') return 'In deze weergave kan Claude geen gereedschap gebruiken. Open het dorp op claude.ai.';
+  return (e && e.message ? e.message : 'Er ging iets mis') + (code ? ` (${code})` : '');
 }
 
 // Kevin reads the task and calls the right director.
 async function kevinRoutes(t) {
   t.status = 'kevin';
-  logStep(t, 'kevin', 'Kevin is reading the task.');
+  logStep(t, 'kevin', 'Kevin leest de taak.');
   await saveTask(t);
   let owner = t.owner;
   let brief = '';
@@ -144,13 +146,13 @@ Reply with only JSON: {"director": "<director id from the list>", "why": "<one s
     owner = DIRECTORS.some((d) => d.id === out.director) ? out.director : DIRECTORS[0].id;
     brief = String(out.brief || '');
     t.kevinWhy = String(out.why || '');
-    logStep(t, 'kevin', `Kevin picked ${firstName(owner)}: ${t.kevinWhy}`);
-    const callLine = String(out.callLine || `Hi ${firstName(owner)}, Harm has something for you.`);
+    logStep(t, 'kevin', `Kevin koos ${firstName(owner)}: ${t.kevinWhy}`);
+    const callLine = String(out.callLine || `Hoi ${firstName(owner)}, Harm heeft iets voor je.`);
     startCall('kevin', owner, callLine);
-    logStep(t, 'kevin', `Kevin called ${firstName(owner)}: "${callLine}"`);
+    logStep(t, 'kevin', `Kevin belde ${firstName(owner)}: "${callLine}"`);
     lineAdd('kevin', owner, `${callLine} ${brief}`.trim(), 'call', t.id);
   } else {
-    brief = `Harm asked ${firstName(owner)} directly.`;
+    brief = `Harm vroeg het ${firstName(owner)} rechtstreeks.`;
   }
   t.owner = owner;
   t.brief = brief;
@@ -179,14 +181,14 @@ function releasePeople(t) {
 function teamTools(t, who) {
   const name = firstName(who);
   const call = async (server, tool, input, ctx) => {
-    if (!office.mcp) throw new Error(`${server} is not available on this page view.`);
+    if (!office.mcp) throw new Error(`${server} is niet beschikbaar in deze weergave.`);
     try {
       const res = await office.mcp.callTool(server, tool, input, { signal: ctx && ctx.signal });
       return res.payload !== undefined ? res.payload : res.content;
     } catch (e) {
-      const why = { needs_reauth: `reconnect ${server} in claude.ai Settings → Connectors`, server_not_connected: `${server} isn't connected in claude.ai Settings → Connectors`,
-        not_in_manifest: `Harm hasn't allowed ${server} for this page`, approval_required: `Harm needs to approve ${server} for this page` }[e.code];
-      throw new Error(why || `${server} said: ${e.message || e.code}`);
+      const why = { needs_reauth: `koppel ${server} opnieuw in claude.ai → Instellingen → Connectors`, server_not_connected: `${server} is niet gekoppeld in claude.ai → Instellingen → Connectors`,
+        not_in_manifest: `Harm heeft ${server} niet toegestaan voor deze pagina`, approval_required: `Harm moet ${server} goedkeuren voor deze pagina` }[e.code];
+      throw new Error(why || `${server} zei: ${e.message || e.code}`);
     }
   };
   return [
@@ -196,13 +198,13 @@ function teamTools(t, who) {
     { name: 'gmail_search', description: "Search Harm's Gmail with Gmail query syntax (e.g. 'is:unread in:inbox newer_than:2d', 'from:anna subject:invoice'). Returns threads with id, subject, sender, date and a snippet.",
       inputSchema: { type: 'object', properties: { query: { type: 'string' }, max: { type: 'number' } }, required: ['query'] },
       execute: async ({ query, max }, ctx) => {
-        logStep(t, who, `${name} searched Gmail for "${query}".`, { tool: 'gmail_search' });
+        logStep(t, who, `${name} zocht in Gmail naar "${query}".`, { tool: 'gmail_search' });
         return compact(await call(GMAIL, 'search_threads', { query: String(query), pageSize: Math.min(20, Number(max) || 10), view: 'THREAD_VIEW_SUMMARY' }, ctx), 12000);
       } },
     { name: 'gmail_read_thread', description: 'Read one Gmail thread in full (plain text). Use the thread id from gmail_search.',
       inputSchema: { type: 'object', properties: { threadId: { type: 'string' } }, required: ['threadId'] },
       execute: async ({ threadId }, ctx) => {
-        logStep(t, who, `${name} read an email thread.`, { tool: 'gmail_read_thread' });
+        logStep(t, who, `${name} las een e-mailgesprek.`, { tool: 'gmail_read_thread' });
         return compact(await call(GMAIL, 'get_thread', { threadId: String(threadId), messageFormat: 'PLAIN_TEXT' }, ctx), 16000);
       } },
     { name: 'gmail_list_drafts', description: "List Harm's existing Gmail drafts (optionally filtered with a Gmail query).",
@@ -217,16 +219,16 @@ function teamTools(t, who) {
         if (input.subject) args.subject = String(input.subject);
         if (input.replyToMessageId) args.replyToMessageId = String(input.replyToMessageId);
         const out = await call(GMAIL, 'create_draft', args, ctx);
-        const d = { at: nowStamp(), by: who, to: args.to || [], subject: args.subject || '(reply)', body: args.body.slice(0, 3000), url: out && (out.viewUrl || (out.draft && out.draft.viewUrl)) || '', id: out && (out.id || (out.draft && out.draft.id)) || '' };
+        const d = { at: nowStamp(), by: who, to: args.to || [], subject: args.subject || '(antwoord)', body: args.body.slice(0, 3000), url: out && (out.viewUrl || (out.draft && out.draft.viewUrl)) || '', id: out && (out.id || (out.draft && out.draft.id)) || '' };
         t.drafts.push(d);
-        logStep(t, who, `${name} wrote a draft: "${d.subject}"${d.to.length ? ' to ' + d.to.join(', ') : ''}.`, { tool: 'gmail_create_draft', link: d.url });
+        logStep(t, who, `${name} schreef een concept: "${d.subject}"${d.to.length ? ' aan ' + d.to.join(', ') : ''}.`, { tool: 'gmail_create_draft', link: d.url });
         await saveTask(t);
         return compact(out, 2000);
       } },
     { name: 'calendar_list_events', description: "List events on Harm's calendar between two local times (ISO 8601 without offset, e.g. 2026-11-02T00:00:00). Optional text filter.",
       inputSchema: { type: 'object', properties: { startTime: { type: 'string' }, endTime: { type: 'string' }, text: { type: 'string' } } },
       execute: async ({ startTime, endTime, text }, ctx) => {
-        logStep(t, who, `${name} looked at the calendar${startTime ? ' from ' + String(startTime).slice(0, 10) : ''}${endTime ? ' to ' + String(endTime).slice(0, 10) : ''}.`, { tool: 'calendar_list_events' });
+        logStep(t, who, `${name} keek in de agenda${startTime ? ' van ' + String(startTime).slice(0, 10) : ''}${endTime ? ' tot ' + String(endTime).slice(0, 10) : ''}.`, { tool: 'calendar_list_events' });
         const args = { orderBy: 'startTime', pageSize: 40 };
         if (startTime) args.startTime = String(startTime);
         if (endTime) args.endTime = String(endTime);
@@ -236,7 +238,7 @@ function teamTools(t, who) {
     { name: 'calendar_search', description: "Search Harm's calendar for events by topic or words.",
       inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
       execute: async ({ query }, ctx) => {
-        logStep(t, who, `${name} searched the calendar for "${query}".`, { tool: 'calendar_search' });
+        logStep(t, who, `${name} zocht in de agenda naar "${query}".`, { tool: 'calendar_search' });
         return compact(await call(CAL, 'search_events', { query: String(query), pageSize: 20 }, ctx), 12000);
       } },
     { name: 'calendar_propose_event', description: "Propose a NEW calendar event. It is NOT saved yet: Harm sees it and approves or declines. Times are local ISO 8601 without offset.",
@@ -247,7 +249,7 @@ function teamTools(t, who) {
         if (input.location) payload.location = String(input.location);
         if (input.allDay) payload.allDay = true;
         t.approvals.push({ id: newId(), kind: 'create_event', by: who, payload, status: 'pending', at: nowStamp() });
-        logStep(t, who, `${name} proposed a calendar event: "${payload.summary}", ${payload.startTime.replace('T', ' ').slice(0, 16)}. Waiting for Harm's OK.`);
+        logStep(t, who, `${name} stelde een afspraak voor: "${payload.summary}", ${payload.startTime.replace('T', ' ').slice(0, 16)}. Wacht op Harms OK.`);
         await saveTask(t);
         return 'Proposed. It will be added only after Harm approves it.';
       } },
@@ -257,7 +259,7 @@ function teamTools(t, who) {
         const payload = { eventId: String(input.eventId) };
         for (const k of ['summary', 'startTime', 'endTime', 'description', 'location']) if (input[k]) payload[k] = String(input[k]);
         t.approvals.push({ id: newId(), kind: 'update_event', by: who, payload, what: String(input.what || ''), status: 'pending', at: nowStamp() });
-        logStep(t, who, `${name} proposed a calendar change: ${input.what}. Waiting for Harm's OK.`);
+        logStep(t, who, `${name} stelde een agendawijziging voor: ${input.what}. Wacht op Harms OK.`);
         await saveTask(t);
         return 'Proposed. It will be changed only after Harm approves it.';
       } },
@@ -308,19 +310,19 @@ function appTools(t, who, call) {
     name: `${app.key}_${tool}`, description: `${app.label} app: ${description}`,
     inputSchema: { type: 'object', properties: props, ...(required ? { required } : {}) },
     execute: async (input, ctx) => {
-      logStep(t, who, `${name} looked in the ${app.label} app (${tool.replace(/_/g, ' ')}).`, { tool: `${app.key}_${tool}` });
+      logStep(t, who, `${name} keek in de ${app.label}-app (${tool.replace(/_/g, ' ')}).`, { tool: `${app.key}_${tool}` });
       return compact(await call(app.server, tool, input, ctx), 14000);
     } }));
   for (const [tool, description, props, required] of app.writes) {
     tools.push({ name: `${app.key}_propose_${tool}`,
-      description: `${app.label} app: PROPOSE this change; it is NOT done yet. Harm sees it and approves or declines. ${description} Also give "what": one plain line for Harm saying what will change.`,
+      description: `${app.label} app: PROPOSE this change; it is NOT done yet. Harm sees it and approves or declines. ${description} Also give "what": one plain line in Dutch for Harm saying what will change.`,
       inputSchema: { type: 'object', properties: { ...props, what: { type: 'string' } }, required: [...(required || []), 'what'] },
       execute: async (input) => {
         const payload = { ...input };
         const what = String(payload.what || tool.replace(/_/g, ' '));
         delete payload.what;
         t.approvals.push({ id: newId(), kind: 'app', server: app.server, app: app.label, tool, by: who, payload, what, status: 'pending', at: nowStamp() });
-        logStep(t, who, `${name} proposed a change in the ${app.label} app: ${what}. Waiting for Harm's OK.`);
+        logStep(t, who, `${name} stelde een wijziging voor in de ${app.label}-app: ${what}. Wacht op Harms OK.`);
         await saveTask(t);
         return 'Proposed. It will be done only after Harm approves it.';
       } });
@@ -342,9 +344,9 @@ async function directorWorks(t) {
   const w = d.workerRef;
   t.status = 'working';
   busyWith(d, t);
-  logStep(t, d.id, `${firstName(d.id)} is on it.`);
-  if (t.askedPerson === d.id || t.askedPerson === w.id) lineAdd(d.id, 'kevin', `Kevin, Harm asked ${t.askedPerson === d.id ? 'me' : firstName(w.id)} directly: "${t.text}". I'm on it.`, 'say', t.id);
-  else lineAdd(d.id, 'kevin', 'On it, Kevin.', 'say', t.id);
+  logStep(t, d.id, `${firstName(d.id)} gaat ermee aan de slag.`);
+  if (t.askedPerson === d.id || t.askedPerson === w.id) lineAdd(d.id, 'kevin', `Kevin, Harm vroeg ${t.askedPerson === d.id ? 'mij' : firstName(w.id)} rechtstreeks: "${t.text}". Ik pak het op.`, 'say', t.id);
+  else lineAdd(d.id, 'kevin', 'Komt goed, Kevin.', 'say', t.id);
   await saveTask(t);
 
   const tools = teamTools(t, d.id).concat([
@@ -354,7 +356,7 @@ async function directorWorks(t) {
     { name: 'ask_advisor', description: 'Ask your advisor (a more senior model) for a second opinion on something hard: a tricky judgement, wording, or a plan. Returns their advice.',
       inputSchema: { type: 'object', properties: { question: { type: 'string' } }, required: ['question'] },
       execute: async ({ question }) => {
-        logStep(t, d.id, `${firstName(d.id)} asked the advisor for a second opinion.`);
+        logStep(t, d.id, `${firstName(d.id)} vroeg de adviseur om een tweede mening.`);
         const { text } = await office.sample(`You are a senior advisor to ${d.name}, a director in Harm's AI village. Give short, practical advice.\n\nThe task: ${t.text}\n\nQuestion: ${question}`, { model: MODELS.advisor, modelTier: 'complex', cache: false });
         return text.slice(0, 4000);
       } },
@@ -377,8 +379,8 @@ ${RESULT_SHAPE}`;
   t.results = Array.isArray(out.results) ? out.results.map((r) => ({ title: String(r.title || ''), body: String(r.body || '') })) : [];
   t.noteForHarm = String(out.noteForHarm || '');
   t.outcome = out.status === 'could_not' ? 'could_not' : 'done';
-  logStep(t, d.id, `${firstName(d.id)} finished: ${t.summary}`);
-  lineAdd(d.id, 'kevin', String(out.reportToKevin || t.summary || 'Done.'), 'say', t.id);
+  logStep(t, d.id, `${firstName(d.id)} is klaar: ${t.summary}`);
+  lineAdd(d.id, 'kevin', String(out.reportToKevin || t.summary || 'Klaar.'), 'say', t.id);
   t.status = t.approvals.some((a) => a.status === 'pending') ? 'needs_harm' : 'finishing';
   await saveTask(t);
 }
@@ -386,8 +388,8 @@ ${RESULT_SHAPE}`;
 async function workerDoes(t, d, w, instructions, ctx) {
   t.worker = w.id;
   busyWith(w, t);
-  startCall(d.id, w.id, `${firstName(w.id)}, can you take this?`);
-  logStep(t, d.id, `${firstName(d.id)} handed it to ${firstName(w.id)}: ${instructions}`);
+  startCall(d.id, w.id, `${firstName(w.id)}, kun jij dit oppakken?`);
+  logStep(t, d.id, `${firstName(d.id)} gaf het aan ${firstName(w.id)}: ${instructions}`);
   lineAdd(d.id, w.id, instructions, 'call', t.id);
   await saveTask(t);
   const prompt = `You are ${w.name}, worker at the ${d.building.name} in Harm's AI village (${w.bio}). Your director ${d.name} gave you this job:
@@ -399,11 +401,11 @@ ${ACCESS_TEXT}
 
 Do it with the tools. Use note for your main steps. When done, reply with a clear report for ${firstName(d.id)}: what you did, what you found or made (include draft subjects, event details, key facts), and anything you couldn't do.`;
   const { text } = await office.sample(prompt, { model: MODELS.worker, modelTier: 'default', tools: teamTools(t, w.id), signal: ctx && ctx.signal });
-  logStep(t, w.id, `${firstName(w.id)} reported back to ${firstName(d.id)}.`);
+  logStep(t, w.id, `${firstName(w.id)} bracht verslag uit aan ${firstName(d.id)}.`);
   lineAdd(w.id, d.id, text.slice(0, 600), 'say', t.id);
   t.workerReports = (t.workerReports || []).concat([{ at: nowStamp(), text: text.slice(0, 6000) }]);
   await saveTask(t);
-  logStep(t, d.id, `${firstName(d.id)} is checking ${firstName(w.id)}'s work.`);
+  logStep(t, d.id, `${firstName(d.id)} controleert het werk van ${firstName(w.id)}.`);
   return text.slice(0, 12000);
 }
 
@@ -413,11 +415,11 @@ async function finishIfReady(t) {
   if (t.status !== 'finishing' && t.status !== 'working') return;
   t.status = 'done';
   t.doneAt = nowStamp();
-  logStep(t, 'kevin', `Kevin crossed it off the list.`);
-  lineAdd('kevin', 'harm', `Done: ${t.text}. It's crossed off your list.`, 'say', t.id);
+  logStep(t, 'kevin', `Kevin streepte het af.`);
+  lineAdd('kevin', 'harm', `Klaar: ${t.text}. Het is afgestreept op je lijst.`, 'say', t.id);
   await saveTask(t);
   releasePeople(t);
-  toast(`Done: ${t.text}`);
+  toast(`Klaar: ${t.text}`);
   offerReport(t);
 }
 
@@ -435,24 +437,24 @@ async function decide(taskId, apId, approve) {
         const res = await office.mcp.callTool(ap.server, ap.tool, ap.payload);
         ap.status = 'done';
         ap.result = compact(res.payload !== undefined ? res.payload : res.content, 600);
-        logStep(t, 'harm', `Harm approved: ${ap.what} (${ap.app} app). Done.`);
+        logStep(t, 'harm', `Harm keurde goed: ${ap.what} (${ap.app}-app). Gedaan.`);
       } else {
         const tool = ap.kind === 'create_event' ? 'create_event' : 'update_event';
         const res = await office.mcp.callTool(CAL, tool, ap.payload);
         const out = res.payload || {};
         ap.status = 'done';
         ap.url = out.htmlLink || out.viewUrl || (out.event && (out.event.htmlLink || out.event.viewUrl)) || '';
-        logStep(t, 'harm', `Harm approved: ${ap.kind === 'create_event' ? 'added' : 'changed'} "${ap.payload.summary || ap.what}" in the calendar.`, { link: ap.url });
+        logStep(t, 'harm', `Harm keurde goed: "${ap.payload.summary || ap.what}" ${ap.kind === 'create_event' ? 'toegevoegd aan' : 'gewijzigd in'} de agenda.`, { link: ap.url });
       }
     } catch (e) {
       ap.status = 'pending';
-      const why = { server_not_connected: `add the ${ap.server || 'Google Calendar'} connector in claude.ai Settings → Connectors`, not_in_manifest: `allow ${ap.server || 'Google Calendar'} for this page`, needs_reauth: `reconnect ${ap.server || 'Google Calendar'} in claude.ai Settings → Connectors` }[e.code];
-      logStep(t, 'office', `${ap.kind === 'app' ? `The ${ap.app} app` : 'The calendar'} didn't take it: ${why || e.message || e.code}. You can try Approve again.`);
+      const why = { server_not_connected: `voeg de connector ${ap.server || 'Google Calendar'} toe in claude.ai → Instellingen → Connectors`, not_in_manifest: `sta ${ap.server || 'Google Calendar'} toe voor deze pagina`, needs_reauth: `koppel ${ap.server || 'Google Calendar'} opnieuw in claude.ai → Instellingen → Connectors` }[e.code];
+      logStep(t, 'office', `${ap.kind === 'app' ? `De ${ap.app}-app` : 'De agenda'} nam het niet aan: ${why || e.message || e.code}. Je kunt opnieuw op Goedkeuren drukken.`);
       await saveTask(t);
       return;
     }
   } else {
-    logStep(t, 'harm', `Harm declined: "${ap.payload.summary || ap.what}".`);
+    logStep(t, 'harm', `Harm wees af: "${ap.payload.summary || ap.what}".`);
   }
   if (!t.approvals.some((a) => a.status === 'pending')) t.status = 'finishing';
   await saveTask(t);
@@ -465,12 +467,12 @@ async function offerReport(t) {
   if (typeof makeTaskReport !== 'function') return;
   try {
     const blob = await makeTaskReport(t);
-    if (!office.downloads) { toast('The report is ready, but this view can\'t save files.'); return; }
-    const safe = t.text.replace(/[^A-Za-z0-9 _-]+/g, '').trim().slice(0, 50) || 'task';
-    await office.downloads.save({ filename: `Task report - ${safe}.pdf`, data: blob });
+    if (!office.downloads) { toast('Het rapport is klaar, maar deze weergave kan geen bestanden opslaan.'); return; }
+    const safe = t.text.replace(/[^A-Za-z0-9À-ž _-]+/g, '').trim().slice(0, 50) || 'taak';
+    await office.downloads.save({ filename: `Taakrapport - ${safe}.pdf`, data: blob });
   } catch (e) {
     if (e && e.code === 'declined') return;
-    toast('Could not make the report: ' + (e && (e.message || e.code)));
+    toast('Het rapport kon niet worden gemaakt: ' + (e && (e.message || e.code)));
   }
 }
 
@@ -479,7 +481,7 @@ async function makeChatTask(personId, task, words, autoCreated) {
   const p = personById(personId);
   const owner = personId === 'kevin' ? null : (p.role === 'Director' ? p.id : p.boss.id);
   const t = await createTask(task, 'chat', { words, owner, askedPerson: personId, autoCreated });
-  if (p.role === 'Worker') t.brief = `Harm asked ${p.name} directly; hand it to ${firstName(p.id)} and check the work.`;
+  if (p.role === 'Worker') t.brief = `Harm vroeg het ${p.name} rechtstreeks; geef het aan ${firstName(p.id)} en controleer het werk.`;
   return t;
 }
 
@@ -487,8 +489,8 @@ async function makeChatTask(personId, task, words, autoCreated) {
 
 function statusText(t) {
   const who = t.owner ? firstName(t.owner) : 'Kevin';
-  return ({ new: 'New', kevin: 'Kevin is on it', assigned: `With ${who}`, working: t.worker ? `${firstName(t.worker)} is working, ${who} checks` : `${who} is working on it`,
-    needs_harm: 'Needs your OK', finishing: 'Wrapping up', done: 'Done', paused: 'Paused' })[t.status] || t.status;
+  return ({ new: 'Nieuw', kevin: 'Kevin pakt het op', assigned: `Bij ${who}`, working: t.worker ? `${firstName(t.worker)} werkt eraan, ${who} controleert` : `${who} werkt eraan`,
+    needs_harm: 'Wacht op jouw OK', finishing: 'Bijna klaar', done: 'Klaar', paused: 'Gepauzeerd' })[t.status] || t.status;
 }
 
 function renderTodo() {
@@ -501,18 +503,18 @@ function renderTodo() {
   badge.hidden = !open;
   list.innerHTML = '';
   let reshow = null;
-  if (!tasks.length) { list.innerHTML = '<li class="todo-empty">Nothing yet. Type a task above and press Enter: Kevin passes it to the right director.</li>'; return; }
+  if (!tasks.length) { list.innerHTML = '<li class="todo-empty">Nog niets. Typ hierboven een taak en druk op Enter: Kevin geeft hem aan de juiste directeur.</li>'; return; }
   for (const t of tasks) {
     const li = document.createElement('li');
     li.className = 'todo-item ' + t.status;
     li.innerHTML = `<div class="todo-row"><span class="todo-check" aria-hidden="true">${t.status === 'done' ? '✓' : ''}</span>
       <span class="todo-text">${esc(t.text)}</span></div>
-      <div class="todo-meta">${esc(statusText(t))}${t.from === 'chat' ? ` · asked ${esc(firstName(t.askedPerson))} in person` : ''}${t.status === 'done' ? ' · ' + esc(timeOf(t.doneAt)) : ''}</div>`;
+      <div class="todo-meta">${esc(statusText(t))}${t.from === 'chat' ? ` · persoonlijk gevraagd aan ${esc(firstName(t.askedPerson))}` : ''}${t.status === 'done' ? ' · ' + esc(timeOf(t.doneAt)) : ''}</div>`;
     const last = (t.log || []).slice(-1)[0];
     if (t.status !== 'done' && last) li.insertAdjacentHTML('beforeend', `<div class="todo-latest">${esc(last.text)}</div>`);
     if (t.status === 'paused') {
       li.insertAdjacentHTML('beforeend', `<div class="todo-latest">${esc(t.pauseReason || '')}</div>`);
-      const b = document.createElement('button'); b.textContent = 'Continue'; b.className = 'small';
+      const b = document.createElement('button'); b.textContent = 'Verder'; b.className = 'small';
       b.onclick = () => { t.status = t.owner ? 'assigned' : 'new'; saveTask(t); runTask(t); };
       li.appendChild(b);
     }
@@ -520,17 +522,17 @@ function renderTodo() {
       const p = ap.payload;
       const box = document.createElement('div');
       box.className = 'todo-approval';
-      box.innerHTML = `<div><b>${ap.kind === 'app' ? esc(ap.app) : ap.kind === 'create_event' ? 'Add to calendar' : 'Change event'}:</b> ${esc(ap.kind === 'app' ? ap.what : (p.summary || ap.what || ''))}</div>
+      box.innerHTML = `<div><b>${ap.kind === 'app' ? esc(ap.app) : ap.kind === 'create_event' ? 'In de agenda zetten' : 'Afspraak wijzigen'}:</b> ${esc(ap.kind === 'app' ? ap.what : (p.summary || ap.what || ''))}</div>
         <div class="todo-meta">${esc((p.startTime || '').replace('T', ' ').slice(0, 16))}${p.endTime ? ' – ' + esc(p.endTime.slice(11, 16)) : ''}${p.location ? ' · ' + esc(p.location) : ''}</div>`;
-      const ok = document.createElement('button'); ok.textContent = ap.status === 'approving' ? 'Saving…' : 'Approve'; ok.className = 'small primary'; ok.disabled = ap.status === 'approving';
+      const ok = document.createElement('button'); ok.textContent = ap.status === 'approving' ? 'Bezig…' : 'Goedkeuren'; ok.className = 'small primary'; ok.disabled = ap.status === 'approving';
       ok.onclick = () => decide(t.id, ap.id, true);
-      const no = document.createElement('button'); no.textContent = 'Decline'; no.className = 'small'; no.disabled = ap.status === 'approving';
+      const no = document.createElement('button'); no.textContent = 'Afwijzen'; no.className = 'small'; no.disabled = ap.status === 'approving';
       no.onclick = () => decide(t.id, ap.id, false);
       box.append(ok, no);
       li.appendChild(box);
     }
     if (t.status === 'done') {
-      const b = document.createElement('button'); b.textContent = 'PDF report'; b.className = 'small';
+      const b = document.createElement('button'); b.textContent = 'PDF-rapport'; b.className = 'small';
       b.onclick = () => offerReport(t);
       li.appendChild(b);
       li.addEventListener('mouseenter', () => showDone(t, li));
@@ -551,12 +553,12 @@ function showDone(t, li) {
   const pop = document.getElementById('todo-pop');
   const people = ['kevin', t.owner, t.worker].filter(Boolean).map(firstName).join(' → ');
   pop.innerHTML = `<div class="pop-title">${esc(t.text)}</div>
-    <div class="pop-meta">${esc(people)} · done ${esc(new Date(t.doneAt).toLocaleString())}</div>
+    <div class="pop-meta">${esc(people)} · klaar ${esc(new Date(t.doneAt).toLocaleString('nl-NL'))}</div>
     ${t.summary ? `<p>${esc(t.summary)}</p>` : ''}
-    ${t.whatWasDone.length ? `<div class="pop-h">What was done</div><ol>${t.whatWasDone.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
-    ${t.drafts.length ? `<div class="pop-h">Drafts in your Gmail</div><ul>${t.drafts.map((d) => `<li>${esc(d.subject)}${d.to.length ? ' → ' + esc(d.to.join(', ')) : ''}</li>`).join('')}</ul>` : ''}
-    ${(t.approvals || []).length ? `<div class="pop-h">Calendar and app changes</div><ul>${t.approvals.map((a) => `<li>${a.kind === 'app' ? esc(a.app) + ': ' + esc(a.what) : esc(a.payload.summary || a.what)}: ${esc(a.status === 'done' ? 'done' : a.status)}</li>`).join('')}</ul>` : ''}
-    ${t.noteForHarm ? `<div class="pop-h">For you</div><p>${esc(t.noteForHarm)}</p>` : ''}`;
+    ${t.whatWasDone.length ? `<div class="pop-h">Wat er is gedaan</div><ol>${t.whatWasDone.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
+    ${t.drafts.length ? `<div class="pop-h">Concepten in je Gmail</div><ul>${t.drafts.map((d) => `<li>${esc(d.subject)}${d.to.length ? ' → ' + esc(d.to.join(', ')) : ''}</li>`).join('')}</ul>` : ''}
+    ${(t.approvals || []).length ? `<div class="pop-h">Agenda en app-wijzigingen</div><ul>${t.approvals.map((a) => `<li>${a.kind === 'app' ? esc(a.app) + ': ' + esc(a.what) : esc(a.payload.summary || a.what)}: ${esc({ done: 'gedaan', declined: 'afgewezen', pending: 'wacht op jou', approving: 'bezig' }[a.status] || a.status)}</li>`).join('')}</ul>` : ''}
+    ${t.noteForHarm ? `<div class="pop-h">Voor jou</div><p>${esc(t.noteForHarm)}</p>` : ''}`;
   const r = li.getBoundingClientRect();
   pop.hidden = false;
   const w = pop.offsetWidth;
@@ -607,16 +609,16 @@ function officeCallsNow() {
 (async () => {
   [office.db, office.sample, office.mcp, office.downloads] = await Promise.all(['db', 'sample', 'mcp', 'downloads'].map((n) => (window.claude && window.claude.use ? window.claude.use(n).catch(() => null) : Promise.resolve(null))));
   const note = document.getElementById('todo-note');
-  if (!office.sample) note.textContent = 'Open the village on claude.ai so the team can work (it uses your Claude plan).';
-  else if (!office.mcp) note.textContent = 'Gmail and Calendar are not available in this view.';
-  else note.textContent = 'Kevin passes each task to the right director. Runs on your Claude plan while this page is open.';
+  if (!office.sample) note.textContent = 'Open het dorp op claude.ai zodat het team kan werken (het gebruikt je Claude-abonnement).';
+  else if (!office.mcp) note.textContent = 'Gmail en Agenda zijn niet beschikbaar in deze weergave.';
+  else note.textContent = 'Kevin geeft elke taak aan de juiste directeur. Draait op je Claude-abonnement zolang deze pagina open is.';
   if (office.db) {
     try {
       const snap = await office.db.collection('tasks').orderBy('createdAt', 'desc').limit(100).get();
       for (const d of snap.docs) {
         const t = d.data();
         const copy = JSON.parse(JSON.stringify(t));
-        if (!['done', 'needs_harm', 'paused'].includes(copy.status)) { copy.status = 'paused'; copy.pauseReason = 'The page was closed while this was being worked on. Click Continue.'; }
+        if (!['done', 'needs_harm', 'paused'].includes(copy.status)) { copy.status = 'paused'; copy.pauseReason = 'De pagina werd gesloten terwijl hieraan gewerkt werd. Klik op Verder.'; }
         office.tasks.set(copy.id, copy);
       }
     } catch (e) { /* empty list */ }

@@ -244,6 +244,44 @@ One Artlist image per house. Every room:
   - Darkglass: 54 tests pass, plus an end-to-end run on its dev server.
   - Village: Kevin → Rosie → proposal → Approve → kookboek call → PDF.
 
+## Nederlands, rollen op de naamlabels, telefoon (Harm, 2026-10-31)
+
+- **Het dorp spreekt Nederlands.**
+  - Alle knoppen, panelen, meldingen, het logboek en het PDF-rapport zijn Nederlands.
+  - De bewoners antwoorden in het Nederlands; elke opdracht aan Claude zegt dat. E-mailconcepten gaan in de taal van de ontvanger.
+  - "Kom hier" en "weer aan het werk" werken in het Nederlands (en nog steeds in het Engels).
+- **Gebouwen in het Nederlands:**
+
+  | Gebouw | Onderwerp |
+  |---|---|
+  | Raadhuis | Kevin · Stafchef |
+  | Posthuis | Inbox & e-mail |
+  | Drukkerij | AI-nieuws |
+  | Geleerdentoren | Onderzoek |
+  | Rekenhuis | Geld & rekeningen |
+  | Werkplaats | Producten |
+  | Familiehuisje | Familie & kookboek |
+  | Vrachtdepot | Logistiek & reizen |
+  | Herautenhuis | Contacten |
+  | Bardenhuis | Muziek & darkglass |
+  | Gastenhuis en Gastenhuisje | Vrij |
+
+- **Rollen:** directeur, stagiair, stafchef.
+- **Naamlabels:** onder elke naam staat waarvoor iemand is, zodat Harm weet wie hij waarover aanspreekt.
+  - Directeuren: hun onderwerp (bv. "Margot Finch · Inbox & e-mail").
+  - Kevin: "Stafchef · opdrachten".
+  - Stagiairs: "stagiair van …".
+  - Hetzelfde in de vergaderbalk, de chatkop, de hover-kaart en het namenpaneel.
+- **Telefoon:**
+  - Bovenaan staan alleen Taken, Kevin en **☰ Meer**. Daaronder zitten zoom, geluid, logboek, vergadering en kaart bewerken.
+  - Panelen schuiven van onderen omhoog; er is er steeds maar één open.
+  - Invoervelden zijn 16 px, zodat iOS niet inzoomt.
+  - Op een staand scherm vullen het dorp en de kamers het hele scherm en volgt de camera Harm (op de computer verandert niets).
+  - Knijpen om te zoomen. Naamlabels hebben een leesbare minimumgrootte.
+  - Op een telefoon beginnen de vergadergezichten kleiner.
+  - Tikken op iemand opent het gesprek.
+- **Apps live:** na Harms OK zijn de kookboek- en darkglass-koppelingen samengevoegd naar main; beide productie-deploys staan op READY. Nog te doen door Harm: in elke app de sleutel maken en de connectors **Kookboek** en **Darkglass** toevoegen op claude.ai. Daarna declareer en publiceer ik die connectors voor het dorp.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

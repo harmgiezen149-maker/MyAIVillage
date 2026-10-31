@@ -55,18 +55,18 @@ const MAP_OBSTACLES = [
 
 // Doors you can walk into. `room` is the interior to show; null means no interior yet.
 const BUILDINGS = [
-  { id: 'council-hall', name: 'Council Hall', job: 'Kevin · Chief of Staff', door: [1194, 528], room: 'council-hall' },
-  { id: 'post-house', name: 'Post House', job: 'Inbox & Email', door: [1562, 548], room: 'post-house' },
-  { id: 'criers-press', name: "Crier's Press", job: 'AI News', door: [1716, 786], room: 'criers-press' },
-  { id: 'scholars-tower', name: "Scholar's Tower", job: 'Research', door: [915, 532], room: 'scholars-tower' },
-  { id: 'counting-house', name: 'Counting House', job: 'Money', door: [712, 692], room: 'counting-house' },
-  { id: 'artisans-workshop', name: "Artisan's Workshop", job: 'Products', door: [2190, 712], room: 'artisans-workshop' },
-  { id: 'family-cottage', name: 'Family Cottage', job: 'Family', door: [766, 1240], room: 'family-cottage' },
-  { id: 'carriers-depot', name: "Carrier's Depot", job: 'Logistics', door: [256, 1560], room: 'carriers-depot' },
-  { id: 'heralds-lodge', name: "Herald's Lodge", job: 'Outreach', door: [1380, 1408], room: 'heralds-lodge' },
-  { id: 'bards-house', name: "Bard's House", job: 'Music', door: [1684, 1292], room: 'bards-house' },
-  { id: 'guest-top-left', name: 'Guest House', job: 'Spare for a future agent', door: [125, 796], room: null },
-  { id: 'guest-cottage', name: 'Guest Cottage', job: 'Spare for a future agent', door: [1045, 1408], room: null },
+  { id: 'council-hall', name: 'Raadhuis', job: 'Kevin · Stafchef', door: [1194, 528], room: 'council-hall' },
+  { id: 'post-house', name: 'Posthuis', job: 'Inbox & e-mail', door: [1562, 548], room: 'post-house' },
+  { id: 'criers-press', name: 'Drukkerij', job: 'AI-nieuws', door: [1716, 786], room: 'criers-press' },
+  { id: 'scholars-tower', name: 'Geleerdentoren', job: 'Onderzoek', door: [915, 532], room: 'scholars-tower' },
+  { id: 'counting-house', name: 'Rekenhuis', job: 'Geld & rekeningen', door: [712, 692], room: 'counting-house' },
+  { id: 'artisans-workshop', name: 'Werkplaats', job: 'Producten', door: [2190, 712], room: 'artisans-workshop' },
+  { id: 'family-cottage', name: 'Familiehuisje', job: 'Familie & kookboek', door: [766, 1240], room: 'family-cottage' },
+  { id: 'carriers-depot', name: 'Vrachtdepot', job: 'Logistiek & reizen', door: [256, 1560], room: 'carriers-depot' },
+  { id: 'heralds-lodge', name: 'Herautenhuis', job: 'Contacten', door: [1380, 1408], room: 'heralds-lodge' },
+  { id: 'bards-house', name: 'Bardenhuis', job: 'Muziek & darkglass', door: [1684, 1292], room: 'bards-house' },
+  { id: 'guest-top-left', name: 'Gastenhuis', job: 'Vrij voor een nieuwe agent', door: [125, 796], room: null },
+  { id: 'guest-cottage', name: 'Gastenhuisje', job: 'Vrij voor een nieuwe agent', door: [1045, 1408], room: null },
 ];
 
 // The Chief Human Officer's walking sheet (tools/cut_character.py):
@@ -83,7 +83,7 @@ const HARM_SEATED = { image: 'seat:harm', src: 'assets/characters/harm-seated.pn
 const KEVIN_SHEET = { ...WALK_SHEET, image: 'char:kevin', src: 'assets/characters/kevin-walk.png' };
 const KEVIN_PHONE_SHEET = { ...WALK_SHEET, image: 'char:kevin-phone', src: 'assets/characters/kevin-phone.png' };
 const KEVIN_SEATED = { image: 'seat:kevin', src: 'assets/characters/kevin-seated.png' };
-const KEVIN = { name: 'Kevin', job: 'Chief of Staff', home: 'council-hall', followDistance: 0.9 }; // in person heights
+const KEVIN = { name: 'Kevin', job: 'Stafchef', home: 'council-hall', followDistance: 0.9 }; // in person heights
 
 // ---------- meetings in the Council Hall ----------
 // Seat points are where the person sits on the chair (room pixels, 1200 x 896). dir is the way they face.

@@ -44,7 +44,7 @@ const talk = {
   villagePausedUntil: 0,
 };
 const CHAT_LIMIT = 24;
-const COMMIT_RE = /\b(on it|i'?ll|i will|will do|i'?m on|leave it|consider it|right away|can do|got it|doing it|let me|happy to|of course|sure|okay|ok|absolutely)\b/i;
+const COMMIT_RE = /\b(on it|i'?ll|i will|will do|i'?m on|leave it|consider it|right away|can do|got it|doing it|let me|happy to|of course|sure|okay|ok|absolutely|komt goed|komt in orde|doe ik|ga ik|ik ga|ik pak|pak ik|ik regel|regel ik|ik zorg|zorg ik|ik zet|zet ik|ik zoek|zoek ik|ik maak|maak ik|zal ik|ik zal|meteen|natuurlijk|zeker|prima|oké|is goed|geregeld|op het)\b/i;
 
 // ---------- people ----------
 
@@ -67,7 +67,7 @@ function peopleNamedIn(text) {
 }
 function listNames(rs) {
   const n = rs.map((r) => r.name.split(' ')[0]);
-  return n.length <= 1 ? (n[0] || '') : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1];
+  return n.length <= 1 ? (n[0] || '') : n.slice(0, -1).join(', ') + ' en ' + n[n.length - 1];
 }
 function whereName(where) {
   if (where === 'map') return 'out in the village';
@@ -101,8 +101,8 @@ function realWork(r) {
 }
 function sayWork(r) {
   const i = workItems(r)[0];
-  if (!i) return 'Nothing on right now.';
-  return i.kind === 'now' ? `I'm working on "${i.text}".` : i.kind === 'open' ? `I've got "${i.text}" on my list.` : `I finished "${i.text}" today.`;
+  if (!i) return 'Nu even niets.';
+  return i.kind === 'now' ? `Ik werk aan "${i.text}".` : i.kind === 'open' ? `Ik heb "${i.text}" op mijn lijst.` : `Ik heb vandaag "${i.text}" afgerond.`;
 }
 
 // ---------- who they are, for Claude ----------
@@ -155,7 +155,7 @@ async function askPerson(id, turns, opts = {}) {
           if (!r) return 'Nobody by that name lives in the village.';
           if (r.inMeeting) return `${r.name} is in the meeting already.`;
           kevinCalls(r, say);
-          notes.push(`📞 ${KEVIN.name} called ${r.name.split(' ')[0]}. ${r.name.split(' ')[0]} is on the way.`);
+          notes.push(`📞 ${KEVIN.name} belde ${r.name.split(' ')[0]}. ${r.name.split(' ')[0]} komt eraan.`);
           return `${r.name} is on the way.`;
         } },
       { name: 'send_back_to_work', description: "Send someone (or 'everyone') back to work: they go back inside their house.",
@@ -163,21 +163,21 @@ async function askPerson(id, turns, opts = {}) {
         execute: async ({ person }) => {
           const list = /^(everyone|all|everybody)$/i.test(String(person).trim()) ? residents.filter((r) => r.summoned) : [residentById(findPerson(person))].filter(Boolean);
           list.forEach(backToWork);
-          if (list.length) notes.push(`${listNames(list)} went back to work.`);
+          if (list.length) notes.push(`${listNames(list)} ${list.length > 1 ? 'gaan' : 'gaat'} weer aan het werk.`);
           return list.length ? `${listNames(list)} went back to work.` : 'Nobody to send back.';
         } });
   } else {
     const me = residentById(id);
     tools.push(
       { name: 'come_over', description: 'Walk over to Harm to talk in person.', inputSchema: { type: 'object', properties: {} },
-        execute: async () => { summon(me); notes.push(`${me.name.split(' ')[0]} is walking over.`); return 'walking over'; } },
+        execute: async () => { summon(me); notes.push(`${me.name.split(' ')[0]} loopt naar je toe.`); return 'walking over'; } },
       { name: 'back_to_work', description: 'Go back to work, inside your house.', inputSchema: { type: 'object', properties: {} },
-        execute: async () => { backToWork(me); notes.push(`${me.name.split(' ')[0]} went back to work.`); return 'back at work'; } });
+        execute: async () => { backToWork(me); notes.push(`${me.name.split(' ')[0]} gaat weer aan het werk.`); return 'back at work'; } });
   }
   const rules = `${persona.text}
 
 ${opts.context || 'Harm is talking to you in person in the village.'} Today is ${today()}.
-Answer as yourself, in your own voice and personality: warm, short and plain (1-4 sentences). No Markdown, no lists unless asked.
+Answer as yourself, in your own voice and personality, in Dutch: warm, short and plain (1-4 sentences). No Markdown, no lists unless asked.
 ${ACCESS_TEXT}
 IMPORTANT: if Harm asks you to do something and you agree ("on it", "I'll do it"), call create_task with Harm's request in Harm's words BEFORE you reply, so a real task exists. Never pretend you already did work you haven't done: the work starts once the task exists.`;
   const msgs = [];
@@ -192,10 +192,10 @@ IMPORTANT: if Harm asks you to do something and you agree ("on it", "I'll do it"
   markSampleOk();
   // A promise to do something must always become a real task, even if they forgot to create it.
   if (!created && said && COMMIT_RE.test(text)) {
-    const check = await office.sample.json(`Harm said to ${nameOf(id)}: "${said}"\n${nameOf(id)} replied: "${text}"\n\nDid they agree or promise to do something for Harm (e.g. "on it", "I'll do it", "will do", "sure, I'll...")? Walking over or going back to work does not count. Reply with only JSON: {"committed": true|false, "task": "<if committed: the task in Harm's own words, as a short to-do line>"}`, { modelTier: 'quick', cache: false }).catch(() => null);
+    const check = await office.sample.json(`Harm said to ${nameOf(id)}: "${said}"\n${nameOf(id)} replied: "${text}"\n\nDid they agree or promise to do something for Harm (e.g. "komt goed", "ik pak het op", "on it", "I'll do it")? Walking over or going back to work does not count. Reply with only JSON: {"committed": true|false, "task": "<if committed: the task in Harm's own words, as a short to-do line in Dutch>"}`, { modelTier: 'quick', cache: false }).catch(() => null);
     if (check && check.committed && check.task) created = await makeChatTask(id, String(check.task), said, true);
   }
-  if (created) notes.push(`📋 Added to your to-do list: "${created.text}"`);
+  if (created) notes.push(`📋 Op je takenlijst gezet: "${created.text}"`);
   return { text, created, notes };
 }
 
@@ -224,11 +224,11 @@ function backToWork(r) {
   r.modeUntil = r.task ? Infinity : state.time + 60 + Math.random() * 60;
 }
 function kevinCalls(r, say) {
-  const line = String(say || `${r.name.split(' ')[0]}, Harm would like to see you.`);
+  const line = String(say || `${r.name.split(' ')[0]}, Harm wil je even spreken.`);
   state.kevin.callUntil = state.time + 6;
   office.calls.push({ a: 'kevin', b: r.id, line, until: state.time + 6 });
   lineAdd('kevin', r.id, line, 'call');
-  lineAdd(r.id, 'kevin', 'On my way.', 'say');
+  lineAdd(r.id, 'kevin', 'Ik kom eraan.', 'say');
   setTimeout(() => summon(r), 1500);
 }
 
@@ -261,25 +261,25 @@ function heldByHarm(r) {
 
 // "Theo, come here" / "back to work": done right away in the page (free), no need to ask Claude.
 function localCommand(said, chatId) {
-  const come = /\bcome (here|over)\b/i.test(said);
-  const back = /\b(get |go )?back to work\b/i.test(said);
+  const come = /\bcome (here|over)\b|\bkom (eens |even |maar )?(hier|hierheen|naar mij|langs)\b/i.test(said);
+  const back = /\b(get |go )?back to work\b|\b(weer |terug )?aan (het )?(werk|de slag)\b|\bterug naar (je|jullie|het) werk\b/i.test(said);
   if (!come && !back) return null;
   const named = peopleNamedIn(said);
-  const everyone = /\b(everyone|everybody|all of you)\b/i.test(said);
+  const everyone = /\b(everyone|everybody|all of you|iedereen|allemaal|jullie)\b/i.test(said);
   const self = chatId && chatId !== 'kevin' ? residentById(chatId) : null;
   const notes = [];
   if (come) {
     const who = named.length ? named : self ? [self] : [];
     who.forEach(summon);
-    notes.push(who.length ? `${listNames(who)} ${who.length > 1 ? 'are' : 'is'} walking over.` : `${KEVIN.name} is right here with you.`);
+    notes.push(who.length ? `${listNames(who)} ${who.length > 1 ? 'lopen' : 'loopt'} naar je toe.` : `${KEVIN.name} staat al naast je.`);
   }
   if (back) {
     const who = everyone ? residents.filter((r) => r.summoned || (r.where === state.scene && Math.hypot(state.player.x - r.x, state.player.y - r.y) < heightIn(r.where) * 3))
       : named.length ? named : self ? [self] : residents.filter((r) => r.summoned);
     who.forEach(backToWork);
-    notes.push(who.length ? `${listNames(who)} went back to work.` : 'Nobody here to send back.');
+    notes.push(who.length ? `${listNames(who)} ${who.length > 1 ? 'gaan' : 'gaat'} weer aan het werk.` : 'Er is hier niemand om terug te sturen.');
   }
-  let rest = said.replace(/\b(please|now|come (here|over)|(get |go )?back to work|everyone|everybody|all of you|and|you)\b/gi, ' ');
+  let rest = said.replace(/\b(please|now|come (here|over)|(get |go )?back to work|everyone|everybody|all of you|and|you|kom|eens|even|maar|hier|hierheen|naar mij|langs|weer|terug|aan|het|werk|de slag|naar|je|jullie|iedereen|allemaal|en|nu|graag|alsjeblieft|svp)\b/gi, ' ');
   for (const r of named) rest = rest.replace(new RegExp('\\b' + r.name.split(' ')[0] + '\\b', 'gi'), ' ');
   rest = rest.replace(/[^a-z0-9]+/gi, ' ').trim();
   return { note: notes.join(' '), only: rest.length < 4 };
@@ -319,7 +319,7 @@ async function sendChat() {
   const cmd = localCommand(said, c.id);
   if (cmd) c.turns.push({ role: 'note', content: cmd.note });
   if (cmd && cmd.only) { renderChat(); saveChat(c); return; }
-  if (!office.sample) { c.turns.push({ role: 'note', content: 'Talking needs Claude: open the village on claude.ai.' }); renderChat(); return; }
+  if (!office.sample) { c.turns.push({ role: 'note', content: 'Praten heeft Claude nodig: open het dorp op claude.ai.' }); renderChat(); return; }
   c.busy = true; c.streaming = '…'; renderChat();
   try {
     const res = await askPerson(c.id, c.turns.filter((t) => t.role !== 'note').slice(-CHAT_LIMIT), { said, onText: ({ text }) => { c.streaming = text; renderChat(); } });
@@ -340,7 +340,7 @@ function renderChat() {
   const p = personById(c.id);
   document.getElementById('chat-face').src = `assets/portraits/${c.id}.jpg`;
   document.getElementById('chat-name').textContent = p.name;
-  document.getElementById('chat-role').textContent = c.id === 'kevin' ? 'Chief of Staff · give your orders here' : roleLabel(p);
+  document.getElementById('chat-role').textContent = c.id === 'kevin' ? 'Stafchef · geef hier je opdrachten' : roleLabel(p);
   const log = document.getElementById('chat-log');
   log.innerHTML = '';
   for (const turn of c.turns) {
@@ -352,8 +352,8 @@ function renderChat() {
   if (c.streaming) { const div = document.createElement('div'); div.className = 'msg them'; div.textContent = c.streaming; log.appendChild(div); }
   if (!c.turns.length && !c.streaming) {
     log.innerHTML = c.id === 'kevin'
-      ? `<div class="msg hint">Tell ${esc(KEVIN.name)} what you need. They pass it to the right director (you'll see that in ${esc(KEVIN.name)}'s line on the left), or call someone over for you.</div>`
-      : `<div class="msg hint">Say hello, or ask ${esc(p.name.split(' ')[0])} to do something. If they say they'll do it, it goes on your to-do list. "Back to work" sends them home.</div>`;
+      ? `<div class="msg hint">Vertel ${esc(KEVIN.name)} wat je nodig hebt. ${esc(KEVIN.name)} geeft het aan de juiste directeur (dat zie je in de lijn van ${esc(KEVIN.name)}), of belt iemand voor je op. "Margot, kom hier" roept iemand naar je toe.</div>`
+      : `<div class="msg hint">Zeg hallo, of vraag ${esc(p.name.split(' ')[0])} iets te doen. Zeggen ze dat ze het doen, dan komt het op je takenlijst. "Weer aan het werk" stuurt ze naar huis.</div>`;
   }
   log.scrollTop = log.scrollHeight;
   document.getElementById('chat-send').disabled = c.busy;
@@ -399,7 +399,7 @@ function lineAdd(from, to, text, kind = 'say', taskId) {
 function renderLine() {
   document.getElementById('tab-line').classList.remove('fresh');
   const log = document.getElementById('line-log');
-  if (!talk.line.length) { log.innerHTML = `<div class="msg hint">When you give ${esc(KEVIN.name)} an order, the calls and handovers show up here: ${esc(KEVIN.name)} to the director, the director to their worker, and the reports back.</div>`; return; }
+  if (!talk.line.length) { log.innerHTML = `<div class="msg hint">Geef je ${esc(KEVIN.name)} een opdracht, dan zie je hier de telefoontjes en overdrachten: ${esc(KEVIN.name)} naar de directeur, de directeur naar de stagiair, en de verslagen terug.</div>`; return; }
   log.innerHTML = talk.line.slice(-120).map((e) => `<div class="entry ${e.kind}">${face(e.from)}<div><div class="who">${e.kind === 'call' ? '📞 ' : ''}${esc(nameOf(e.from))} <span>→ ${esc(nameOf(e.to))} · ${clockOf(e.at)}</span></div><div class="said">${esc(e.text)}</div></div></div>`).join('');
   log.scrollTop = log.scrollHeight;
 }
@@ -408,11 +408,11 @@ function renderLine() {
 function renderVillage() {
   document.getElementById('tab-village').classList.remove('fresh');
   const btn = document.getElementById('village-toggle');
-  btn.textContent = talk.villageOn ? 'Village talk: on' : 'Village talk: off';
+  btn.textContent = talk.villageOn ? 'Dorpspraat: aan' : 'Dorpspraat: uit';
   btn.setAttribute('aria-pressed', String(talk.villageOn));
   const log = document.getElementById('village-log');
   if (!talk.village.length) {
-    log.innerHTML = `<div class="msg hint">When two villagers meet and at least one of them has real work to share, their conversation shows up here. ${talk.villageOn ? '' : 'Switch village talk on to let them really talk (it uses your Claude plan, smallest model). While it is off, you only see what they asked each other.'}</div>`;
+    log.innerHTML = `<div class="msg hint">Komen twee dorpelingen elkaar tegen en heeft minstens één van hen echt werk te delen, dan zie je hier hun gesprek. ${talk.villageOn ? '' : 'Zet dorpspraat aan om ze echt te laten praten (het gebruikt je Claude-abonnement, kleinste model). Staat het uit, dan zie je alleen wat ze elkaar vroegen.'}</div>`;
     return;
   }
   log.innerHTML = talk.village.slice(-60).map((e) => `<div class="convo"><div class="convo-head">${face(e.a, 'face sm')}${face(e.b, 'face sm')}<span>${esc(firstOf(e.a))} & ${esc(firstOf(e.b))} · ${clockOf(e.at)}</span></div>${e.lines.map((l) => `<div class="said"><b>${esc(firstOf(l.who))}:</b> ${esc(l.text)}</div>`).join('')}</div>`).join('');
@@ -431,7 +431,7 @@ function villageMet(a, b) {
     const prompt = `Two people in Harm's AI village just met in the street.
 A: ${a.name} (${a.role === 'Director' ? 'director of the ' + a.building.name : 'worker at the ' + a.building.name}). Personality: ${PERSONALITY[a.id]}. Real work: ${wa || 'nothing on right now'}.
 B: ${b.name} (${b.role === 'Director' ? 'director of the ' + b.building.name : 'worker at the ' + b.building.name}). Personality: ${PERSONALITY[b.id]}. Real work: ${wb || 'nothing on right now'}.
-A asks B what they're working on. Write their short conversation (2 to 5 lines) about that real work only: what each is doing, anything useful, or how they could help each other. No filler, no invented facts beyond what is given. Each in their own voice.
+A asks B what they're working on. Write their short conversation in Dutch (2 to 5 lines) about that real work only: what each is doing, anything useful, or how they could help each other. No filler, no invented facts beyond what is given. Each in their own voice.
 Reply with only JSON: {"lines": [{"who": "a" or "b", "text": "..."}]}`;
     office.sample.json(prompt, { modelTier: 'quick', cache: false }).then((out) => {
       const lines = (out && Array.isArray(out.lines) ? out.lines : []).slice(0, 6).map((l) => ({ who: l.who === 'b' ? b.id : a.id, text: String(l.text || '').slice(0, 300) })).filter((l) => l.text);
@@ -447,8 +447,8 @@ Reply with only JSON: {"lines": [{"who": "a" or "b", "text": "..."}]}`;
   }
 }
 function plainLines(a, b, wa, wb) {
-  const lines = [{ who: a.id, text: `What are you working on, ${firstOf(b.id)}?` }, { who: b.id, text: sayWork(b) }];
-  if (wa) lines.push({ who: a.id, text: 'And me: ' + sayWork(a).replace(/^I/, 'I') });
+  const lines = [{ who: a.id, text: `Waar ben je mee bezig, ${firstOf(b.id)}?` }, { who: b.id, text: sayWork(b) }];
+  if (wa) lines.push({ who: a.id, text: 'En ik: ' + sayWork(a).replace(/^Ik/, 'ik') });
   return lines;
 }
 function villageAdd(entry) {
@@ -464,7 +464,7 @@ async function setVillageTalk(on) {
     try { await office.sample('Reply with the word OK.', { modelTier: 'quick', cache: false }); markSampleOk(); }
     catch (e) { toast(sampleErrorText(e)); return; }
   }
-  if (on && !office.sample) { toast('Village talk needs Claude: open the village on claude.ai.'); }
+  if (on && !office.sample) { toast('Dorpspraat heeft Claude nodig: open het dorp op claude.ai.'); }
   talk.villageOn = on && !!office.sample;
   try { localStorage.setItem('village-talk-on', talk.villageOn ? '1' : '0'); } catch (e) { /* fine */ }
   renderVillage();
@@ -476,12 +476,18 @@ function meetingPeople() {
   return ['kevin', ...MEETING.seats.map((s) => s.who).filter((id) => id !== 'harm' && id !== 'kevin'), ...residents.filter((r) => r.role === 'Worker').map((r) => r.id)]
     .filter((id) => id === 'kevin' || (residentById(id) && residentById(id).inMeeting));
 }
+// Under each name: what they're for, so Harm knows whom to ask (Harm, 2026-10-31).
+function chipTopic(id) {
+  if (id === 'kevin') return 'stafchef';
+  const r = residentById(id);
+  return r.role === 'Director' ? r.building.job : 'stagiair ' + r.boss.name.split(' ')[0];
+}
 function renderMeeting() {
   const m = talk.meeting;
   const roster = document.getElementById('meet-roster');
   const people = meetingPeople();
-  roster.innerHTML = `<button class="chip ${m.to === 'everyone' ? 'on' : ''}" data-to="everyone"><span class="face all">All</span><span class="nm">Everyone</span></button>` +
-    people.map((id) => `<button class="chip ${m.to === id ? 'on' : ''} ${residentById(id) && residentById(id).role === 'Worker' ? 'worker' : ''}" data-to="${esc(id)}">${face(id)}<span class="nm">${esc(firstOf(id))}</span></button>`).join('');
+  roster.innerHTML = `<button class="chip ${m.to === 'everyone' ? 'on' : ''}" data-to="everyone"><span class="face all">Allen</span><span class="nm">Iedereen</span><span class="tp">de hele zaal</span></button>` +
+    people.map((id) => `<button class="chip ${m.to === id ? 'on' : ''} ${residentById(id) && residentById(id).role === 'Worker' ? 'worker' : ''}" data-to="${esc(id)}">${face(id)}<span class="nm">${esc(firstOf(id))}</span><span class="tp">${esc(chipTopic(id))}</span></button>`).join('');
   const log = document.getElementById('meet-log');
   log.innerHTML = m.turns.length ? m.turns.map((t) => t.who === 'harm'
     ? `<div class="msg me">${t.to !== 'everyone' ? `<span class="to">to ${esc(firstOf(t.to))}</span> ` : ''}${esc(t.text)}</div>`
@@ -490,7 +496,7 @@ function renderMeeting() {
     : `<div class="msg hint">Talk to the whole room, or click a name to talk to just that person.</div>`;
   if (m.busy) log.insertAdjacentHTML('beforeend', '<div class="msg hint">…</div>');
   log.scrollTop = log.scrollHeight;
-  document.getElementById('meet-input').placeholder = m.to === 'everyone' ? 'Say something to everyone…' : `Say something to ${firstOf(m.to)}…`;
+  document.getElementById('meet-input').placeholder = m.to === 'everyone' ? 'Zeg iets tegen iedereen…' : `Zeg iets tegen ${firstOf(m.to)}…`;
   document.getElementById('meet-send').disabled = m.busy;
 }
 function meetingTranscript() {
@@ -504,7 +510,7 @@ async function sendMeeting() {
   box.value = '';
   const before = meetingTranscript();
   m.turns.push({ who: 'harm', to: m.to, text: said });
-  if (!office.sample) { m.turns.push({ who: 'note', text: 'Talking needs Claude: open the village on claude.ai.' }); renderMeeting(); return; }
+  if (!office.sample) { m.turns.push({ who: 'note', text: 'Praten heeft Claude nodig: open het dorp op claude.ai.' }); renderMeeting(); return; }
   m.busy = true; renderMeeting();
   try {
     if (m.to === 'everyone') {
@@ -523,8 +529,9 @@ ${before}
 
 Harm: "${said}"
 
-Today is ${today()}. Write the replies of the people who would naturally answer (1 to 4 of them, most relevant first; Kevin first if Harm gave an order to the team). Each answers in their own voice and personality, short and plain (1-3 sentences). No invented facts about mail or calendar.
-If someone agrees to do something, fill "commits" with the task in Harm's words (the person who agrees should be the one whose area it is). Otherwise leave it empty.
+Today is ${today()}. ${LANG_TEXT}
+Write the replies (in Dutch) of the people who would naturally answer (1 to 4 of them, most relevant first; Kevin first if Harm gave an order to the team). Each answers in their own voice and personality, short and plain (1-3 sentences). No invented facts about mail or calendar.
+If someone agrees to do something, fill "commits" with the task in Harm's words (Dutch) (the person who agrees should be the one whose area it is). Otherwise leave it empty.
 Reply with only JSON: {"replies": [{"who": "<id from the list>", "text": "...", "commits": ""}]}`;
       const out = await office.sample.json(prompt, { model: MODELS.director, modelTier: 'complex', cache: false });
       markSampleOk();
@@ -534,12 +541,12 @@ Reply with only JSON: {"replies": [{"who": "<id from the list>", "text": "...", 
         let task = String(r.commits || '').trim();
         let auto = false;
         if (!task && COMMIT_RE.test(String(r.text))) {
-          const check = await office.sample.json(`Harm said to the room: "${said}"\n${nameOf(r.who)} replied: "${r.text}"\n\nDid ${nameOf(r.who)} agree or promise to do something for Harm? Reply with only JSON: {"committed": true|false, "task": "<if committed: the task in Harm's own words>"}`, { modelTier: 'quick', cache: false }).catch(() => null);
+          const check = await office.sample.json(`Harm said to the room: "${said}"\n${nameOf(r.who)} replied: "${r.text}"\n\nDid ${nameOf(r.who)} agree or promise to do something for Harm? Reply with only JSON: {"committed": true|false, "task": "<if committed: the task in Harm's own words, in Dutch>"}`, { modelTier: 'quick', cache: false }).catch(() => null);
           if (check && check.committed && check.task) { task = String(check.task); auto = true; }
         }
-        if (task) { const t = await makeChatTask(r.who, task, said, auto); m.turns.push({ who: 'note', text: `📋 Added to your to-do list for ${firstOf(r.who)}: "${t.text}"` }); }
+        if (task) { const t = await makeChatTask(r.who, task, said, auto); m.turns.push({ who: 'note', text: `📋 Op je takenlijst gezet voor ${firstOf(r.who)}: "${t.text}"` }); }
       }
-      if (!replies.length) m.turns.push({ who: 'note', text: 'Nobody answered. Try again?' });
+      if (!replies.length) m.turns.push({ who: 'note', text: 'Niemand antwoordde. Nog eens proberen?' });
     } else {
       const res = await askPerson(m.to, [{ role: 'user', content: said }], { said,
         context: `You are in a meeting in the Council Hall with Harm, ${KEVIN.name} and the team. Harm is speaking to you directly, in front of everyone. What was said so far:\n${before}` });
@@ -556,7 +563,7 @@ Reply with only JSON: {"replies": [{"who": "<id from the list>", "text": "...", 
   }
 }
 // meeting.js tells us when a meeting starts and ends
-function meetingChatStarted() { talk.meeting.to = 'everyone'; talk.meeting.turns.push({ who: 'note', text: `Meeting started · ${new Date().toTimeString().slice(0, 5)}` }); openDock('meeting'); }
+function meetingChatStarted() { talk.meeting.to = 'everyone'; talk.meeting.turns.push({ who: 'note', text: `Vergadering begonnen · ${new Date().toTimeString().slice(0, 5)}` }); openDock('meeting'); }
 function meetingChatEnded() { if (talk.dock.tab === 'meeting') { talk.dock.tab = 'line'; if (talk.dock.open) closeDock(); } renderDock(); }
 
 function setFaceSize(v) {
@@ -603,7 +610,7 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     if (state.meeting) { openDock('meeting'); document.getElementById('meet-input').focus(); return; }
     const id = nearestPerson();
-    if (!id) { toast('Walk up to someone first, then press T.'); return; }
+    if (!id) { toast('Loop eerst naar iemand toe en druk dan op T (of tik op iemand).'); return; }
     if (office.chat && office.chat.id === id && !document.getElementById('chat').hidden) closeChat();
     else openChat(id);
   } else if (k === 'c') {
@@ -643,6 +650,7 @@ let boxZ = 10;
 
 (async () => {
   try { talk.villageOn = localStorage.getItem('village-talk-on') === '1'; } catch (e) { /* fine */ }
+  if (window.matchMedia('(max-width: 700px)').matches) faceSize.value = '1';     // smaller faces on a phone to start with
   try { const v = localStorage.getItem('village-face-size'); if (v) faceSize.value = v; } catch (e) { /* fine */ }
   setFaceSize(faceSize.value);
   const db = window.claude && window.claude.use ? await window.claude.use('db').catch(() => null) : null;
@@ -656,3 +664,32 @@ let boxZ = 10;
   renderDock();
 })();
 renderDock();
+
+// ---------- phones and small screens (Harm, 2026-10-31) ----------
+// "☰ Meer" shows the less-used buttons; only one box is open at a time, as a sheet from the bottom.
+const smallScreen = () => window.matchMedia('(max-width: 700px)').matches;
+const controlsEl = document.getElementById('controls');
+const moreBtn = document.getElementById('more-btn');
+moreBtn.addEventListener('click', () => {
+  const open = !controlsEl.classList.contains('open');
+  controlsEl.classList.toggle('open', open);
+  moreBtn.setAttribute('aria-expanded', String(open));
+});
+// tapping one of the extra buttons closes the menu again
+for (const b of controlsEl.querySelectorAll('.extra')) b.addEventListener('click', () => {
+  if (smallScreen() && b.id !== 'zoom-in' && b.id !== 'zoom-out') { controlsEl.classList.remove('open'); moreBtn.setAttribute('aria-expanded', 'false'); }
+});
+const SHEETS = {
+  todo: () => document.getElementById('todo-close').click(),
+  chat: () => closeChat(),
+  dock: () => closeDock(),
+};
+const sheetWatch = new MutationObserver((changes) => {
+  if (!smallScreen()) return;
+  for (const c of changes) {
+    if (c.target.hidden) continue;
+    for (const [id, close] of Object.entries(SHEETS)) if (id !== c.target.id && !document.getElementById(id).hidden) close();
+    controlsEl.classList.remove('open');
+  }
+});
+for (const id of Object.keys(SHEETS)) sheetWatch.observe(document.getElementById(id), { attributes: true, attributeFilter: ['hidden'] });
