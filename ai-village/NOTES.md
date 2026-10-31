@@ -142,6 +142,15 @@ One Artlist image per house. Every room:
 - **Made (2026-10-31):** walking sheet `art/characters/kevin-sheet-v1.png` (from Harm's cleaned sheet `harm-reference-clean.png` + pose guide, first try) and phone sheet `kevin-phone-sheet-v1.png` (from Kevin's sheet + pose guide, first try). **320 credits.** Cut out with `tools/cut_character.py` (now also clears enclosed magenta gaps) → `kevin-walk.png`, `kevin-phone.png`. Small flaw: the standing-away frame of the phone sheet shows no phone.
 - **In the game:** Kevin walks Harm's own path a step behind (so never through walls), catches up if far behind, turns toward Harm when both stand still, enters and leaves buildings with Harm. Key **C** starts or ends a call (phone sheet, 12 seconds). Council Hall label: "Kevin · Chief of Staff".
 
+## How Harm's team works (Harm, 2026-10-31)
+
+- **Ranks, top to bottom:** Harm (Chief Human Officer) → Kevin (Chief of Staff) → **Directors** → **Workers**.
+- **Directors:** each owns one area of Harm's life and one house. Only directors get a house of their own. They mostly hang out in their yard and their house. There are only **10 director spots**; anyone added after that is a worker.
+- **Workers:** like interns. Every task comes from their director, and their director checks every piece of their work before it counts as complete. Every worker wears a **yellow safety vest** drawn into their character sheet, so Harm can tell them apart at a glance. No house of their own.
+- **Models:** directors run on **Opus 5.5 with advisor turned on**, so they can check with **Fable 5.1** when something is hard. Workers run on **Sonnet 5.5**. Kevin runs on Opus 5.5.
+- **Every director is a real agent** with their own folder, a short instruction file (who they are, their job, who they report to, who reports to them) and their own notes file to remember what they learn.
+- **Start:** one director per job house, and one worker per director. No tasks yet.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
