@@ -139,6 +139,8 @@ One Artlist image per house. Every room:
 - **Look (approved):** tailored navy suit, crisp white shirt, polished brown shoes, small gold lapel pin, short neat dark hair, clean-shaven, thin-rimmed glasses.
 - **Sheets (approved, 2 × 160 credits):** a walking sheet made from Harm's cleaned sheet + the pose guide ("a different person, same style, proportions and grid"); then a second walking sheet holding a phone to the ear, made from Kevin's own sheet + the pose guide. Shown in the game while Kevin is "on a call".
 - **For now it's just Harm and Kevin. Nobody else** in the village.
+- **Made (2026-10-31):** walking sheet `art/characters/kevin-sheet-v1.png` (from Harm's cleaned sheet `harm-reference-clean.png` + pose guide, first try) and phone sheet `kevin-phone-sheet-v1.png` (from Kevin's sheet + pose guide, first try). **320 credits.** Cut out with `tools/cut_character.py` (now also clears enclosed magenta gaps) → `kevin-walk.png`, `kevin-phone.png`. Small flaw: the standing-away frame of the phone sheet shows no phone.
+- **In the game:** Kevin walks Harm's own path a step behind (so never through walls), catches up if far behind, turns toward Harm when both stand still, enters and leaves buildings with Harm. Key **C** starts or ends a call (phone sheet, 12 seconds). Council Hall label: "Kevin · Chief of Staff".
 
 ## How the build log works (2026-10-30)
 

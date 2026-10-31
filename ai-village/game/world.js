@@ -55,7 +55,7 @@ const MAP_OBSTACLES = [
 
 // Doors you can walk into. `room` is the interior to show; null means no interior yet.
 const BUILDINGS = [
-  { id: 'council-hall', name: 'Council Hall', job: 'Chief of Staff', door: [1194, 528], room: 'council-hall' },
+  { id: 'council-hall', name: 'Council Hall', job: 'Kevin · Chief of Staff', door: [1194, 528], room: 'council-hall' },
   { id: 'post-house', name: 'Post House', job: 'Inbox & Email', door: [1562, 548], room: 'post-house' },
   { id: 'criers-press', name: "Crier's Press", job: 'AI News', door: [1716, 786], room: 'criers-press' },
   { id: 'scholars-tower', name: "Scholar's Tower", job: 'Research', door: [915, 532], room: 'scholars-tower' },
@@ -76,6 +76,12 @@ const WALK_SHEET = {
   frameW: 192, frameH: 256, foot: 244, figure: 236,
   rows: { down: 0, right: 1, left: 2, up: 3 },
 };
+
+// Kevin, Chief of Staff (they/them): Harm's right hand. Lives in the Council Hall, follows Harm everywhere.
+// Same layout as Harm's sheet; the phone sheet is used while Kevin is on a call.
+const KEVIN_SHEET = { ...WALK_SHEET, image: 'char:kevin', src: 'assets/characters/kevin-walk.png' };
+const KEVIN_PHONE_SHEET = { ...WALK_SHEET, image: 'char:kevin-phone', src: 'assets/characters/kevin-phone.png' };
+const KEVIN = { name: 'Kevin', job: 'Chief of Staff', home: 'council-hall', followDistance: 0.9 }; // in person heights
 
 const START = [1200, 1060]; // the CEO starts just below the fountain
 

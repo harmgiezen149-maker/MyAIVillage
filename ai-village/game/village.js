@@ -20,6 +20,8 @@ const propNames = new Set([...MAP_PROPS.map((p) => p[0]), ...Object.values(ROOMS
 const loading = Promise.all([
   loadImage('map', MAP.image),
   loadImage(WALK_SHEET.image, WALK_SHEET.src),
+  loadImage(KEVIN_SHEET.image, KEVIN_SHEET.src),
+  loadImage(KEVIN_PHONE_SHEET.image, KEVIN_PHONE_SHEET.src),
   ...Object.keys(ROOMS).map((id) => loadImage('room:' + id, `assets/rooms/${id}.jpg`)),
   ...[...propNames].map((n) => loadImage('prop:' + n, `assets/props/${n}.png`)),
 ]);
@@ -31,6 +33,8 @@ const state = {
   scene: 'map',        // 'map' or a room id
   building: null,
   player: { x: START[0], y: START[1], facing: 1, dir: 'down', step: 0, moving: false },
+  kevin: { x: START[0] - 40, y: START[1] - 30, dir: 'down', step: 0, moving: false, callUntil: 0 },
+  trail: [],
   target: null,
   camera: { x: START[0], y: START[1], zoom: 1 },
   zoomFactor: { map: 1.8, room: 1 },
@@ -80,6 +84,7 @@ function enterBuilding(b) {
     state.building = b;
     const [ex, ey] = ROOMS[b.room].exit;
     [state.player.x, state.player.y] = ROOMS[b.room].start || [ex, ey - 70];
+    placeKevinBehind(0, 1);
     state.target = null;
     state.camera.zoom = fitZoom() * state.zoomFactor.room;
     state.camera.x = ROOM_W / 2;
@@ -96,6 +101,7 @@ function leaveBuilding() {
     state.building = null;
     state.player.x = b.door[0];
     state.player.y = b.door[1] + 46;
+    placeKevinBehind(0, -1);
     state.target = null;
     state.doorArmed = false;
     state.camera.zoom = fitZoom() * state.zoomFactor.map;
@@ -142,6 +148,7 @@ function update(dt) {
     p.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
   }
   p.step = p.moving ? p.step + dt * 9 : 0;
+  updateKevin(dt);
 
   // doors
   if (state.fade <= 0) {
@@ -409,25 +416,81 @@ function drawJukeboxLife() {
   }
 }
 
-// ---------- the CEO (a stand-in until the real characters arrive) ----------
+// ---------- Kevin follows Harm ----------
+
+// Kevin walks the path Harm walked, a step behind, so they never cut through walls.
+function placeKevinBehind(dx, dy) {
+  const k = state.kevin, p = state.player, gap = personHeight() * 0.5;
+  k.x = p.x + dx * gap;
+  k.y = p.y + dy * gap;
+  if (!canStand(k.x, k.y)) { k.x = p.x; k.y = p.y; }
+  k.dir = p.dir;
+  state.trail = [];
+}
+
+function updateKevin(dt) {
+  const p = state.player, k = state.kevin;
+  const last = state.trail[state.trail.length - 1];
+  if (!last || Math.hypot(p.x - last[0], p.y - last[1]) > 3) state.trail.push([p.x, p.y]);
+  if (state.trail.length > 400) state.trail.splice(0, state.trail.length - 400);
+
+  // the point on Harm's path one follow-distance behind Harm
+  const behind = personHeight() * KEVIN.followDistance;
+  let target = null, walked = 0;
+  for (let i = state.trail.length - 1; i > 0; i--) {
+    const [x1, y1] = state.trail[i], [x0, y0] = state.trail[i - 1];
+    const seg = Math.hypot(x1 - x0, y1 - y0);
+    if (walked + seg >= behind) { const t = (behind - walked) / seg; target = [x1 + (x0 - x1) * t, y1 + (y0 - y1) * t]; break; }
+    walked += seg;
+  }
+  k.moving = false;
+  if (target) {
+    const tx = target[0] - k.x, ty = target[1] - k.y, d = Math.hypot(tx, ty);
+    if (d > personHeight() * 6) { k.x = target[0]; k.y = target[1]; }      // fell far behind: catch up
+    else if (d > 2) {
+      const speed = Math.min(d, (state.scene === 'map' ? 210 : 255) * dt * (d > behind * 0.5 ? 1.25 : 1));
+      k.x += (tx / d) * speed; k.y += (ty / d) * speed; k.moving = true;
+      k.dir = Math.abs(tx) > Math.abs(ty) ? (tx > 0 ? 'right' : 'left') : (ty > 0 ? 'down' : 'up');
+    }
+  }
+  if (!k.moving && !p.moving) {                                            // standing: turn toward Harm
+    const tx = p.x - k.x, ty = p.y - k.y;
+    if (Math.hypot(tx, ty) > 4) k.dir = Math.abs(tx) > Math.abs(ty) ? (tx > 0 ? 'right' : 'left') : (ty > 0 ? 'down' : 'up');
+  }
+  k.step = k.moving ? k.step + dt * 9 : 0;
+}
+
+function kevinOnCall() {
+  return state.time < state.kevin.callUntil;
+}
+
+// ---------- characters ----------
 
 const WALK_CYCLE = [0, 1, 2, 1];
 
-function drawCEO(g = ctx) {
-  const img = images[WALK_SHEET.image];
-  if (!img) { drawStandIn(g); return; }
-  const p = state.player, S = WALK_SHEET;
+function drawWalker(g, who, S) {
+  const img = images[S.image];
+  if (!img) return false;
   const scale = personHeight() / S.figure;
-  const col = p.moving ? WALK_CYCLE[Math.floor(p.step / 1.25) % 4] : 1;
-  const row = S.rows[p.dir];
+  const col = who.moving ? WALK_CYCLE[Math.floor(who.step / 1.25) % 4] : 1;
+  const row = S.rows[who.dir];
   g.save();
   g.fillStyle = 'rgba(40,25,10,0.28)';
   g.beginPath();
-  g.ellipse(p.x, p.y, S.frameW * scale * 0.2, S.frameW * scale * 0.06, 0, 0, Math.PI * 2);
+  g.ellipse(who.x, who.y, S.frameW * scale * 0.2, S.frameW * scale * 0.06, 0, 0, Math.PI * 2);
   g.fill();
   g.drawImage(img, col * S.frameW, row * S.frameH, S.frameW, S.frameH,
-    p.x - (S.frameW * scale) / 2, p.y - S.foot * scale, S.frameW * scale, S.frameH * scale);
+    who.x - (S.frameW * scale) / 2, who.y - S.foot * scale, S.frameW * scale, S.frameH * scale);
   g.restore();
+  return true;
+}
+
+function drawCEO(g = ctx) {
+  if (!drawWalker(g, state.player, WALK_SHEET)) drawStandIn(g);
+}
+
+function drawKevin(g = ctx) {
+  drawWalker(g, state.kevin, kevinOnCall() ? KEVIN_PHONE_SHEET : KEVIN_SHEET);
 }
 
 // The simple drawn figure, used only if the walking sheet is missing.
@@ -498,6 +561,12 @@ function drawCEOInPlace() {
   drawWithCover(ctx, layerFor(state.scene), bbox, p.y, drawCEO);
 }
 
+function drawKevinInPlace() {
+  const k = state.kevin, H = personHeight();
+  const bbox = { x: k.x - H * 0.45, y: k.y - H * 1.06, w: H * 0.9, h: H * 1.13 };
+  drawWithCover(ctx, layerFor(state.scene), bbox, k.y, drawKevin);
+}
+
 // ---------- drawing ----------
 
 function drawProp([name, x, y, w]) {
@@ -544,6 +613,7 @@ function drawTown() {
   // props and the CEO, back to front
   const things = MAP_PROPS.map((p) => ({ y: p[2], draw: () => drawProp(p) }));
   things.push({ y: state.player.y, draw: drawCEOInPlace });
+  things.push({ y: state.kevin.y - 0.01, draw: drawKevinInPlace });
   things.sort((a, b) => a.y - b.y).forEach((t) => t.draw());
   drawJukeboxLife();
   ctx.save();
@@ -566,6 +636,7 @@ function drawRoom(id) {
   if (img) ctx.drawImage(img, 0, 0, ROOM_W, ROOM_H);
   const things = (room.props || []).map((p) => ({ y: p[2], draw: () => drawProp(p) }));
   things.push({ y: state.player.y, draw: drawCEOInPlace });
+  things.push({ y: state.kevin.y - 0.01, draw: drawKevinInPlace });
   things.sort((a, b) => a.y - b.y).forEach((t) => t.draw());
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
@@ -614,6 +685,10 @@ window.addEventListener('keydown', (e) => {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(k)) e.preventDefault();
   if (k === 'm') toggleSound();
+  if (k === 'c') {
+    state.kevin.callUntil = kevinOnCall() ? 0 : state.time + 12;
+    toast(kevinOnCall() ? 'Kevin is on a call.' : 'Kevin hung up.');
+  }
   if (k === '+' || k === '=') zoomBy(1.2);
   if (k === '-') zoomBy(1 / 1.2);
   keys.add(k);

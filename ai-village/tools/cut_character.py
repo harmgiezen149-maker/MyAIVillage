@@ -33,7 +33,11 @@ def cut(r, c):
     for y in range(0, h, 6):
         for x in (0, w - 1):
             if flood.getpixel((x, y)) == 255: ImageDraw.floodfill(flood, (x, y), 128)
-    figure = Image.fromarray(((np.asarray(flood) != 128) * 255).astype(np.uint8))
+    inside = np.asarray(flood) != 128
+    if bg[0] > 150 and bg[2] > 150 and bg[1] < 110:
+        # a true magenta background never appears in clothes or skin, so gaps between arm and body go too
+        inside &= dist >= 60
+    figure = Image.fromarray((inside * 255).astype(np.uint8))
     # biggest blob only (drop specks), then a soft one-pixel edge
     keep = figure.copy()
     ys, xs = np.nonzero(np.asarray(keep))
