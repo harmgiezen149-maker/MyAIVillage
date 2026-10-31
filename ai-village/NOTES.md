@@ -96,7 +96,19 @@ One Artlist image per house. Every room:
 - Props placed in yards and around the square, off paths and doors. The 2 extra council chairs stand at the foot of the table (12 in total), toned to match.
 - The CEO is a simple drawn placeholder figure until the real characters arrive. Person height indoors = 1/12 of the room.
 - Sound: soft breeze, the odd bird, and a swing tune from the jukebox that fades in as the CEO walks close; quieter indoors. Starts after the first click (browser rule). Made in code for now.
-- Artlist sound: Harm upgraded the plan so sound downloads work (no watermark). Picked: "Morning birds chirping in a village" (re:focus), "Single Bird, Chirping" (InspectorJ), "Single Bird, Singing" (Marcello Del Monaco), and jukebox track "Learn How to Walk" (Ziv Grinberg). Downloads blocked by the workspace network (`cms-artifacts.artlist.io`, `cms-public-artifacts.artlist.io` not allowed). The page uses them automatically once saved as `assets/sound/village-birds.aac`, `bird-chirp.aac`, `bird-song.aac`, `jukebox.mp3`.
+- Artlist sound: Harm upgraded the plan so sound downloads work (no watermark). Picked: "Morning birds chirping in a village" (re:focus), "Single Bird, Chirping" (InspectorJ), "Single Bird, Singing" (Marcello Del Monaco), and jukebox track "Learn How to Walk" (Ziv Grinberg). Downloads blocked: first by the workspace network, and after Harm allowed the hosts (2026-10-31) the Artlist file server itself refuses downloads from the workspace (403). Harm to download and upload the 4 files. The page uses them automatically once saved as `assets/sound/village-birds.aac`, `bird-chirp.aac`, `bird-song.aac`, `jukebox.mp3`.
+
+## Walk & cover layers + paint mode (2026-10-31)
+
+- Problem (Harm): the character walked on top of trees and tables, stood on a cottage window, and paths that continue behind objects were blocked.
+- Fix (approved by Harm): three invisible layers per place on a 4 × 4 unit grid, stored in `game/masks.js`:
+  - **Walk**: walkable or blocked.
+  - **Under** (blue): always drawn over the character (tree tops, roofs, awnings).
+  - **Behind** (yellow): drawn over the character only while his feet are above that patch's bottom edge, so he walks behind it above the line and in front of it below.
+- The character is drawn with the covered parts cut away (soft edges), so the art shows through.
+- First pass made by `tools/make_masks.js` from the shapes in `game/world.js`: buildings block; small things (picnic table, signpost, carts, garden boxes, notice board, market stall...) block only at their foot and cover the rest; two tree tops over paths are walkable and covering; room furniture blocks its lower half and covers the whole piece. Known roughness: covers are rectangles, so the character can vanish in empty space next to big furniture until painted.
+- **Paint mode**: key E or the Edit map button. Tools 1–5 (Walkable, Blocked, Under, Behind, No cover), brush size, undo, reset place, Save. Shift- or right-drag looks around. Saves go to the page's own storage (`masks/<place>`, owner-only writing); Claude reads them and folds them into `game/masks.js`.
+- Tested: all 12 doors and every room exit reachable; painting, undo and saving work.
 
 ## How the build log works (2026-10-30)
 

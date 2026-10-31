@@ -47,6 +47,18 @@
   #intro p { margin: 0 0 20px; color: var(--muted); }
   #enter { background: var(--accent); color: var(--accent-ink); border: none; font-size: 17px; padding: 11px 22px; }
   #enter:disabled { opacity: .6; cursor: wait; }
+  #editor { top: 70px; right: 16px; flex-direction: column; align-items: stretch; gap: 6px; max-width: min(560px, calc(100vw - 32px));
+    background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 12px; padding: 10px; }
+  #editor[hidden] { display: none; }
+  #editor .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  #editor label { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+  #editor .hint { font-size: 12px; color: var(--muted); }
+  #editor-status { color: var(--accent); min-height: 1em; }
+  button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  body.editing #view { cursor: crosshair; }
+  body.editing #help { display: none; }
   @media (max-width: 560px) { #help { display: none; } #place-name { font-size: 16px; } }
 </style>
 </head>
@@ -58,9 +70,23 @@
   <button id="zoom-out" aria-label="Zoom out">−</button>
   <button id="zoom-in" aria-label="Zoom in">+</button>
   <button id="sound" aria-pressed="true">Sound on</button>
+  <button id="edit" aria-pressed="false" title="Paint where he can walk (key E)">Edit map</button>
 </div>
-<div class="hud" id="help"><span>Walk: arrow keys / WASD or click · Zoom: mouse wheel · Walk into a door to enter · M: sound</span></div>
+<div class="hud" id="help"><span>Walk: arrow keys / WASD or click · Zoom: mouse wheel · Walk into a door to enter · M: sound · E: edit map</span></div>
 <div id="toast" role="status"></div>
+
+<div class="hud" id="editor" hidden>
+  <div class="row" id="tools"></div>
+  <div class="row">
+    <label>Brush <input id="brush" type="range" min="1" max="16" value="3"></label>
+    <button id="undo" title="Ctrl/Cmd + Z">Undo</button>
+    <button id="reset-place" title="Back to the first version of this place">Reset place</button>
+    <button id="save" class="primary">Save</button>
+    <button id="done">Done</button>
+  </div>
+  <div class="hint">Drag to paint · Shift-drag or right-drag to look around · keys 1–5 tools, [ ] brush size · walk to try it</div>
+  <div class="hint" id="editor-status" role="status"></div>
+</div>
 
 <div id="intro">
   <div class="card">
@@ -71,7 +97,10 @@
 </div>
 
 <script src="game/world.js"></script>
+<script src="game/masks.js"></script>
+<script src="game/layers.js"></script>
 <script src="game/audio.js"></script>
 <script src="game/village.js"></script>
+<script src="game/editor.js"></script>
 </body>
 </html>

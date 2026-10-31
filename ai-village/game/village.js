@@ -3,7 +3,6 @@
 const canvas = document.getElementById('view');
 const ctx = canvas.getContext('2d');
 const audio = new VillageAudio();
-const DEBUG = new URLSearchParams(location.search).has('debug');
 
 // ---------- loading ----------
 
@@ -51,41 +50,20 @@ function personHeight() {
   return state.scene === 'map' ? 46 : ROOM_H / 12;   // indoors: one twelfth of the room
 }
 
-// ---------- geometry ----------
+// ---------- where he can stand ----------
 
-function insidePolygon(x, y, poly) {
-  let inside = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i], [xj, yj] = poly[j];
-    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
 function hitsObstacle(x, y, list) {
-  for (const o of list) {
-    if (o.ellipse) {
-      const [cx, cy, rx, ry] = o.ellipse;
-      if (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 < 1) return true;
-    } else if (x > o[0] && x < o[0] + o[2] && y > o[1] && y < o[1] + o[3]) return true;
-  }
-  return false;
+  return list.some((o) => x > o[0] && x < o[0] + o[2] && y > o[1] && y < o[1] + o[3]);
 }
 function propFootprints(props) {
   return props.filter((p) => p[4] !== false).map(([name, x, y, w]) => [x - w * 0.42, y - w * 0.3, w * 0.84, w * 0.32]);
 }
-const mapSolids = [...MAP_OBSTACLES, ...propFootprints(MAP_PROPS)];
+const mapPropSolids = propFootprints(MAP_PROPS);
 
 function canStand(x, y) {
-  if (state.scene === 'map') {
-    if (!insidePolygon(x, y, WALK_AREA)) return false;
-    return !hitsObstacle(x, y, mapSolids);
-  }
-  const room = ROOMS[state.scene];
-  const [fx, fy, fw, fh] = room.floor;
-  const [ex, ey] = room.exit;
-  const inDoorway = Math.abs(x - ex) < 55 && y >= fy && y <= ey + 30;
-  if (!inDoorway && (x < fx || x > fx + fw || y < fy || y > fy + fh)) return false;
-  return !hitsObstacle(x, y, [...room.obstacles, ...propFootprints(room.props || [])]);
+  if (!isWalkable(layerFor(state.scene), x, y)) return false;
+  const solids = state.scene === 'map' ? mapPropSolids : propFootprints(ROOMS[state.scene].props || []);
+  return !hitsObstacle(x, y, solids);
 }
 
 // ---------- scenes ----------
@@ -129,6 +107,7 @@ function leaveBuilding() {
 
 function transition(swap) {
   state.fade = 1;
+  state.cameraFree = false;
   setTimeout(swap, 180);
 }
 
@@ -142,7 +121,7 @@ function update(dt) {
   if (keys.has('ArrowRight') || keys.has('d')) dx += 1;
   if (keys.has('ArrowUp') || keys.has('w')) dy -= 1;
   if (keys.has('ArrowDown') || keys.has('s')) dy += 1;
-  if (dx || dy) state.target = null;
+  if (dx || dy) { state.target = null; state.cameraFree = false; }
   if (state.target) {
     const tx = state.target[0] - p.x, ty = state.target[1] - p.y;
     const d = Math.hypot(tx, ty);
@@ -181,6 +160,7 @@ function update(dt) {
   // camera follows the CEO in town; rooms sit centered
   const cam = state.camera;
   const [w, h] = sceneSize();
+  if (state.cameraFree) { updateParticles(dt); return; }
   const viewW = canvas.clientWidth / cam.zoom, viewH = canvas.clientHeight / cam.zoom;
   let cx = state.scene === 'map' ? p.x : cam.x, cy = state.scene === 'map' ? p.y : cam.y;
   if (state.scene !== 'map' && cam.zoom > fitZoom() * 1.05) { cx = p.x; cy = p.y; }
@@ -429,64 +409,71 @@ function drawJukeboxLife() {
 
 // ---------- the CEO (a stand-in until the real characters arrive) ----------
 
-function drawCEO() {
+function drawCEO(g = ctx) {
   const p = state.player;
   const H = personHeight();
   const u = H / 46;
   const swingLeg = Math.sin(p.step) * 4 * u;
   const bob = p.moving ? Math.abs(Math.sin(p.step)) * -1.2 * u : 0;
-  ctx.save();
-  ctx.translate(p.x, p.y);
-  ctx.fillStyle = 'rgba(40,25,10,0.28)';
-  ctx.beginPath();
-  ctx.ellipse(0, 0, 11 * u, 4 * u, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.translate(0, bob);
-  ctx.scale(p.facing, 1);
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#1d1a24';
-  ctx.lineWidth = 1.2 * u;
+  g.save();
+  g.translate(p.x, p.y);
+  g.fillStyle = 'rgba(40,25,10,0.28)';
+  g.beginPath();
+  g.ellipse(0, 0, 11 * u, 4 * u, 0, 0, Math.PI * 2);
+  g.fill();
+  g.translate(0, bob);
+  g.scale(p.facing, 1);
+  g.lineJoin = 'round';
+  g.strokeStyle = '#1d1a24';
+  g.lineWidth = 1.2 * u;
   // legs
-  ctx.fillStyle = '#2b3245';
-  ctx.fillRect(-5 * u + swingLeg * 0.5, -16 * u, 4 * u, 16 * u);
-  ctx.fillRect(1 * u - swingLeg * 0.5, -16 * u, 4 * u, 16 * u);
-  ctx.fillStyle = '#3a2416';
-  ctx.fillRect(-6 * u + swingLeg * 0.5, -2.5 * u, 6 * u, 2.5 * u);
-  ctx.fillRect(0.5 * u - swingLeg * 0.5, -2.5 * u, 6 * u, 2.5 * u);
+  g.fillStyle = '#2b3245';
+  g.fillRect(-5 * u + swingLeg * 0.5, -16 * u, 4 * u, 16 * u);
+  g.fillRect(1 * u - swingLeg * 0.5, -16 * u, 4 * u, 16 * u);
+  g.fillStyle = '#3a2416';
+  g.fillRect(-6 * u + swingLeg * 0.5, -2.5 * u, 6 * u, 2.5 * u);
+  g.fillRect(0.5 * u - swingLeg * 0.5, -2.5 * u, 6 * u, 2.5 * u);
   // suit jacket
-  ctx.fillStyle = '#28324d';
-  ctx.beginPath();
-  ctx.moveTo(-8 * u, -15 * u);
-  ctx.lineTo(-7 * u, -31 * u);
-  ctx.quadraticCurveTo(0, -35 * u, 7 * u, -31 * u);
-  ctx.lineTo(8 * u, -15 * u);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  g.fillStyle = '#28324d';
+  g.beginPath();
+  g.moveTo(-8 * u, -15 * u);
+  g.lineTo(-7 * u, -31 * u);
+  g.quadraticCurveTo(0, -35 * u, 7 * u, -31 * u);
+  g.lineTo(8 * u, -15 * u);
+  g.closePath();
+  g.fill();
+  g.stroke();
   // shirt and gold tie
-  ctx.fillStyle = '#f4efe6';
-  ctx.beginPath();
-  ctx.moveTo(-3 * u, -32 * u); ctx.lineTo(3 * u, -32 * u); ctx.lineTo(0, -24 * u); ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = '#d4a017';
-  ctx.beginPath();
-  ctx.moveTo(-1 * u, -31 * u); ctx.lineTo(1 * u, -31 * u); ctx.lineTo(1.4 * u, -23 * u); ctx.lineTo(0, -21.5 * u); ctx.lineTo(-1.4 * u, -23 * u); ctx.closePath();
-  ctx.fill();
+  g.fillStyle = '#f4efe6';
+  g.beginPath();
+  g.moveTo(-3 * u, -32 * u); g.lineTo(3 * u, -32 * u); g.lineTo(0, -24 * u); g.closePath();
+  g.fill();
+  g.fillStyle = '#d4a017';
+  g.beginPath();
+  g.moveTo(-1 * u, -31 * u); g.lineTo(1 * u, -31 * u); g.lineTo(1.4 * u, -23 * u); g.lineTo(0, -21.5 * u); g.lineTo(-1.4 * u, -23 * u); g.closePath();
+  g.fill();
   // arms
-  ctx.fillStyle = '#28324d';
-  ctx.fillRect(-10 * u, -30 * u - swingLeg * 0.3, 3.4 * u, 13 * u);
-  ctx.fillRect(6.6 * u, -30 * u + swingLeg * 0.3, 3.4 * u, 13 * u);
-  ctx.fillStyle = '#e9b98f';
-  ctx.beginPath(); ctx.arc(-8.3 * u, -16.5 * u - swingLeg * 0.3, 1.8 * u, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.arc(8.3 * u, -16.5 * u + swingLeg * 0.3, 1.8 * u, 0, Math.PI * 2); ctx.fill();
+  g.fillStyle = '#28324d';
+  g.fillRect(-10 * u, -30 * u - swingLeg * 0.3, 3.4 * u, 13 * u);
+  g.fillRect(6.6 * u, -30 * u + swingLeg * 0.3, 3.4 * u, 13 * u);
+  g.fillStyle = '#e9b98f';
+  g.beginPath(); g.arc(-8.3 * u, -16.5 * u - swingLeg * 0.3, 1.8 * u, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.arc(8.3 * u, -16.5 * u + swingLeg * 0.3, 1.8 * u, 0, Math.PI * 2); g.fill();
   // head
-  ctx.fillStyle = '#e9b98f';
-  ctx.beginPath(); ctx.arc(0, -39 * u, 6 * u, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = '#4a2f1c';
-  ctx.beginPath(); ctx.arc(0, -41 * u, 6.2 * u, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
-  ctx.fillStyle = '#1d1a24';
-  ctx.beginPath(); ctx.arc(2.6 * u, -39 * u, 0.9 * u, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
+  g.fillStyle = '#e9b98f';
+  g.beginPath(); g.arc(0, -39 * u, 6 * u, 0, Math.PI * 2); g.fill(); g.stroke();
+  g.fillStyle = '#4a2f1c';
+  g.beginPath(); g.arc(0, -41 * u, 6.2 * u, Math.PI * 1.05, Math.PI * 1.95); g.fill();
+  g.fillStyle = '#1d1a24';
+  g.beginPath(); g.arc(2.6 * u, -39 * u, 0.9 * u, 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+
+// The CEO, with whatever he is under or behind showing through.
+function drawCEOInPlace() {
+  const p = state.player, H = personHeight();
+  const bbox = { x: p.x - H * 0.35, y: p.y - H * 1.05, w: H * 0.7, h: H * 1.2 };
+  drawWithCover(ctx, layerFor(state.scene), bbox, p.y, drawCEO);
 }
 
 // ---------- drawing ----------
@@ -519,7 +506,7 @@ function render() {
   if (state.scene === 'map') drawTown();
   else drawRoom(state.scene);
 
-  if (DEBUG) drawDebug();
+  drawEditor(ctx);
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   if (state.fade > 0) {
@@ -534,7 +521,7 @@ function drawTown() {
   drawFountain();
   // props and the CEO, back to front
   const things = MAP_PROPS.map((p) => ({ y: p[2], draw: () => drawProp(p) }));
-  things.push({ y: state.player.y, draw: drawCEO });
+  things.push({ y: state.player.y, draw: drawCEOInPlace });
   things.sort((a, b) => a.y - b.y).forEach((t) => t.draw());
   drawJukeboxLife();
   ctx.save();
@@ -556,7 +543,7 @@ function drawRoom(id) {
   const img = images['room:' + id];
   if (img) ctx.drawImage(img, 0, 0, ROOM_W, ROOM_H);
   const things = (room.props || []).map((p) => ({ y: p[2], draw: () => drawProp(p) }));
-  things.push({ y: state.player.y, draw: drawCEO });
+  things.push({ y: state.player.y, draw: drawCEOInPlace });
   things.sort((a, b) => a.y - b.y).forEach((t) => t.draw());
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
@@ -564,34 +551,6 @@ function drawRoom(id) {
   ctx.restore();
   (room.fire || []).forEach((f, i) => drawFire(f, i + 5));
   (room.orbs || []).forEach((o, i) => drawOrb(o, i + 3));
-}
-
-function drawDebug() {
-  ctx.save();
-  ctx.lineWidth = 2;
-  if (state.scene === 'map') {
-    ctx.strokeStyle = 'lime';
-    ctx.beginPath();
-    WALK_AREA.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
-    ctx.closePath();
-    ctx.stroke();
-    ctx.fillStyle = 'rgba(255,0,0,0.25)';
-    for (const o of mapSolids) {
-      if (o.ellipse) { ctx.beginPath(); ctx.ellipse(...o.ellipse, 0, 0, Math.PI * 2); ctx.fill(); }
-      else ctx.fillRect(...o);
-    }
-    ctx.fillStyle = 'cyan';
-    for (const b of BUILDINGS) { ctx.beginPath(); ctx.arc(b.door[0], b.door[1], 8, 0, Math.PI * 2); ctx.fill(); }
-  } else {
-    const room = ROOMS[state.scene];
-    ctx.strokeStyle = 'lime';
-    ctx.strokeRect(...room.floor);
-    ctx.fillStyle = 'rgba(255,0,0,0.25)';
-    for (const o of room.obstacles) ctx.fillRect(...o);
-    ctx.fillStyle = 'cyan';
-    ctx.beginPath(); ctx.arc(room.exit[0], room.exit[1], 8, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.restore();
 }
 
 // ---------- page controls ----------

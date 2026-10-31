@@ -13,7 +13,9 @@ const WALK_AREA = [
   [820, 1610], [700, 1600], [590, 1720], [170, 1720], [160, 1250], [440, 1090], [440, 960], [0, 960],
 ];
 
-// Buildings and other solid things in the art: [x, y, w, h], or {ellipse: [cx, cy, rx, ry]}.
+// Buildings and other solid things in the art: [x, y, w, h], {ellipse: [cx, cy, rx, ry]},
+// or { box, small: true } for small things whose foot blocks while the character can pass behind the rest.
+// These shapes only feed tools/make_masks.js; the game itself walks on the layers in game/masks.js.
 const MAP_OBSTACLES = [
   [0, 415, 245, 330],        // plain house, far top left
   [245, 560, 195, 205],      // trees between the two left houses
@@ -22,32 +24,32 @@ const MAP_OBSTACLES = [
   [1065, 150, 280, 365],     // town hall
   [1330, 25, 120, 445],      // bell tower
   [1470, 110, 320, 425],     // post house
-  [1565, 535, 85, 60],       // letter chest
+  { box: [1565, 535, 85, 60], small: true },       // letter chest
   [1650, 440, 330, 330],     // crier's press
-  [1520, 630, 100, 95],      // notice board
-  [1790, 620, 45, 95],       // bell post
+  { box: [1520, 630, 100, 95], small: true },      // notice board
+  { box: [1790, 620, 45, 95], small: true },       // bell post
   [2075, 330, 270, 360],     // artisan's workshop
-  [2225, 755, 95, 60],       // workbench outside the workshop
+  { box: [2225, 755, 95, 60], small: true },       // workbench outside the workshop
   [450, 770, 200, 340],      // tall house left of the square (closed)
   [500, 990, 245, 305],      // family cottage
-  [440, 1100, 70, 170],      // vegetable boxes
+  { box: [440, 1100, 70, 170], small: true },      // vegetable boxes
   [825, 1130, 310, 265],     // guest cottage, bottom middle
-  [905, 1420, 95, 90],       // picnic table
-  [805, 1400, 70, 120],      // garden box
-  [725, 1395, 75, 75],       // toy cart
-  [1000, 1500, 150, 70],     // flower border
-  [1085, 1405, 50, 100],     // garden box
+  { box: [905, 1420, 95, 90], small: true },       // picnic table
+  { box: [805, 1400, 70, 120], small: true },      // garden box
+  { box: [725, 1395, 75, 75], small: true },       // toy cart
+  { box: [1000, 1500, 150, 70], small: true },     // flower border
+  { box: [1085, 1405, 50, 100], small: true },     // garden box
   [185, 1250, 375, 295],     // carrier's depot
-  [275, 1550, 70, 75],       // cart wheel
+  { box: [275, 1550, 70, 75], small: true },       // cart wheel
   [330, 1490, 240, 140],     // crates and barrels under the lean-to
-  [600, 1510, 70, 110],      // signpost
+  { box: [600, 1510, 70, 110], small: true },      // signpost
   [1270, 1070, 345, 330],    // herald's lodge
   [1600, 990, 330, 290],     // bard's house
   [1700, 1180, 150, 185],    // bandstand
   [1745, 880, 215, 260],     // tall house right of the square (closed)
-  [2140, 880, 170, 240],     // market stall
+  { box: [2140, 880, 170, 240], small: true },     // market stall
   [790, 1050, 70, 90],       // swing tree trunk
-  [1255, 1595, 50, 50],      // beacon brazier
+  { box: [1255, 1595, 50, 50], small: true },      // beacon brazier
   { ellipse: [1200, 860, 135, 85] }, // fountain
 ];
 
