@@ -178,6 +178,42 @@ function releasePeople(t) {
 }
 
 // The tools the team can use: Gmail, Calendar, notes. Each one is written into the task's log.
+// ---------- all of Harm's calendars (Harm, 2026-11-01) ----------
+// Harm has several calendars (his own, the family ones, the Natuurmonumenten roster, the band...). Looking only in
+// the main one missed a whole day out; every calendar question now looks in all of them, and says which one.
+const calendarList = { at: 0, list: null };
+async function harmsCalendars(call, ctx) {
+  if (calendarList.list && Date.now() - calendarList.at < 10 * 60 * 1000) return calendarList.list;
+  const out = await call(CAL, 'list_calendars', { pageSize: 100 }, ctx);
+  const list = (out && out.calendars ? out.calendars : []).map((c) => ({ id: c.id, name: c.summary || c.id }));
+  calendarList.list = list.length ? list : [{ id: 'primary', name: 'Agenda' }];
+  calendarList.at = Date.now();
+  return calendarList.list;
+}
+function localWhen(x) {
+  if (!x) return '';
+  if (x.date && !x.dateTime) return x.date + ' (hele dag)';
+  return new Date(x.dateTime).toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+async function eventsInAllCalendars(call, args, onlyName, ctx) {
+  let cals = await harmsCalendars(call, ctx);
+  if (onlyName) {
+    const q = String(onlyName).toLowerCase();
+    const pick = cals.filter((c) => c.name.toLowerCase().includes(q) || c.id.toLowerCase() === q);
+    if (pick.length) cals = pick;
+  }
+  const skipped = [];
+  const lists = await Promise.all(cals.map((c) => call(CAL, 'list_events', { ...args, calendarId: c.id }, ctx)
+    .then((out) => (out && out.events ? out.events : []).map((e) => ({ e, c })))
+    .catch(() => { skipped.push(c.name); return []; })));
+  const events = lists.flat().filter(({ e }) => e.status !== 'cancelled').map(({ e, c }) => ({
+    calendar: c.name, calendarId: c.id, eventId: e.id, title: e.summary || '(geen titel)',
+    start: localWhen(e.start), end: localWhen(e.end), allDay: !!(e.start && e.start.date && !e.start.dateTime),
+    location: e.location || '', sortKey: (e.start && (e.start.dateTime ? new Date(e.start.dateTime).toISOString() : e.start.date)) || '',
+  })).sort((a, b) => a.sortKey.localeCompare(b.sortKey)).map(({ sortKey, ...rest }) => rest);
+  return { calendarsChecked: cals.map((c) => c.name), couldNotRead: skipped, events };
+}
+
 function teamTools(t, who) {
   const name = firstName(who);
   const call = async (server, tool, input, ctx) => {
@@ -225,26 +261,28 @@ function teamTools(t, who) {
         await saveTask(t);
         return compact(out, 2000);
       } },
-    { name: 'calendar_list_events', description: "List events on Harm's calendar between two local times (ISO 8601 without offset, e.g. 2026-11-02T00:00:00). Optional text filter.",
-      inputSchema: { type: 'object', properties: { startTime: { type: 'string' }, endTime: { type: 'string' }, text: { type: 'string' } } },
-      execute: async ({ startTime, endTime, text }, ctx) => {
-        logStep(t, who, `${name} keek in de agenda${startTime ? ' van ' + String(startTime).slice(0, 10) : ''}${endTime ? ' tot ' + String(endTime).slice(0, 10) : ''}.`, { tool: 'calendar_list_events' });
-        const args = { orderBy: 'startTime', pageSize: 40 };
+    { name: 'calendar_list_events', description: "List events in ALL of Harm's calendars (his own, GezinAgenda, Gezin, GB Agenda, the Natuurmonumenten roster, Static Line, Dutch holidays...) between two local times (ISO 8601 without offset, e.g. 2026-11-02T00:00:00). Each event says which calendar it is in, with Dutch local times. Optional: text filter, or calendar (a calendar name) to look in just one.",
+      inputSchema: { type: 'object', properties: { startTime: { type: 'string' }, endTime: { type: 'string' }, text: { type: 'string' }, calendar: { type: 'string' } } },
+      execute: async ({ startTime, endTime, text, calendar }, ctx) => {
+        logStep(t, who, `${name} keek in alle agenda's${startTime ? ' van ' + String(startTime).slice(0, 10) : ''}${endTime ? ' tot ' + String(endTime).slice(0, 10) : ''}.`, { tool: 'calendar_list_events' });
+        const args = { orderBy: 'startTime', pageSize: 50 };
         if (startTime) args.startTime = String(startTime);
         if (endTime) args.endTime = String(endTime);
         if (text) args.fullText = String(text);
-        return compact(await call(CAL, 'list_events', args, ctx), 14000);
+        return compact(await eventsInAllCalendars(call, args, calendar, ctx), 14000);
       } },
-    { name: 'calendar_search', description: "Search Harm's calendar for events by topic or words.",
+    { name: 'calendar_search', description: "Search ALL of Harm's calendars for events by words in the title, description, place or guests (from a month ago to a year ahead).",
       inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
       execute: async ({ query }, ctx) => {
-        logStep(t, who, `${name} zocht in de agenda naar "${query}".`, { tool: 'calendar_search' });
-        return compact(await call(CAL, 'search_events', { query: String(query), pageSize: 20 }, ctx), 12000);
+        logStep(t, who, `${name} zocht in alle agenda's naar "${query}".`, { tool: 'calendar_search' });
+        const day = (n) => { const d = new Date(Date.now() + n * 86400000); return d.toISOString().slice(0, 10) + 'T00:00:00'; };
+        return compact(await eventsInAllCalendars(call, { fullText: String(query), startTime: day(-30), endTime: day(365), orderBy: 'startTime', pageSize: 25 }, null, ctx), 12000);
       } },
     { name: 'calendar_propose_event', description: "Propose a NEW calendar event. It is NOT saved yet: Harm sees it and approves or declines. Times are local ISO 8601 without offset.",
-      inputSchema: { type: 'object', properties: { summary: { type: 'string' }, startTime: { type: 'string' }, endTime: { type: 'string' }, description: { type: 'string' }, location: { type: 'string' }, allDay: { type: 'boolean' } }, required: ['summary', 'startTime', 'endTime'] },
+      inputSchema: { type: 'object', properties: { summary: { type: 'string' }, startTime: { type: 'string' }, endTime: { type: 'string' }, description: { type: 'string' }, location: { type: 'string' }, allDay: { type: 'boolean' }, calendarId: { type: 'string', description: "leave out for Harm's own calendar" } }, required: ['summary', 'startTime', 'endTime'] },
       execute: async (input) => {
         const payload = { summary: String(input.summary), startTime: String(input.startTime), endTime: String(input.endTime) };
+        if (input.calendarId) payload.calendarId = String(input.calendarId);
         if (input.description) payload.description = String(input.description);
         if (input.location) payload.location = String(input.location);
         if (input.allDay) payload.allDay = true;
@@ -254,10 +292,10 @@ function teamTools(t, who) {
         return 'Proposed. It will be added only after Harm approves it.';
       } },
     { name: 'calendar_propose_change', description: "Propose a CHANGE to an existing event (new time, title, place or description). Not saved until Harm approves. Needs the eventId from the calendar tools.",
-      inputSchema: { type: 'object', properties: { eventId: { type: 'string' }, summary: { type: 'string' }, startTime: { type: 'string' }, endTime: { type: 'string' }, description: { type: 'string' }, location: { type: 'string' }, what: { type: 'string', description: 'one line: what changes and why' } }, required: ['eventId', 'what'] },
+      inputSchema: { type: 'object', properties: { eventId: { type: 'string' }, calendarId: { type: 'string', description: 'the calendarId the event is in (from calendar_list_events)' }, summary: { type: 'string' }, startTime: { type: 'string' }, endTime: { type: 'string' }, description: { type: 'string' }, location: { type: 'string' }, what: { type: 'string', description: 'one line in Dutch: what changes and why' } }, required: ['eventId', 'what'] },
       execute: async (input) => {
         const payload = { eventId: String(input.eventId) };
-        for (const k of ['summary', 'startTime', 'endTime', 'description', 'location']) if (input[k]) payload[k] = String(input[k]);
+        for (const k of ['calendarId', 'summary', 'startTime', 'endTime', 'description', 'location']) if (input[k]) payload[k] = String(input[k]);
         t.approvals.push({ id: newId(), kind: 'update_event', by: who, payload, what: String(input.what || ''), status: 'pending', at: nowStamp() });
         logStep(t, who, `${name} stelde een agendawijziging voor: ${input.what}. Wacht op Harms OK.`);
         await saveTask(t);

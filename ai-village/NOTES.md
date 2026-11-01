@@ -293,6 +293,18 @@ One Artlist image per house. Every room:
 - **Getest:** 40 willekeurige bestemmingen, 40 keer aangekomen, bijna nooit langs iets geschoven; deur in en uitgang uit werken.
 - Rosie vond via de Kookboek-connector de kiprecepten: de koppeling werkt echt (Harm, 2026-11-01).
 
+## Agenda: alle agenda's (Harm, 2026-11-01)
+
+- **Fout:** Harm vroeg wat er vandaag in zijn agenda stond. Iris en Imani zeiden "niets", maar er stond een dienst van 10:00 tot 16:00 ("Vraag het de boswachter").
+  - Oorzaak: het team keek alleen in de hoofdagenda (harmgiezen149@gmail.com).
+  - Harm heeft 7 agenda's: zijn eigen, GezinAgenda, Gezin, GB Agenda, Natuurmonumenten Zuid-Veluwe en IJsselvallei rooster, Static Line, en Feestdagen in Nederland.
+- **Nu:**
+  - Agenda bekijken en zoeken gaat altijd door **alle** agenda's. Elke afspraak zegt in welke agenda hij staat.
+  - Tijden worden omgezet naar Nederlandse tijd; de koppeling gaf soms UTC, waardoor 10:00 als 09:00 verscheen.
+  - Een agenda die niet te lezen is, wordt gemeld.
+  - Voorstellen kunnen een agenda noemen.
+  - De connector mag daarvoor nu ook `list_calendars`.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
