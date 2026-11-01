@@ -121,6 +121,7 @@
   .todo-parts { margin: 6px 0 0 26px; display: grid; gap: 3px; font-size: 12.5px; color: var(--muted); }
   .todo-part.done { color: var(--text); }
   .todo-part button.small { margin: 0 0 0 8px; padding: 2px 8px; }
+  .todo-usage { font-size: 11.5px; color: var(--muted); padding: 0 12px 8px; opacity: .85; }
   .todo-empty { color: var(--muted); font-size: 13px; padding: 8px 2px; }
   @keyframes pulse { 50% { box-shadow: 0 0 0 4px rgba(242,193,78,.2); } }
   @media (prefers-reduced-motion: reduce) { .todo-item .todo-check { animation: none !important; } }
@@ -247,6 +248,7 @@
   <div class="panel-head"><h2>Taken</h2><button id="todo-close" class="small" aria-label="Takenlijst sluiten" style="margin:0">Sluiten</button></div>
   <div id="todo-form"><input id="todo-input" type="text" placeholder="Wat moet er gebeuren?" aria-label="Nieuwe taak" autocomplete="off" enterkeyhint="send"><button id="todo-add" class="primary">Toevoegen</button></div>
   <div id="todo-note">Laden…</div>
+  <div id="todo-usage" class="todo-usage"></div>
   <ul id="todo-list"></ul>
 </div>
 <div id="todo-pop" role="tooltip" hidden></div>

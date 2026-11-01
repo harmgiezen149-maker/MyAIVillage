@@ -42,9 +42,19 @@ const talk = {
   villageBusy: false,
   villageLastCall: -1e9,
   villagePausedUntil: 0,
-  pendingResults: {},   // chat id -> answers waiting for the chat to open
+  pendingResults: {},
+  villageDay: { day: '', n: 0 },   // conversations made with Claude today (cap: VILLAGE_PER_DAY)   // chat id -> answers waiting for the chat to open
 };
 const CHAT_LIMIT = 24;
+const VILLAGE_PER_DAY = 40;      // village talk with Claude: at most this many conversations a day (Harm, 2026-11-01)
+function villageToday() {
+  const day = new Date().toLocaleDateString('sv-SE');
+  if (talk.villageDay.day !== day) {
+    talk.villageDay = { day, n: 0 };
+    try { const s = JSON.parse(localStorage.getItem('village-talk-day') || 'null'); if (s && s.day === day) talk.villageDay = s; } catch (e) { /* fine */ }
+  }
+  return talk.villageDay;
+}
 const COMMIT_RE = /\b(on it|i'?ll|i will|will do|i'?m on|leave it|consider it|right away|can do|got it|doing it|let me|happy to|of course|sure|okay|ok|absolutely|komt goed|komt in orde|doe ik|ga ik|ik ga|ik pak|pak ik|ik regel|regel ik|ik zorg|zorg ik|ik zet|zet ik|ik zoek|zoek ik|ik maak|maak ik|zal ik|ik zal|meteen|natuurlijk|zeker|prima|oké|is goed|geregeld|op het)\b/i;
 
 // ---------- people ----------
@@ -189,10 +199,12 @@ IMPORTANT: if Harm asks you to do something and you agree ("on it", "I'll do it"
   }
   if (!msgs.length || msgs[0].role !== 'user') msgs.unshift({ role: 'user', content: '(Harm walks up.)' });
   msgs[0] = { role: 'user', content: rules + '\n\n---\nHarm: ' + msgs[0].content };
+  countCall(null);
   const { text } = await office.sample(msgs, { model: persona.model, modelTier: persona.tier, tools, onText: opts.onText });
   markSampleOk();
   // A promise to do something must always become a real task, even if they forgot to create it.
   if (!created && said && COMMIT_RE.test(text)) {
+    countCall(null);
     const check = await office.sample.json(`Harm said to ${nameOf(id)}: "${said}"\n${nameOf(id)} replied: "${text}"\n\nDid they agree or promise to do something for Harm (e.g. "komt goed", "ik pak het op", "on it", "I'll do it")? Walking over or going back to work does not count. Reply with only JSON: {"committed": true|false, "task": "<if committed: the task in Harm's own words, as a short to-do line in Dutch>"}`, { modelTier: 'quick', cache: false }).catch(() => null);
     if (check && check.committed && check.task) created = await makeChatTask(id, String(check.task), said, true, opts.from || 'chat');
   }
@@ -471,7 +483,7 @@ function renderLine() {
 function renderVillage() {
   document.getElementById('tab-village').classList.remove('fresh');
   const btn = document.getElementById('village-toggle');
-  btn.textContent = talk.villageOn ? 'Dorpspraat: aan' : 'Dorpspraat: uit';
+  btn.textContent = talk.villageOn ? `Dorpspraat: aan (${villageToday().n}/${VILLAGE_PER_DAY} vandaag)` : 'Dorpspraat: uit';
   btn.setAttribute('aria-pressed', String(talk.villageOn));
   const log = document.getElementById('village-log');
   if (!talk.village.length) {
@@ -487,15 +499,18 @@ function villageMet(a, b) {
   const wa = realWork(a), wb = realWork(b);
   if (!wa && !wb) return;                                    // nothing real to talk about: no conversation logged
   const entry = { at: nowStamp(), a: a.id, b: b.id, lines: [] };
-  const canTalk = talk.villageOn && office.sample && sampleOk() && !talk.villageBusy && state.time > talk.villagePausedUntil && state.time - talk.villageLastCall > 30;
+  const canTalk = talk.villageOn && office.sample && sampleOk() && !talk.villageBusy && state.time > talk.villagePausedUntil && state.time - talk.villageLastCall > 30 && villageToday().n < VILLAGE_PER_DAY;
   if (canTalk) {
     talk.villageBusy = true;
     talk.villageLastCall = state.time;
+    villageToday().n++;
+    try { localStorage.setItem('village-talk-day', JSON.stringify(talk.villageDay)); } catch (e) { /* fine */ }
     const prompt = `Two people in Harm's AI village just met in the street.
 A: ${a.name} (${a.role === 'Director' ? 'director of the ' + a.building.name : 'worker at the ' + a.building.name}). Personality: ${PERSONALITY[a.id]}. Real work: ${wa || 'nothing on right now'}.
 B: ${b.name} (${b.role === 'Director' ? 'director of the ' + b.building.name : 'worker at the ' + b.building.name}). Personality: ${PERSONALITY[b.id]}. Real work: ${wb || 'nothing on right now'}.
 A asks B what they're working on. Write their short conversation in Dutch (2 to 5 lines) about that real work only: what each is doing, anything useful, or how they could help each other. No filler, no invented facts beyond what is given. Each in their own voice.
 Reply with only JSON: {"lines": [{"who": "a" or "b", "text": "..."}]}`;
+    countCall(null);
     office.sample.json(prompt, { modelTier: 'quick', cache: false }).then((out) => {
       const lines = (out && Array.isArray(out.lines) ? out.lines : []).slice(0, 6).map((l) => ({ who: l.who === 'b' ? b.id : a.id, text: String(l.text || '').slice(0, 300) })).filter((l) => l.text);
       entry.lines = lines.length ? lines : plainLines(a, b, wa, wb);
@@ -599,6 +614,7 @@ BUT if Harm addresses everyone or a whole group ("iedereen", "iedere directeur",
 Each answers in their own voice and personality, short and plain (1-3 sentences). No invented facts about mail, calendar or apps.
 If someone agrees to do something, fill "commits" with the task in Harm's words (Dutch), for their own part (the person who agrees should be the one whose area it is). When every director takes their own part, Kevin does not add an extra task for the same thing. Otherwise leave it empty.
 Reply with only JSON: {"replies": [{"who": "<id from the list>", "text": "...", "commits": ""}]}`;
+      countCall(null);
       const out = await office.sample.json(prompt, { model: MODELS.director, modelTier: 'complex', cache: false });
       markSampleOk();
       const replies = (out && Array.isArray(out.replies) ? out.replies : []).filter((r) => people.includes(r.who)).slice(0, people.length);
@@ -607,6 +623,7 @@ Reply with only JSON: {"replies": [{"who": "<id from the list>", "text": "...", 
         let task = String(r.commits || '').trim();
         let auto = false;
         if (!task && COMMIT_RE.test(String(r.text))) {
+          countCall(null);
           const check = await office.sample.json(`Harm said to the room: "${said}"\n${nameOf(r.who)} replied: "${r.text}"\n\nDid ${nameOf(r.who)} agree or promise to do something for Harm? Reply with only JSON: {"committed": true|false, "task": "<if committed: the task in Harm's own words, in Dutch>"}`, { modelTier: 'quick', cache: false }).catch(() => null);
           if (check && check.committed && check.task) { task = String(check.task); auto = true; }
         }

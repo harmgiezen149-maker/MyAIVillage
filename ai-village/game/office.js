@@ -25,6 +25,29 @@ const office = {
   ready: false,
 };
 
+// ---------- usage meter (Harm, 2026-11-01): how many calls to Claude, per task and per day ----------
+office.usage = { day: '', calls: 0 };
+function usageDay() { return new Date().toLocaleDateString('sv-SE'); }
+function loadUsage() {
+  try { const u = JSON.parse(localStorage.getItem('village-usage') || 'null'); office.usage = u && u.day === usageDay() ? u : { day: usageDay(), calls: 0 }; }
+  catch (e) { office.usage = { day: usageDay(), calls: 0 }; }
+}
+let usageSave = null;
+function countCall(t) {
+  if (office.usage.day !== usageDay()) office.usage = { day: usageDay(), calls: 0 };
+  office.usage.calls++;
+  try { localStorage.setItem('village-usage', JSON.stringify(office.usage)); } catch (e) { /* fine */ }
+  if (t) t.calls = (t.calls || 0) + 1;
+  clearTimeout(usageSave);
+  usageSave = setTimeout(() => { if (office.db) office.db.doc('stats/usage-' + office.usage.day).set({ calls: office.usage.calls, updatedAt: nowStamp() }).catch(() => {}); }, 2000);
+  showUsage();
+}
+function showUsage() {
+  const el = document.getElementById('todo-usage');
+  if (el) el.textContent = `Vandaag ${office.usage.calls} ${office.usage.calls === 1 ? 'aanroep' : 'aanroepen'} naar Claude vanuit het dorp (een aanroep met gereedschap telt intern meerdere rondes).`;
+}
+loadUsage();
+
 // ---------- helpers ----------
 
 function nowStamp() { return new Date().toISOString(); }
@@ -168,6 +191,7 @@ BUT if Harm asks several or all directors for something (for example "each direc
 ${ACCESS_TEXT}
 
 Reply with only JSON: {"director": "<director id from the list>", "directors": ["<only when more than one director should do a part: their ids>"], "why": "<one sentence>", "brief": "<2-5 sentences>", "callLine": "<the first thing you say on the phone, one short sentence>"}`;
+    countCall(t);
     const out = await office.sample.json(prompt, { model: MODELS.kevin, modelTier: 'complex', cache: false });
     const many = Array.isArray(out.directors) ? [...new Set(out.directors.filter((id) => DIRECTORS.some((d) => d.id === id)))] : [];
     if (many.length > 1) { await splitTask(t, many, String(out.brief || ''), String(out.why || '')); return; }
@@ -224,6 +248,7 @@ async function combineParent(parentId) {
       const d = residents.find((r) => r.id === x.owner);
       return `${d.name} (${d.building.job}):\nSummary: ${x.summary}\n${(x.results || []).map((r) => `- ${r.title}: ${r.body}`).join('\n')}`;
     }).join('\n\n');
+    countCall(p);
     const out = await office.sample.json(`You are Kevin, Chief of Staff to Harm. Harm asked: "${p.text}". Each director did their part:
 
 ${parts}
@@ -349,6 +374,9 @@ function teamTools(t, who) {
         if (Array.isArray(input.cc)) args.cc = input.cc.map(String);
         if (input.subject) args.subject = String(input.subject);
         if (input.replyToMessageId) args.replyToMessageId = String(input.replyToMessageId);
+        // the same draft twice (e.g. after Verder) is not made again
+        const same = (t.drafts || []).find((x) => (x.subject || '').toLowerCase() === (args.subject || '(antwoord)').toLowerCase() && (x.to || []).join(',').toLowerCase() === (args.to || []).join(',').toLowerCase());
+        if (same) return `This draft already exists (made earlier in this task): "${same.subject}". Not made again.`;
         const out = await call(GMAIL, 'create_draft', args, ctx);
         const d = { at: nowStamp(), by: who, to: args.to || [], subject: args.subject || '(antwoord)', body: args.body.slice(0, 3000), url: out && (out.viewUrl || (out.draft && out.draft.viewUrl)) || '', id: out && (out.id || (out.draft && out.draft.id)) || '' };
         t.drafts.push(d);
@@ -381,6 +409,7 @@ function teamTools(t, who) {
         if (input.description) payload.description = String(input.description);
         if (input.location) payload.location = String(input.location);
         if (input.allDay) payload.allDay = true;
+        if (t.approvals.some((a) => a.kind === 'create_event' && a.payload.summary === payload.summary && a.payload.startTime === payload.startTime)) return 'This event was already proposed in this task. Not proposed again.';
         t.approvals.push({ id: newId(), kind: 'create_event', by: who, payload, status: 'pending', at: nowStamp() });
         logStep(t, who, `${name} stelde een afspraak voor: "${payload.summary}", ${payload.startTime.replace('T', ' ').slice(0, 16)}. Wacht op Harms OK.`);
         await saveTask(t);
@@ -391,6 +420,7 @@ function teamTools(t, who) {
       execute: async (input) => {
         const payload = { eventId: String(input.eventId) };
         for (const k of ['calendarId', 'summary', 'startTime', 'endTime', 'description', 'location']) if (input[k]) payload[k] = String(input[k]);
+        if (t.approvals.some((a) => a.kind === 'update_event' && JSON.stringify(a.payload) === JSON.stringify(payload))) return 'This change was already proposed in this task. Not proposed again.';
         t.approvals.push({ id: newId(), kind: 'update_event', by: who, payload, what: String(input.what || ''), status: 'pending', at: nowStamp() });
         logStep(t, who, `${name} stelde een agendawijziging voor: ${input.what}. Wacht op Harms OK.`);
         await saveTask(t);
@@ -512,6 +542,7 @@ function appTools(t, who, call) {
         const { action, what: rawWhat, ...payload } = input || {};
         if (!writes.includes(action)) return `Unknown action. Use one of: ${writes.join(', ')}`;
         const what = String(rawWhat || String(action).replace(/_/g, ' '));
+        if (t.approvals.some((a) => a.kind === 'app' && a.tool === action && JSON.stringify(a.payload) === JSON.stringify(payload))) return 'This change was already proposed in this task. Not proposed again.';
         t.approvals.push({ id: newId(), kind: 'app', server: app.server, app: app.label, tool: action, by: who, payload, what, status: 'pending', at: nowStamp() });
         logStep(t, who, `${name} stelde een wijziging voor in de ${app.label}-app: ${what}. Wacht op Harms OK.`);
         await saveTask(t);
@@ -539,12 +570,41 @@ const RESULT_SHAPE = `When you are finished, reply with only JSON:
 If you used the internet, every finding needs its source in "sources".`;
 
 // The director does the task, or hands it to their worker and checks the work.
+// After "Verder": what is already done, so it is not done twice.
+function resumeNote(t) {
+  if ((t.attempt || 1) < 2) return '';
+  const drafts = (t.drafts || []).map((x) => `- draft "${x.subject}" to ${(x.to || []).join(', ') || '(reply)'}`);
+  const props = (t.approvals || []).map((a) => `- proposal: ${a.kind === 'app' ? a.app + ': ' + a.what : (a.payload.summary || a.what)} (${a.status})`);
+  const steps = (t.log || []).slice(-12).map((l) => `- ${l.text}`);
+  return `THIS TASK WAS STARTED BEFORE AND STOPPED HALFWAY. Already done (do NOT do these again; continue from here):
+${[...drafts, ...props].join('\n') || '- no drafts or proposals yet'}
+Last steps:
+${steps.join('\n')}
+
+`;
+}
+
+// The director's answer. If it comes back unreadable, one cheap repair: turn the raw text into the JSON (no tools, no
+// work done twice). Only if that also fails does the task pause.
+async function directorAnswer(t, prompt, tools) {
+  try {
+    countCall(t);
+    return await office.sample.json(prompt, { model: MODELS.director, modelTier: 'complex', tools: capTools(tools) });
+  } catch (e) {
+    if (!e || e.code !== 'invalid_json' || !e.text) throw e;
+    logStep(t, 'office', 'Het antwoord was niet goed leesbaar; het wordt netjes overgezet.');
+    countCall(t);
+    return office.sample.json(`Turn this report into the JSON below. Keep the facts exactly; do not add anything.\n\nREPORT:\n${String(e.text).slice(-12000)}\n\n${LANG_TEXT}\n${RESULT_SHAPE}`, { modelTier: 'quick', cache: false });
+  }
+}
+
 async function directorWorks(t) {
   const d = residents.find((r) => r.id === t.owner);
   const w = d.workerRef;
   t.status = 'working';
+  t.attempt = (t.attempt || 0) + 1;
   busyWith(d, t);
-  logStep(t, d.id, `${firstName(d.id)} gaat ermee aan de slag.`);
+  logStep(t, d.id, t.attempt > 1 ? `${firstName(d.id)} gaat verder waar het bleef.` : `${firstName(d.id)} gaat ermee aan de slag.`);
   if (t.askedPerson === d.id || t.askedPerson === w.id) lineAdd(d.id, 'kevin', `Kevin, Harm vroeg ${t.askedPerson === d.id ? 'mij' : firstName(w.id)} rechtstreeks: "${t.text}". Ik pak het op.`, 'say', t.id);
   else lineAdd(d.id, 'kevin', 'Komt goed, Kevin.', 'say', t.id);
   await saveTask(t);
@@ -557,6 +617,7 @@ async function directorWorks(t) {
       inputSchema: { type: 'object', properties: { question: { type: 'string' } }, required: ['question'] },
       execute: async ({ question }) => {
         logStep(t, d.id, `${firstName(d.id)} vroeg de adviseur om een tweede mening.`);
+        countCall(t);
         const { text } = await office.sample(`You are a senior advisor to ${d.name}, a director in Harm's AI village. Give short, practical advice.\n\nThe task: ${t.text}\n\nQuestion: ${question}`, { model: MODELS.advisor, modelTier: 'complex', cache: false });
         return text.slice(0, 4000);
       } },
@@ -572,8 +633,8 @@ Today is ${today()}.
 ${ACCESS_TEXT}
 
 Do the task properly with the tools: do it yourself, or hand it (or a part) to ${firstName(w.id)} with hand_to_worker and then check what comes back. Use note to tell Harm what you're doing at each main step. Keep it to what the task needs.
-${RESULT_SHAPE}`;
-  const out = await office.sample.json(prompt, { model: MODELS.director, modelTier: 'complex', tools: capTools(tools) });
+${resumeNote(t)}${RESULT_SHAPE}`;
+  const out = await directorAnswer(t, prompt, tools);
   t.summary = String(out.summary || '');
   t.whatWasDone = Array.isArray(out.whatWasDone) ? out.whatWasDone.map(String) : [];
   t.results = Array.isArray(out.results) ? out.results.map((r) => ({ title: String(r.title || ''), body: String(r.body || '') })) : [];
@@ -584,7 +645,7 @@ ${RESULT_SHAPE}`;
   t.outcome = out.status === 'could_not' ? 'could_not' : 'done';
   logStep(t, d.id, `${firstName(d.id)} is klaar: ${t.summary}`);
   lineAdd(d.id, 'kevin', String(out.reportToKevin || t.summary || 'Klaar.'), 'say', t.id);
-  t.status = t.approvals.some((a) => a.status === 'pending') ? 'needs_harm' : 'finishing';
+  t.status = t.approvals.some((a) => a.status === 'pending' || a.status === 'unsure') ? 'needs_harm' : 'finishing';
   await saveTask(t);
 }
 
@@ -603,6 +664,7 @@ Today is ${today()}.
 ${ACCESS_TEXT}
 
 Do it with the tools. Use note for your main steps. When done, reply with a clear report for ${firstName(d.id)}: what you did, what you found or made (include draft subjects, event details, key facts), and anything you couldn't do.`;
+  countCall(t);
   const { text } = await office.sample(prompt, { model: MODELS.worker, modelTier: 'default', tools: capTools(teamTools(t, w.id)), signal: ctx && ctx.signal });
   logStep(t, w.id, `${firstName(w.id)} bracht verslag uit aan ${firstName(d.id)}.`);
   lineAdd(w.id, d.id, text.slice(0, 600), 'say', t.id);
@@ -614,7 +676,7 @@ Do it with the tools. Use note for your main steps. When done, reply with a clea
 
 async function finishIfReady(t) {
   if (t.status === 'needs_harm' || t.status === 'paused' || t.status === 'kevin' || t.status === 'new' || t.status === 'split') return;
-  if (!t.subtasks && t.approvals.some((a) => a.status === 'pending')) { t.status = 'needs_harm'; await saveTask(t); return; }
+  if (!t.subtasks && t.approvals.some((a) => a.status === 'pending' || a.status === 'unsure')) { t.status = 'needs_harm'; await saveTask(t); return; }
   if (t.status !== 'finishing' && t.status !== 'working') return;
   t.status = 'done';
   t.doneAt = nowStamp();
@@ -630,15 +692,54 @@ async function finishIfReady(t) {
 
 // ---------- approvals (Harm clicks Approve or Decline) ----------
 
+// When a save may or may not have gone through (the connection broke), look first: is it already there?
+// Only then may Harm approve again, so nothing ends up twice (Harm, 2026-11-01).
+const AMBIGUOUS = ['server_unavailable', 'upstream_error', 'cancelled', 'tool_error'];
+async function alreadyDone(ap) {
+  const read = async (server, tool, input) => { const r = await office.mcp.callTool(server, tool, input); return r.payload !== undefined ? r.payload : r.content; };
+  const p = ap.payload || {};
+  try {
+    if (ap.kind === 'create_event') {
+      const day = String(p.startTime || '').slice(0, 10);
+      const out = await read(CAL, 'list_events', { calendarId: p.calendarId || 'primary', startTime: day + 'T00:00:00', endTime: day + 'T23:59:59', fullText: p.summary, pageSize: 20 });
+      return (out && out.events || []).some((e) => (e.summary || '').trim() === String(p.summary).trim());
+    }
+    if (ap.kind === 'update_event') return false;                        // changing again to the same values does no harm
+    if (ap.server === 'Kookboek' && ap.tool === 'plan_recipe') {
+      const out = await read('Kookboek', 'get_week_menu', p.week ? { week: p.week } : {});
+      return (out && out.dagen || []).some((d) => d.dag === p.day && d.receptId === p.recipeId);
+    }
+    if (ap.server === 'Kookboek' && ap.tool === 'add_to_shopping_list') {
+      const out = await read('Kookboek', 'get_shopping_list', {});
+      const names = new Set((out && out.items || []).map((i) => String(i.naam).toLowerCase()));
+      return (p.items || []).length > 0 && p.items.every((i) => names.has(String(i.name).toLowerCase()));
+    }
+    if (ap.server === 'Kookboek' && ap.tool === 'add_recipe') {
+      const out = await read('Kookboek', 'search_recipes', { query: p.title, limit: 10 });
+      return (out && out.recepten || []).some((r) => (r.titel || '').toLowerCase() === String(p.title).toLowerCase());
+    }
+    if (ap.server === 'Darkglass' && ap.tool === 'save_setlist') {
+      if (p.id) return false;                                             // saving the same setlist again does no harm
+      const out = await read('Darkglass', 'list_setlists', {});
+      return (out && out.setlists || []).some((x) => x.naam === p.name && JSON.stringify((x.items || []).map((i) => i.id)) === JSON.stringify(p.presetIds || []));
+    }
+  } catch (e) { return false; }
+  return false;
+}
+
 async function decide(taskId, apId, approve) {
   const t = office.tasks.get(taskId);
   const ap = t && t.approvals.find((a) => a.id === apId);
-  if (!ap || ap.status !== 'pending') return;
+  if (!ap || (ap.status !== 'pending' && ap.status !== 'unsure')) return;
+  const wasUnsure = ap.status === 'unsure';
   ap.status = approve ? 'approving' : 'declined';
   renderTodo();
   if (approve) {
     try {
-      if (ap.kind === 'app') {
+      if (wasUnsure && await alreadyDone(ap)) {
+        ap.status = 'done';
+        logStep(t, 'office', `Gecontroleerd: "${ap.kind === 'app' ? ap.what : (ap.payload.summary || ap.what)}" was de vorige keer toch al gelukt. Niet nog eens gedaan.`);
+      } else if (ap.kind === 'app') {
         const res = await office.mcp.callTool(ap.server, ap.tool, ap.payload);
         ap.status = 'done';
         ap.result = compact(res.payload !== undefined ? res.payload : res.content, 600);
@@ -652,16 +753,19 @@ async function decide(taskId, apId, approve) {
         logStep(t, 'harm', `Harm keurde goed: "${ap.payload.summary || ap.what}" ${ap.kind === 'create_event' ? 'toegevoegd aan' : 'gewijzigd in'} de agenda.`, { link: ap.url });
       }
     } catch (e) {
-      ap.status = 'pending';
+      const unsure = AMBIGUOUS.includes(e && e.code);
+      ap.status = unsure ? 'unsure' : 'pending';
       const why = { server_not_connected: `voeg de connector ${ap.server || 'Google Calendar'} toe in claude.ai → Instellingen → Connectors`, not_in_manifest: `sta ${ap.server || 'Google Calendar'} toe voor deze pagina`, needs_reauth: `koppel ${ap.server || 'Google Calendar'} opnieuw in claude.ai → Instellingen → Connectors` }[e.code];
-      logStep(t, 'office', `${ap.kind === 'app' ? `De ${ap.app}-app` : 'De agenda'} nam het niet aan: ${why || e.message || e.code}. Je kunt opnieuw op Goedkeuren drukken.`);
+      logStep(t, 'office', unsure
+        ? `${ap.kind === 'app' ? `De ${ap.app}-app` : 'De agenda'} gaf geen duidelijk antwoord; misschien is het toch gelukt. Druk op "Controleren en goedkeuren": eerst wordt gekeken of het er al staat.`
+        : `${ap.kind === 'app' ? `De ${ap.app}-app` : 'De agenda'} nam het niet aan: ${why || e.message || e.code}. Je kunt opnieuw op Goedkeuren drukken.`);
       await saveTask(t);
       return;
     }
   } else {
     logStep(t, 'harm', `Harm wees af: "${ap.payload.summary || ap.what}".`);
   }
-  if (!t.approvals.some((a) => a.status === 'pending')) t.status = 'finishing';
+  if (!t.approvals.some((a) => a.status === 'pending' || a.status === 'unsure')) t.status = 'finishing';
   await saveTask(t);
   await finishIfReady(t);
 }
@@ -691,6 +795,10 @@ async function makeChatTask(personId, task, words, autoCreated, from = 'chat') {
 
 // ---------- the to-do panel ----------
 
+function taskCalls(t) {
+  return (t.calls || 0) + (t.subtasks || []).reduce((n, id) => n + ((office.tasks.get(id) || {}).calls || 0), 0);
+}
+
 function statusText(t) {
   if (t.status === 'split') {
     const subs = (t.subtasks || []).map((id) => office.tasks.get(id)).filter(Boolean);
@@ -719,7 +827,7 @@ function renderTodo() {
     li.className = 'todo-item ' + t.status;
     li.innerHTML = `<div class="todo-row"><span class="todo-check" aria-hidden="true">${t.status === 'done' ? '✓' : ''}</span>
       <span class="todo-text">${esc(t.text)}</span></div>
-      <div class="todo-meta">${esc(statusText(t))}${t.from === 'chat' ? ` · persoonlijk gevraagd aan ${esc(firstName(t.askedPerson))}` : t.from === 'meeting' ? ` · in de vergadering gevraagd aan ${esc(firstName(t.askedPerson))}` : ''}${t.status === 'done' ? ' · ' + esc(timeOf(t.doneAt)) : ''}</div>`;
+      <div class="todo-meta">${esc(statusText(t))}${t.from === 'chat' ? ` · persoonlijk gevraagd aan ${esc(firstName(t.askedPerson))}` : t.from === 'meeting' ? ` · in de vergadering gevraagd aan ${esc(firstName(t.askedPerson))}` : ''}${t.status === 'done' ? ' · ' + esc(timeOf(t.doneAt)) : ''}${taskCalls(t) ? ` · ${taskCalls(t)} ${taskCalls(t) === 1 ? 'aanroep' : 'aanroepen'}` : ''}</div>`;
     const subs = (t.subtasks || []).map((id) => office.tasks.get(id)).filter(Boolean);
     const last = (t.log || []).slice(-1)[0];
     if (t.status !== 'done' && t.status !== 'paused' && last) li.insertAdjacentHTML('beforeend', `<div class="todo-latest">${esc(last.text)}</div>`);
@@ -749,13 +857,13 @@ function renderTodo() {
       li.appendChild(parts);
     }
     const sources = t.status === 'done' ? [t] : [t, ...subs];
-    for (const [src, ap] of sources.flatMap((src) => (src.approvals || []).filter((a) => a.status === 'pending' || a.status === 'approving').map((a) => [src, a]))) {
+    for (const [src, ap] of sources.flatMap((src) => (src.approvals || []).filter((a) => a.status === 'pending' || a.status === 'approving' || a.status === 'unsure').map((a) => [src, a]))) {
       const p = ap.payload;
       const box = document.createElement('div');
       box.className = 'todo-approval';
       box.innerHTML = `<div><b>${ap.kind === 'app' ? esc(ap.app) : ap.kind === 'create_event' ? 'In de agenda zetten' : 'Afspraak wijzigen'}:</b> ${esc(ap.kind === 'app' ? ap.what : (p.summary || ap.what || ''))}</div>
         <div class="todo-meta">${esc((p.startTime || '').replace('T', ' ').slice(0, 16))}${p.endTime ? ' – ' + esc(p.endTime.slice(11, 16)) : ''}${p.location ? ' · ' + esc(p.location) : ''}</div>`;
-      const ok = document.createElement('button'); ok.textContent = ap.status === 'approving' ? 'Bezig…' : 'Goedkeuren'; ok.className = 'small primary'; ok.disabled = ap.status === 'approving';
+      const ok = document.createElement('button'); ok.textContent = ap.status === 'approving' ? 'Bezig…' : ap.status === 'unsure' ? 'Controleren en goedkeuren' : 'Goedkeuren'; ok.className = 'small primary'; ok.disabled = ap.status === 'approving';
       ok.onclick = () => decide(src.id, ap.id, true);
       const no = document.createElement('button'); no.textContent = 'Afwijzen'; no.className = 'small'; no.disabled = ap.status === 'approving';
       no.onclick = () => decide(src.id, ap.id, false);
@@ -855,6 +963,7 @@ function officeCallsNow() {
     } catch (e) { /* empty list */ }
   }
   office.ready = true;
+  showUsage();
   renderTodo();
 })();
 renderTodo();
