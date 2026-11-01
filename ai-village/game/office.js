@@ -185,7 +185,7 @@ async function kevinRoutes(t) {
 
 Today is ${today()}. The directors:
 ${rosterText()}
-
+${typeof memoryText === 'function' ? memoryText('kevin') : ''}
 Pick the ONE director whose area fits best. Write them a short brief: what Harm wants, what "done" looks like, anything to watch out for.
 BUT if Harm asks several or all directors for something (for example "each director", "iedere directeur", "alle directeuren", "everyone"), list EVERY director who should do a part in "directors" (all of them for each/every director). Each will do the part for their own area and you bundle the answers.
 ${ACCESS_TEXT}
@@ -254,13 +254,19 @@ async function combineParent(parentId) {
 ${parts}
 
 ${LANG_TEXT}
-Bundle this for Harm without losing anyone's points. Reply with only JSON:
-{"summary": "<a short opening line, then per director their name and their points, each on its own line (plain text, no Markdown)>",
+${typeof profileText === 'function' ? profileText() : ''}Bundle this for Harm:
+- Keep every director's own points, but when several directors say the same thing, say it ONCE and name everyone who raised it.
+- Put the directors in order of how much their points matter to Harm right now (most important first).
+- End with Harm's top 3: the three things that matter most across everyone, each one short line, most important first.
+Reply with only JSON:
+{"summary": "<a short opening line, then per director their name and their points, each on its own line, then an empty line and 'Top 3 voor jou:' with the three lines numbered 1. 2. 3. (plain text, no Markdown)>",
  "results": [{"title": "<director name · area>", "body": "<their points>"}],
+ "top3": ["<most important>", "<second>", "<third>"],
  "noteForHarm": "<anything Harm must do; empty if nothing>"}`, { model: MODELS.kevin, modelTier: 'complex', cache: false });
     p.summary = String(out.summary || '');
     p.results = Array.isArray(out.results) ? out.results.map((r) => ({ title: String(r.title || ''), body: String(r.body || '') })) : [];
     p.noteForHarm = String(out.noteForHarm || '');
+    p.top3 = Array.isArray(out.top3) ? out.top3.map(String).slice(0, 3) : [];
     p.whatWasDone = subs.map((x) => `${firstName(x.owner)}: ${x.summary}`);
     p.drafts = subs.flatMap((x) => x.drafts || []);
     p.approvals = subs.flatMap((x) => x.approvals || []);
@@ -630,7 +636,7 @@ TASK: ${t.text}
 ${t.words !== t.text ? `HARM'S OWN WORDS: ${t.words}\n` : ''}KEVIN'S BRIEF: ${t.brief || '-'}
 
 Today is ${today()}.
-${ACCESS_TEXT}
+${typeof memoryText === 'function' ? memoryText(d.id) : ''}${ACCESS_TEXT}
 
 Do the task properly with the tools: do it yourself, or hand it (or a part) to ${firstName(w.id)} with hand_to_worker and then check what comes back. Use note to tell Harm what you're doing at each main step. Keep it to what the task needs.
 ${resumeNote(t)}${RESULT_SHAPE}`;
@@ -661,7 +667,7 @@ ${instructions}
 
 (It is part of Harm's task: ${t.text})
 Today is ${today()}.
-${ACCESS_TEXT}
+${typeof profileText === 'function' ? profileText() : ''}${ACCESS_TEXT}
 
 Do it with the tools. Use note for your main steps. When done, reply with a clear report for ${firstName(d.id)}: what you did, what you found or made (include draft subjects, event details, key facts), and anything you couldn't do.`;
   countCall(t);
@@ -684,6 +690,7 @@ async function finishIfReady(t) {
   if (!t.parentId) lineAdd('kevin', 'harm', `Klaar: ${t.text}. Het is afgestreept op je lijst.`, 'say', t.id);
   await saveTask(t);
   releasePeople(t);
+  if (typeof rememberTask === 'function') rememberTask(t);
   if (t.parentId) { combineParent(t.parentId); return; }   // a part: Kevin bundles it with the others
   toast(`Klaar: ${t.text}`);
   // The answer comes back in the chat ("In het kort"), with a link to make the full PDF (Harm, 2026-11-01).
@@ -809,35 +816,67 @@ function statusText(t) {
     needs_harm: 'Wacht op jouw OK', finishing: 'Bijna klaar', done: 'Klaar', paused: 'Gepauzeerd' })[t.status] || t.status;
 }
 
+// Done tasks older than a week go into the archive (verbeterplan B6).
+const ARCHIVE_DAYS = 7;
+function isArchived(t) { return t.status === 'done' && t.doneAt && Date.now() - new Date(t.doneAt).getTime() > ARCHIVE_DAYS * 86400000; }
+function matchesSearch(t, q) {
+  if (!q) return true;
+  const subs = (t.subtasks || []).map((id) => office.tasks.get(id)).filter(Boolean);
+  return [t, ...subs].some((x) => `${x.text || ''} ${x.words || ''} ${x.summary || ''} ${x.owner ? firstName(x.owner) : ''}`.toLowerCase().includes(q));
+}
+
 function renderTodo() {
   const list = document.getElementById('todo-list');
   if (!list) return;
   // parts of a question to several directors are shown under that question, not as tasks of their own
-  const tasks = [...office.tasks.values()].filter((t) => !t.parentId || !office.tasks.has(t.parentId))
+  const all = [...office.tasks.values()].filter((t) => !t.parentId || !office.tasks.has(t.parentId))
     .sort((a, b) => (a.status === 'done') - (b.status === 'done') || b.createdAt.localeCompare(a.createdAt));
-  const open = tasks.filter((t) => t.status !== 'done').length;
+  const open = all.filter((t) => t.status !== 'done').length;
   const badge = document.getElementById('todo-count');
   badge.textContent = open ? String(open) : '';
   badge.hidden = !open;
+  const anyPaused = [...office.tasks.values()].some((t) => t.status === 'paused' && !office.running.has(t.id));
+  const resumeAll = document.getElementById('resume-all');
+  if (resumeAll) resumeAll.hidden = !anyPaused;
+  const searchEl = document.getElementById('todo-search');
+  const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  const shown = all.filter((t) => matchesSearch(t, q));
+  const tasks = shown.filter((t) => q || !isArchived(t));
+  const archived = q ? [] : shown.filter(isArchived);
   list.innerHTML = '';
-  let reshow = null;
-  if (!tasks.length) { list.innerHTML = '<li class="todo-empty">Nog niets. Typ hierboven een taak en druk op Enter: Kevin geeft hem aan de juiste directeur.</li>'; return; }
-  for (const t of tasks) {
+  office.reshow = null;
+  if (!all.length) { list.innerHTML = '<li class="todo-empty">Nog niets. Typ hierboven een taak en druk op Enter: Kevin geeft hem aan de juiste directeur.</li>'; return; }
+  if (!shown.length) { list.innerHTML = `<li class="todo-empty">Niets gevonden voor "${esc(q)}".</li>`; return; }
+  for (const t of tasks) list.appendChild(taskItem(t));
+  if (archived.length) {
+    const li = document.createElement('li');
+    li.className = 'todo-archive';
+    const det = document.createElement('details');
+    det.open = !!office.archiveOpen;
+    det.addEventListener('toggle', () => { office.archiveOpen = det.open; });
+    det.innerHTML = `<summary>Archief (${archived.length}) · klaar, ouder dan een week</summary>`;
+    const ul = document.createElement('ul');
+    for (const t of archived) ul.appendChild(taskItem(t));
+    det.appendChild(ul);
+    li.appendChild(det);
+    list.appendChild(li);
+  }
+  if (office.reshow) office.reshow(); else hideDone();     // the list was redrawn under the mouse: keep the card on the same task, or hide it
+}
+
+function taskItem(t) {
     const li = document.createElement('li');
     li.className = 'todo-item ' + t.status;
     li.innerHTML = `<div class="todo-row"><span class="todo-check" aria-hidden="true">${t.status === 'done' ? '✓' : ''}</span>
       <span class="todo-text">${esc(t.text)}</span></div>
-      <div class="todo-meta">${esc(statusText(t))}${t.from === 'chat' ? ` · persoonlijk gevraagd aan ${esc(firstName(t.askedPerson))}` : t.from === 'meeting' ? ` · in de vergadering gevraagd aan ${esc(firstName(t.askedPerson))}` : ''}${t.status === 'done' ? ' · ' + esc(timeOf(t.doneAt)) : ''}${taskCalls(t) ? ` · ${taskCalls(t)} ${taskCalls(t) === 1 ? 'aanroep' : 'aanroepen'}` : ''}</div>`;
+      <div class="todo-meta">${esc(statusText(t))}${t.from === 'chat' ? ` · persoonlijk gevraagd aan ${esc(firstName(t.askedPerson))}` : t.from === 'meeting' ? ` · in de vergadering gevraagd aan ${esc(firstName(t.askedPerson))}` : ''}${t.status === 'done' ? ' · ' + esc(doneWhen(t)) : ''}${taskCalls(t) ? ` · ${taskCalls(t)} ${taskCalls(t) === 1 ? 'aanroep' : 'aanroepen'}` : ''}</div>`;
     const subs = (t.subtasks || []).map((id) => office.tasks.get(id)).filter(Boolean);
     const last = (t.log || []).slice(-1)[0];
     if (t.status !== 'done' && t.status !== 'paused' && last) li.insertAdjacentHTML('beforeend', `<div class="todo-latest">${esc(last.text)}</div>`);
     if (t.status === 'paused') {
       li.insertAdjacentHTML('beforeend', `<div class="todo-latest">${esc(t.pauseReason || '')}</div>`);
       const b = document.createElement('button'); b.textContent = 'Verder'; b.className = 'small';
-      b.onclick = () => {
-        if (t.subtasks) { t.status = 'split'; saveTask(t); combineParent(t.id); return; }   // bundling stopped: try the bundling again
-        t.status = t.owner ? 'assigned' : 'new'; saveTask(t); runTask(t);
-      };
+      b.onclick = () => resumeTask(t);
       li.appendChild(b);
     }
     if (subs.length && t.status !== 'done') {
@@ -849,7 +888,7 @@ function renderTodo() {
         row.textContent = `${x.status === 'done' ? '✓' : '·'} ${firstName(x.owner)}: ${statusText(x)}`;
         if (x.status === 'paused') {
           const b = document.createElement('button'); b.textContent = 'Verder'; b.className = 'small';
-          b.onclick = () => { x.status = 'assigned'; saveTask(x); runTask(x); };
+          b.onclick = () => resumeTask(x);
           row.appendChild(b);
         }
         parts.appendChild(row);
@@ -880,10 +919,101 @@ function renderTodo() {
       li.addEventListener('focusout', hideDone);
       li.tabIndex = 0;
     }
-    list.appendChild(li);
-    if (t.id === office.hoverId && t.status === 'done') reshow = () => showDone(t, li);
+    if ((t.status === 'done' || t.status === 'paused' || t.status === 'needs_harm') && !office.running.has(t.id)) li.appendChild(deleteButton(t));
+    if (t.id === office.hoverId && t.status === 'done') office.reshow = () => showDone(t, li);
+    return li;
+}
+
+function doneWhen(t) {
+  const d = new Date(t.doneAt);
+  return d.toDateString() === new Date().toDateString() ? timeOf(t.doneAt) : d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+}
+
+// ---------- ☀️ Briefing (verbeterplan D4) ----------
+// One click: four directors each do a short part, Kevin bundles it into one answer with a top 3.
+// Kevin's routing call is skipped (the parts are fixed), so it costs 4 directors + 1 bundling call.
+const BRIEFING_PARTS = [
+  ['post-house', "Today's agenda in ALL of Harm's calendars (with times, and which calendar), then the important unread mail of the last 24 hours (who, what, and whether Harm must act). Leave out newsletters and ads. No drafts unless something is urgent."],
+  ['carriers-depot', 'Anything about travel, deliveries or being somewhere today and tomorrow (from the calendars and mail: departure times, parcels, places). Only if there is something; otherwise say so in one line.'],
+  ['family-cottage', "What is on the week menu today and tomorrow in the Kookboek app, and whether anything is missing from the shopping list for it. Do not change anything."],
+  ['criers-press', 'The 3 most important AI/tech news items of the last 24 hours (internet tool: news_search and hacker_news), each in one line with its source.'],
+];
+async function startBriefing() {
+  const day = new Date().toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+  const btn = document.getElementById('briefing-btn');
+  const already = [...office.tasks.values()].find((t) => t.briefing === usageDay() && t.status !== 'done');
+  if (already) { toast('De briefing van vandaag is al bezig.'); return; }
+  if (btn.dataset.sure !== '1' && [...office.tasks.values()].some((t) => t.briefing === usageDay())) {
+    btn.dataset.sure = '1'; btn.textContent = '☀️ Nog een keer?';
+    setTimeout(() => { btn.dataset.sure = ''; btn.textContent = '☀️ Briefing'; }, 4000);
+    return;
   }
-  if (reshow) reshow(); else hideDone();     // the list was redrawn under the mouse: keep the card on the same task, or hide it
+  btn.dataset.sure = ''; btn.textContent = '☀️ Briefing';
+  if (!office.sample) { toast('De briefing heeft Claude nodig: open het dorp op claude.ai.'); return; }
+  const parts = BRIEFING_PARTS.map(([house, ask]) => [residents.find((r) => r.role === 'Director' && r.house === house), ask]).filter(([r]) => r);
+  const t = {
+    id: newId(), text: `Briefing voor ${day}`, from: 'todo', words: `Briefing voor ${day}`, createdAt: nowStamp(), briefing: usageDay(),
+    status: 'split', owner: null, worker: null, askedPerson: null, brief: 'Ochtendbriefing: agenda, mail, reizen, eten en nieuws.', parentId: null,
+    log: [], drafts: [], approvals: [], results: [], whatWasDone: [], summary: '', subtasks: [], kevinWhy: 'Briefing: vaste verdeling.',
+  };
+  logStep(t, 'harm', 'Harm vroeg om de briefing van vandaag.');
+  logStep(t, 'kevin', `Kevin verdeelt de briefing over ${parts.map(([r]) => firstName(r.id)).join(', ')}.`);
+  await saveTask(t);
+  for (const [i, [r, ask]] of parts.entries()) {
+    const line = `${firstName(r.id)}, het is briefingtijd: wil jij je deel doen?`;
+    setTimeout(() => startCall('kevin', r.id, line), i * 1500);
+    lineAdd('kevin', r.id, `${line} ${ask}`, 'call', t.id);
+    const sub = await createTask(`Briefing — deel van ${firstName(r.id)}`, 'split', {
+      owner: r.id, parentId: t.id, status: 'assigned', words: t.words,
+      brief: `${ask} Keep it short (a few lines); Kevin bundles everyone's parts into Harm's briefing.`,
+    });
+    t.subtasks.push(sub.id);
+  }
+  await saveTask(t);
+  toast('Kevin maakt je briefing. Het antwoord komt in het gesprek met Kevin.');
+}
+
+// Verder (one task) and Alles hervatten (every paused task), verbeterplan B5.
+function resumeTask(t) {
+  if (!t || t.status !== 'paused' || office.running.has(t.id)) return;
+  if (t.subtasks) {                                     // a question to several directors: start the stopped parts, then bundle
+    const parts = t.subtasks.map((id) => office.tasks.get(id)).filter(Boolean);
+    const stopped = parts.filter((x) => x.status === 'paused');
+    t.status = 'split'; saveTask(t);
+    if (stopped.length) stopped.forEach(resumeTask); else combineParent(t.id);
+    return;
+  }
+  t.status = t.owner ? 'assigned' : 'new'; saveTask(t); runTask(t);
+}
+function resumeAll() {
+  const paused = [...office.tasks.values()].filter((t) => t.status === 'paused' && !(t.parentId && office.tasks.get(t.parentId) && office.tasks.get(t.parentId).status === 'paused'));
+  paused.forEach(resumeTask);
+  if (paused.length) toast(`${paused.length} ${paused.length === 1 ? 'taak gaat' : 'taken gaan'} verder (hooguit 3 tegelijk).`);
+}
+
+// Delete a task for good (B6): click twice, so it never goes by accident. Parts of a question go with it.
+function deleteButton(t) {
+  const b = document.createElement('button');
+  b.className = 'small todo-del';
+  b.textContent = '🗑';
+  b.title = 'Verwijderen';
+  b.setAttribute('aria-label', 'Taak verwijderen');
+  b.onclick = (e) => {
+    e.stopPropagation();
+    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Echt verwijderen?'; setTimeout(() => { if (b.isConnected) { b.dataset.sure = ''; b.textContent = '🗑'; } }, 4000); return; }
+    deleteTask(t);
+  };
+  return b;
+}
+async function deleteTask(t) {
+  const ids = [t.id, ...(t.subtasks || [])];
+  for (const id of ids) {
+    office.tasks.delete(id);
+    if (office.db) office.db.doc('tasks/' + id).delete().catch(() => {});
+  }
+  hideDone();
+  renderTodo();
+  toast('Taak verwijderd.');
 }
 
 // Hover a crossed-off task: exactly what was done.
@@ -911,6 +1041,7 @@ function hideDone() { office.hoverId = null; document.getElementById('todo-pop')
 document.getElementById('todo-btn').addEventListener('click', () => {
   const panel = document.getElementById('todo');
   panel.hidden = !panel.hidden;
+  if (!panel.hidden && typeof closeProfile === 'function' && !document.getElementById('profile').hidden) closeProfile();
   document.getElementById('todo-btn').setAttribute('aria-pressed', String(!panel.hidden));
   if (!panel.hidden) document.getElementById('todo-input').focus();
 });
@@ -922,6 +1053,20 @@ todoInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && todoInput.value.trim()) { createTask(todoInput.value, 'todo'); todoInput.value = ''; }
 });
 document.getElementById('todo-add').addEventListener('click', () => { if (todoInput.value.trim()) { createTask(todoInput.value, 'todo'); todoInput.value = ''; todoInput.focus(); } });
+
+const todoSearch = document.getElementById('todo-search');
+todoSearch.addEventListener('input', () => renderTodo());
+todoSearch.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Escape') { todoSearch.value = ''; renderTodo(); } });
+document.getElementById('resume-all').addEventListener('click', resumeAll);
+document.getElementById('briefing-btn').addEventListener('click', () => startBriefing());
+
+// Closing the page stops the work (it runs in this page): ask first while someone is working (B5).
+window.addEventListener('beforeunload', (e) => {
+  if (!office.running.size) return;
+  e.preventDefault();
+  e.returnValue = 'Het team is nog bezig. Als je de pagina sluit, stopt het werk (je kunt later op Verder drukken).';
+  return e.returnValue;
+});
 
 const chatInput = document.getElementById('chat-input');
 chatInput.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } if (e.key === 'Escape') closeChat(); });

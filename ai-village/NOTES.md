@@ -398,6 +398,43 @@ One Artlist image per house. Every room:
   - B2, B3, B4, C1 en C2 werken zoals bedoeld.
   - De oudere tests (praten, lopen, vergaderen, takenlijst, PDF, rondvraag) slagen nog.
 
+## Verbeterplan: fase 3 uitgevoerd (2026-11-01)
+
+**Fase 3: slimmer team**
+- **D1 Geheugen:**
+  - Elke directeur (en Kevin) houdt een dossier bij van de laatste 12 taken, in `memory/<id>`: de vraag, de korte uitkomst en wat Harm ervan vond.
+  - Onder elk antwoord in de chat en in de vergadering staan 👍 en 👎. Bij 👎 kan Harm kort zeggen wat beter kan.
+  - Nieuwe knop **Over mij** (op de telefoon onder ☰ Meer). Harm schrijft daar wat het team over hem moet weten; dat staat in `settings/profile` en gaat mee in elke opdracht.
+  - In hetzelfde scherm staat per directeur hoeveel ze onthouden, en een knop "Geheugen van het team wissen" (klik twee keer).
+  - Dossier en profiel gaan mee in de opdracht van Kevin, van de directeuren en in de gesprekken. De stagiairs krijgen alleen het profiel.
+- **D3 Beter bundelen:** als Kevin de antwoorden van meerdere directeuren bundelt, noemt hij dubbele punten maar één keer (met wie ze noemden). De directeuren staan op volgorde van belang. Het eindigt met **Top 3 voor jou**, in de chat en in de PDF.
+- **D4 ☀️ Briefing:**
+  - Een knop in de takenlijst. Vier directeuren doen elk een vast deel:
+    - Margot: de agenda van vandaag in alle agenda's en belangrijke ongelezen mail;
+    - Greta: reizen en bezorging vandaag en morgen;
+    - Rosie: het weekmenu van vandaag en morgen;
+    - Nova: de 3 belangrijkste AI-nieuwtjes.
+  - Kevin bundelt het met een top 3. Er verandert niets in de apps.
+  - Kosten: 4 directeuren en 1 bundel-aanroep, plus eventueel stagiairs. Kevins verdeelronde wordt overgeslagen.
+  - Een tweede briefing op dezelfde dag vraagt eerst "Nog een keer?".
+- **B5:**
+  - Wil Harm de pagina sluiten terwijl er gewerkt wordt, dan vraagt de browser eerst of dat echt moet.
+  - De knop **Alles hervatten** verschijnt zodra er iets gepauzeerd is. Hij laat alles verdergaan, hooguit 3 tegelijk.
+- **B6 Opruimen:**
+  - Taken die langer dan 7 dagen klaar zijn, staan onder "Archief".
+  - Er is een zoekvak.
+  - 🗑 verwijdert een taak (twee keer klikken), samen met zijn deeltaken, ook uit de opslag.
+- **Getest** met nagemaakte versies van Claude, opslag en apps (`.work/phase3-test.js`):
+  - profiel en geheugen in de opdrachten;
+  - 👎 met opmerking in het dossier;
+  - briefing met vier delen, waarvan er één pauzeert;
+  - Alles hervatten;
+  - top 3;
+  - archief, zoeken en verwijderen;
+  - ook op telefoonformaat.
+  - De oude tests (fase 2, vergadering met iedereen, praten) werken nog.
+- Online gezet als versie 1793554464-8d1b.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

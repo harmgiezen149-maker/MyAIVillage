@@ -189,7 +189,7 @@ async function askPerson(id, turns, opts = {}) {
 
 ${opts.context || 'Harm is talking to you in person in the village.'} Today is ${today()}.
 Answer as yourself, in your own voice and personality, in Dutch: warm, short and plain (1-4 sentences). No Markdown, no lists unless asked.
-${ACCESS_TEXT}
+${typeof memoryText === 'function' ? memoryText(id) : ''}${ACCESS_TEXT}
 IMPORTANT: if Harm asks you to do something and you agree ("on it", "I'll do it"), call create_task with Harm's request in Harm's words BEFORE you reply, so a real task exists. Never pretend you already did work you haven't done: the work starts once the task exists.`;
   const msgs = [];
   for (const t of turns) {
@@ -325,7 +325,8 @@ function resultText(t) {
   const note = t.noteForHarm && !staleNote ? `\n\nVoor jou: ${t.noteForHarm}` : '';
   const warn = t.suspicious ? `\n\n⚠️ Let op: ${t.suspicious}` : '';
   const src = (t.sources || []).length ? `\n\nBronnen: ${(t.sources || []).slice(0, 4).map((x) => x.title).join(' · ')}${t.sources.length > 4 ? ` (+${t.sources.length - 4}, zie het rapport)` : ''}` : '';
-  const text = (t.outcome === 'could_not' ? 'Dit is niet gelukt. ' : '') + (t.summary || `Klaar: ${t.text}`) + (changes ? `\n\n${changes}` : '') + note + warn + src;
+  const top = (t.top3 || []).length && !/top 3/i.test(t.summary || '') ? `\n\nTop 3 voor jou:\n${t.top3.map((x, i) => `${i + 1}. ${x}`).join('\n')}` : '';
+  const text = (t.outcome === 'could_not' ? 'Dit is niet gelukt. ' : '') + (t.summary || `Klaar: ${t.text}`) + top + (changes ? `\n\n${changes}` : '') + note + warn + src;
   return text;
 }
 
@@ -420,6 +421,7 @@ function renderChat() {
         link.textContent = '📄 Volledig rapport (PDF)';
         link.onclick = () => offerReport(task);
         div.appendChild(link);
+        if (typeof feedbackRow === 'function') div.appendChild(feedbackRow(task.id));
       }
     } else div.textContent = turn.content;
     log.appendChild(div);
@@ -570,9 +572,10 @@ function renderMeeting() {
   log.innerHTML = m.turns.length ? m.turns.map((t) => t.who === 'harm'
     ? `<div class="msg me">${t.to !== 'everyone' ? `<span class="to">aan ${esc(firstOf(t.to))}</span> ` : ''}${esc(t.text)}</div>`
     : t.who === 'note' ? `<div class="msg hint">${esc(t.text)}</div>`
-      : t.result ? `<div class="msg them with-face result">${face(t.who, 'face sm')}<div><div class="result-head">✓ Klaar: ${esc(t.task || '')}</div><b>${esc(firstOf(t.who))}</b><br><span style="white-space:pre-wrap">${esc(t.text)}</span>${office.tasks.has(t.taskId) ? `<br><button class="result-link" data-task="${esc(t.taskId)}">📄 Volledig rapport (PDF)</button>` : ''}</div></div>`
+      : t.result ? `<div class="msg them with-face result">${face(t.who, 'face sm')}<div><div class="result-head">✓ Klaar: ${esc(t.task || '')}</div><b>${esc(firstOf(t.who))}</b><br><span style="white-space:pre-wrap">${esc(t.text)}</span>${office.tasks.has(t.taskId) ? `<br><button class="result-link" data-task="${esc(t.taskId)}">📄 Volledig rapport (PDF)</button><div class="fb-slot" data-task="${esc(t.taskId)}"></div>` : ''}</div></div>`
       : `<div class="msg them with-face">${face(t.who, 'face sm')}<div><b>${esc(firstOf(t.who))}</b><br>${esc(t.text)}</div></div>`).join('')
     : `<div class="msg hint">Praat met de hele zaal, of tik op een naam om alleen met die persoon te praten.</div>`;
+  if (typeof feedbackRow === 'function') for (const slot of log.querySelectorAll('.fb-slot[data-task]')) slot.appendChild(feedbackRow(slot.dataset.task));
   if (m.busy) log.insertAdjacentHTML('beforeend', '<div class="msg hint">…</div>');
   log.scrollTop = log.scrollHeight;
   document.getElementById('meet-input').placeholder = m.to === 'everyone' ? 'Zeg iets tegen iedereen…' : `Zeg iets tegen ${firstOf(m.to)}…`;
@@ -770,6 +773,7 @@ const SHEETS = {
   todo: () => document.getElementById('todo-close').click(),
   chat: () => closeChat(),
   dock: () => closeDock(),
+  profile: () => { document.getElementById('profile').hidden = true; document.getElementById('profile-btn').setAttribute('aria-pressed', 'false'); },
 };
 const sheetWatch = new MutationObserver((changes) => {
   if (!smallScreen()) return;

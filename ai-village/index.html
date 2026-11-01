@@ -122,6 +122,25 @@
   .todo-part.done { color: var(--text); }
   .todo-part button.small { margin: 0 0 0 8px; padding: 2px 8px; }
   .todo-usage { font-size: 11.5px; color: var(--muted); padding: 0 12px 8px; opacity: .85; }
+  #todo-tools { display: flex; gap: 6px; align-items: center; padding: 0 12px 8px; }
+  #todo-tools button.small { margin: 0; white-space: nowrap; }
+  #todo-tools input { flex: 1; min-width: 0; padding: 5px 8px; font-size: 13px; }
+  .todo-del { float: right; margin: 4px 0 0 6px !important; opacity: .7; }
+  .todo-del:hover, .todo-del[data-sure="1"] { opacity: 1; }
+  .todo-archive { border-top: 1px solid rgba(242,193,78,.16); padding: 8px 2px; list-style: none; }
+  .todo-archive summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  .todo-archive ul { list-style: none; margin: 4px 0 0; padding: 0; }
+  .feedback { display: flex; gap: 6px; align-items: center; margin-top: 6px; font-size: 12.5px; color: var(--muted); }
+  .feedback button.small { margin: 0; padding: 2px 9px; }
+  .feedback input { flex: 1; min-width: 0; padding: 4px 8px; font-size: 13px; }
+  #profile { top: 62px; right: 16px; width: min(400px, calc(100vw - 32px)); max-height: calc(100vh - 140px); overflow-y: auto; }
+  .profile-body { padding: 10px 12px 14px; font-size: 13.5px; }
+  .profile-body label { display: block; margin-bottom: 6px; }
+  .profile-body textarea { width: 100%; box-sizing: border-box; resize: vertical; }
+  .profile-row { display: flex; gap: 8px; align-items: center; margin: 8px 0 4px; font-size: 12.5px; color: var(--muted); }
+  .profile-body h3 { font-size: 13px; font-weight: normal; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 14px 0 4px; }
+  .profile-hint { color: var(--muted); font-size: 12.5px; margin: 0 0 4px; }
+  #profile-dossiers { margin: 0 0 10px; padding-left: 18px; font-size: 13px; }
   .todo-empty { color: var(--muted); font-size: 13px; padding: 8px 2px; }
   @keyframes pulse { 50% { box-shadow: 0 0 0 4px rgba(242,193,78,.2); } }
   @media (prefers-reduced-motion: reduce) { .todo-item .todo-check { animation: none !important; } }
@@ -236,6 +255,7 @@
   <button id="zoom-out" class="extra" aria-label="Uitzoomen">−</button>
   <button id="zoom-in" class="extra" aria-label="Inzoomen">+</button>
   <button id="sound" class="extra" aria-pressed="true">Geluid aan</button>
+  <button id="profile-btn" class="extra" aria-pressed="false" aria-controls="profile" title="Vertel het team wie je bent en wat je belangrijk vindt">Over mij</button>
   <button id="log-btn" class="extra" title="De lijn van Kevin en dorpspraat (C)">Logboek</button>
   <button id="meeting" class="extra" aria-pressed="false" title="Iedereen naar het Raadhuis">Vergadering</button>
   <button id="edit" class="extra" aria-pressed="false" title="Schilder waar hij kan lopen (toets E)">Kaart bewerken</button>
@@ -249,7 +269,24 @@
   <div id="todo-form"><input id="todo-input" type="text" placeholder="Wat moet er gebeuren?" aria-label="Nieuwe taak" autocomplete="off" enterkeyhint="send"><button id="todo-add" class="primary">Toevoegen</button></div>
   <div id="todo-note">Laden…</div>
   <div id="todo-usage" class="todo-usage"></div>
+  <div id="todo-tools">
+    <button id="briefing-btn" class="small" title="Agenda, belangrijke mail, reizen, eten en AI-nieuws van vandaag, gebundeld door Kevin">☀️ Briefing</button>
+    <button id="resume-all" class="small" hidden title="Alle gepauzeerde taken gaan verder">Alles hervatten</button>
+    <input id="todo-search" type="search" placeholder="Zoeken…" aria-label="Taken zoeken" autocomplete="off">
+  </div>
   <ul id="todo-list"></ul>
+</div>
+<div class="panel" id="profile" role="dialog" aria-label="Over mij" hidden>
+  <div class="panel-head"><h2>Over mij</h2><button id="profile-close" class="small" aria-label="Over mij sluiten" style="margin:0">Sluiten</button></div>
+  <div class="profile-body">
+    <label for="profile-text">Wat moet het team over je weten? Kevin, de directeuren en de stagiairs lezen dit bij elke taak.</label>
+    <textarea id="profile-text" rows="7" maxlength="1500" placeholder="Bijvoorbeeld: ik werk bij…, mijn gezin is…, ik speel bas in…, schrijf kort en zonder jargon, belangrijk voor mij is…"></textarea>
+    <div class="profile-row"><button id="profile-save" class="primary">Opslaan</button><span id="profile-status" role="status"></span></div>
+    <h3>Wat het team onthoudt</h3>
+    <p class="profile-hint">Elke directeur onthoudt de laatste 12 taken en wat jij ervan vond (👍/👎 onder een antwoord).</p>
+    <ul id="profile-dossiers"></ul>
+    <button id="profile-forget" class="small">Geheugen van het team wissen</button>
+  </div>
 </div>
 <div id="todo-pop" role="tooltip" hidden></div>
 <div class="panel" id="dock" role="dialog" aria-label="Gesprekken" hidden>
@@ -321,5 +358,6 @@
 <script src="game/report.js"></script>
 <script src="game/office.js"></script>
 <script src="game/talk.js"></script>
+<script src="game/memory.js"></script>
 </body>
 </html>

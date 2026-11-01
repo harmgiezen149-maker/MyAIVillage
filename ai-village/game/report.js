@@ -141,6 +141,8 @@ async function makeTaskReport(t) {
 
     titled('In het kort', callout([{ text: pdfText(t.summary) || 'Het team heeft deze taak afgerond.', fontSize: 11.5, lineHeight: 1.35, color: REPORT.ink }], REPORT.goldLight, REPORT.gold)),
 
+    ...((t.top3 || []).length ? [titled('Top 3 voor jou', callout(t.top3.map((x, i) => ({ text: `${i + 1}. ${pdfText(x)}`, fontSize: 11, color: REPORT.ink, lineHeight: 1.3, margin: [0, 0, 0, 3] })), REPORT.goldLight, REPORT.gold))] : []),
+
     ...(t.noteForHarm ? [titled('Voor jou', callout([{ text: pdfText(t.noteForHarm), fontSize: 11, bold: true, color: REPORT.ink, lineHeight: 1.3 }], '#eef3e6', REPORT.green))] : []),
 
     titled('Wie het deden', people),
