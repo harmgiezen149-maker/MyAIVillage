@@ -6,6 +6,8 @@ const NAV_CELL = 8;
 const navCache = {};
 
 function navPlaceId(where) { return where === 'map' ? 'town' : where; }
+// The walking grid keeps the first body size: feet take the same room on the paths, so no route gets cut off
+// now that people are drawn bigger in town (FIGURE_SCALE).
 function navHeight(where) { return where === 'map' ? 92 : ROOM_H / 6; }
 
 function invalidateNav(id) { delete navCache[id]; }

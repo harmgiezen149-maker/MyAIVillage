@@ -57,7 +57,7 @@ function fitZoom() {
   return Math.max(contain, cover / (state.scene === 'map' ? state.zoomDefault.map : 1.6));
 }
 function personHeight() {
-  return state.scene === 'map' ? 92 : ROOM_H / 6;    // town: twice the first size; indoors: one sixth of the room, to match the furniture (Harm)
+  return state.scene === 'map' ? 92 * FIGURE_SCALE : ROOM_H / 6;    // drawn size: town 92 × FIGURE_SCALE (Harm), rooms a sixth of the room (furniture size)
 }
 
 // ---------- where he can stand ----------

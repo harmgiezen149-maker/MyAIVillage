@@ -72,7 +72,7 @@ function reportsTo(r) {
   return r.role === 'Director' ? `${KEVIN.name} (stafchef)` : `${r.boss.name} (directeur, ${r.boss.building.job.toLowerCase()})`;
 }
 function heightIn(where) {
-  return where === 'map' ? 92 : ROOM_H / 6;
+  return where === 'map' ? 92 : ROOM_H / 6;    // for walking and keeping distance: the first sizes (drawing uses personHeight)
 }
 function walkSpeed(where) {
   return where === 'map' ? 105 : 140;
@@ -542,7 +542,7 @@ function drawNameTags() {
   const p = state.player;
   const people = [...residentsHere(), { ...state.kevin, name: KEVIN.name, role: 'Kevin' }];
   const z = state.camera.zoom || 1;
-  const big = Math.max(H * 0.16, 13 / z), small = Math.max(H * 0.12, 10.5 / z);   // never smaller than readable on screen
+  const big = 15 / z, small = 12 / z;   // the same, readable size on screen, however big the figures are drawn
   ctx.save();
   ctx.textAlign = 'center';
   const placed = [];

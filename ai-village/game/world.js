@@ -3,6 +3,10 @@
 // Room positions are in room units (every room is 1200 × 896).
 
 const MAP = { w: 2400, h: 1792, image: 'assets/map.jpg' };
+// How big people are drawn in town, compared with the first size (92). Harm, 2026-11-01: 1.5×, then 1.5× again.
+// Indoors people keep the furniture size (one sixth of the room), so they still fit the desks and the meeting chairs.
+// Only the drawing grows: walking, keeping distance and meeting all keep the first sizes (heightIn, nav.js).
+const FIGURE_SCALE = 2.25;
 
 // The open ground you can walk on (everything outside is forest).
 const WALK_AREA = [

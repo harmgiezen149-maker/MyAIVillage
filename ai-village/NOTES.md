@@ -333,6 +333,26 @@ One Artlist image per house. Every room:
   - Takenlijst: 9 directeuren, nooit meer dan 3 tegelijk, één gebundeld antwoord bij Kevin.
   - Vergadering: 10 antwoorden (Kevin + 9), en 9 resultaten terug in de vergaderchat.
 
+## Internet voor het team (Harm, 2026-11-01)
+
+- **Harm merkte:** alle antwoorden kwamen uit zijn mail en apps; niemand deed onderzoek op internet.
+- **Oorzaak:** een pagina op claude.ai kan zelf niet browsen. Internet kan alleen via een connector.
+- **Gebouwd:** een eigen gratis connector **Internet** (map `internet-door/`).
+  - Vercel-project `mijn-dorp-internet` op **mijn-dorp-internet.vercel.app**: los project, zonder git-koppeling, met Harms OK neergezet.
+  - Bronnen zonder API-sleutel of kosten: Google Nieuws (nl/en), Wikipedia, Hacker News, arXiv, en een openbare webpagina lezen.
+  - Alleen lezen. Geen interne adressen, ook niet via doorverwijzing of DNS. Hooguit 1,5 MB per pagina, 12 seconden.
+  - Een gewone zoekmachine kan niet zonder betaalde sleutel.
+- **Sleutel:** de `MCP_SLEUTEL` in het Vercel-project heb ik zelf gemaakt en gezet, met Harms OK. Het connector-adres heeft Harm in de chat gekregen. Het geeft alleen toegang tot openbare informatie. Een nieuwe sleutel kan altijd: nieuwe waarde in Vercel, opnieuw neerzetten, en het nieuwe adres op claude.ai zetten.
+- **Wie:** alle directeuren en stagiairs (Harms keuze), met één gereedschap `internet`. De opdracht zegt: doe onderzoek online voor alles over de wereld of je vakgebied, en noem je bronnen.
+- **Getest:** 6 tests met een nep-internet. De echte deur is vanuit mijn werkomgeving niet bereikbaar, dus de eerste echte test is Harms eerste vraag.
+
+## Grotere figuren (Harm, 2026-11-01)
+
+- Harm: "maak alle figuren 1,5 keer zo groot", daarna "nog eens een keer zo groot". Ik las dat als nog een stap van 1,5, dus samen **2,25×** (`FIGURE_SCALE` in `game/world.js`). Bedoelde Harm verdubbelen, dan wordt het 3×.
+- **Alleen in het dorp.** Binnen houden mensen de meubelmaat (Harms eerdere regel). Op 1,5× waren ze al groter dan de bureaus en pasten ze niet meer in de vergaderstoelen.
+- **Alleen de tekening groeit.** Lopen, afstand houden, praten en vergaderen gebruiken de oude maten (`heightIn`, `nav.js`). Op 1,5× met alles meeschalend liep de vergadering vast (13 mensen na 90 seconden nog onderweg); nu zit iedereen binnen 14 seconden.
+- Naamlabels hebben een vaste, leesbare grootte op het scherm.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

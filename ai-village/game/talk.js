@@ -649,7 +649,7 @@ function saveLater(path, make) {
 // ---------- keys ----------
 
 function nearestPerson() {
-  const H = personHeight(), p = state.player;
+  const H = heightIn(state.scene), p = state.player;
   let best = null, bestD = H * 1.7;
   for (const r of residentsHere()) {
     if (r.inMeeting) continue;
