@@ -183,6 +183,14 @@ async function makeTaskReport(t) {
     ] }, layout: { hLineColor: () => REPORT.line, vLineWidth: () => 0, hLineWidth: (i) => (i === 0 ? 0 : 0.8), paddingTop: () => 6, paddingBottom: () => 6 } }));
   }
 
+  if (t.suspicious) {
+    content.push(titled('Let op', callout([{ text: pdfText(t.suspicious), fontSize: 10.5, color: REPORT.ink, lineHeight: 1.35 }], '#fbeaea', REPORT.red)));
+  }
+
+  if ((t.sources || []).length) {
+    content.push(titled('Bronnen', { stack: t.sources.map((x, i) => ({ text: [{ text: `${i + 1}. `, color: REPORT.gold, bold: true }, { text: pdfText(x.title), link: x.url, color: REPORT.ink, decoration: 'underline' }, { text: '\n' + String(x.url).slice(0, 110), fontSize: 7.5, color: REPORT.soft }], fontSize: 9.5, margin: [0, 0, 0, 5] })) }));
+  }
+
   if ((t.workerReports || []).length) {
     t.workerReports.forEach((w, i) => { const c = callout([{ text: pdfText(w.text).slice(0, 3500), fontSize: 9.5, lineHeight: 1.35, color: REPORT.ink }], REPORT.paper, REPORT.line); content.push(i ? c : titled(`Verslag van ${whoName(t.worker)} aan ${whoName(t.owner)}`, c)); });
     content.push({ text: `${whoName(t.owner)} controleerde dit werk voordat het telde.`, fontSize: 8.5, italics: true, color: REPORT.soft, margin: [0, 2, 0, 0] });

@@ -311,7 +311,9 @@ function resultText(t) {
   const changes = handled.map((a) => `${a.status === 'done' ? '✓' : '✗'} ${a.kind === 'app' ? a.app + ': ' + a.what : (a.payload.summary || a.what)}${a.status === 'declined' ? ' (afgewezen)' : ''}`).join('\n');
   const staleNote = handled.length && !(t.approvals || []).some((a) => a.status === 'pending') && /goedkeur|keur .*goed|approve|akkoord/i.test(t.noteForHarm || '');
   const note = t.noteForHarm && !staleNote ? `\n\nVoor jou: ${t.noteForHarm}` : '';
-  const text = (t.outcome === 'could_not' ? 'Dit is niet gelukt. ' : '') + (t.summary || `Klaar: ${t.text}`) + (changes ? `\n\n${changes}` : '') + note;
+  const warn = t.suspicious ? `\n\n⚠️ Let op: ${t.suspicious}` : '';
+  const src = (t.sources || []).length ? `\n\nBronnen: ${(t.sources || []).slice(0, 4).map((x) => x.title).join(' · ')}${t.sources.length > 4 ? ` (+${t.sources.length - 4}, zie het rapport)` : ''}` : '';
+  const text = (t.outcome === 'could_not' ? 'Dit is niet gelukt. ' : '') + (t.summary || `Klaar: ${t.text}`) + (changes ? `\n\n${changes}` : '') + note + warn + src;
   return text;
 }
 

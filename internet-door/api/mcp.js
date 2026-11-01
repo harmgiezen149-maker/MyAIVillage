@@ -48,7 +48,19 @@ async function leesBody(req) {
   return raw ? JSON.parse(raw) : null;
 }
 
+// Een eenvoudige limiet: hooguit 300 verzoeken per uur per draaiende instantie (Vercel start er soms meer,
+// dus het is een rem, geen exacte teller). Lekt het adres ooit uit, dan kan niemand er onbeperkt op schieten.
+var LIMIET_PER_UUR = 300;
+var teller = { uur: -1, aantal: 0 };
+function binnenLimiet() {
+  var uur = Math.floor(Date.now() / 3600000);
+  if (teller.uur !== uur) { teller.uur = uur; teller.aantal = 0; }
+  teller.aantal++;
+  return teller.aantal <= LIMIET_PER_UUR;
+}
+
 module.exports = async function handler(req, res) {
+  if (!binnenLimiet()) { res.setHeader('Retry-After', '600'); return stuur(res, 429, { error: 'Te veel verzoeken; probeer het later opnieuw.' }); }
   var ok = sleutelKlopt(sleutelUit(req));
   if (!ok) { console.log(JSON.stringify({ mcp: req.method, sleutel: 'fout' })); return stuur(res, 404, {}); }
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return stuur(res, 405, { error: 'Alleen POST' }); }
