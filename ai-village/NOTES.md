@@ -404,7 +404,7 @@ One Artlist image per house. Every room:
 - **D1 Geheugen:**
   - Elke directeur (en Kevin) houdt een dossier bij van de laatste 12 taken, in `memory/<id>`: de vraag, de korte uitkomst en wat Harm ervan vond.
   - Onder elk antwoord in de chat en in de vergadering staan 👍 en 👎. Bij 👎 kan Harm kort zeggen wat beter kan.
-  - Nieuwe knop **Over mij** (op de telefoon onder ☰ Meer). Harm schrijft daar wat het team over hem moet weten; dat staat in `settings/profile` en gaat mee in elke opdracht.
+  - Nieuwe knop **Over mij** (op de telefoon onder ☰ Meer). Harm schrijft daar wat het team over Harm moet weten; dat staat in `settings/profile` en gaat mee in elke opdracht.
   - In hetzelfde scherm staat per directeur hoeveel ze onthouden, en een knop "Geheugen van het team wissen" (klik twee keer).
   - Dossier en profiel gaan mee in de opdracht van Kevin, van de directeuren en in de gesprekken. De stagiairs krijgen alleen het profiel.
 - **D3 Beter bundelen:** als Kevin de antwoorden van meerdere directeuren bundelt, noemt hij dubbele punten maar één keer (met wie ze noemden). De directeuren staan op volgorde van belang. Het eindigt met **Top 3 voor jou**, in de chat en in de PDF.
