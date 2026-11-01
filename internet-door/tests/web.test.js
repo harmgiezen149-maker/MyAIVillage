@@ -83,6 +83,12 @@ test('de deur: zonder juiste sleutel een kale 404', async function() {
   assert.equal(goed.body.result.serverInfo.name, 'internet');
   var melding = res(); await handler({ method: 'POST', query: { sleutel: 'x'.repeat(43) }, body: { jsonrpc: '2.0', method: 'notifications/initialized' } }, melding);
   assert.equal(melding.statusCode, 202);
+  // the key straight from the address, and the body read from the stream
+  var { Readable } = require('stream');
+  var stroom = Readable.from([Buffer.from(JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list' }))]);
+  stroom.method = 'POST'; stroom.url = '/api/mcp/' + 'x'.repeat(43); stroom.query = {};
+  var uitStroom = res(); await handler(stroom, uitStroom);
+  assert.equal(uitStroom.body.result.tools.length, 5);
   delete process.env.MCP_SLEUTEL;
   var zonder = res(); await handler({ method: 'POST', query: { sleutel: '' }, body: {} }, zonder);
   assert.equal(zonder.statusCode, 404, 'zonder ingestelde sleutel is de deur dicht');

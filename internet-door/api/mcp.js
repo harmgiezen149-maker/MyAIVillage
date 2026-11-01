@@ -24,12 +24,38 @@ function stuur(res, status, data) {
   return res.status(status).json(data);
 }
 
-module.exports = async function handler(req, res) {
+// De sleutel: uit de omgezette query (?sleutel=), of rechtstreeks uit het adres (/api/mcp/<sleutel>).
+function sleutelUit(req) {
   var q = req.query || {};
-  if (!sleutelKlopt(q.sleutel)) return stuur(res, 404, {});
+  if (q.sleutel) return String(q.sleutel);
+  var m = /\/api\/mcp\/([A-Za-z0-9_-]+)/.exec(req.url || '') || /[?&]sleutel=([A-Za-z0-9_-]+)/.exec(req.url || '');
+  return m ? m[1] : '';
+}
+
+// De inhoud van het verzoek: wat Vercel al heeft gelezen, of zelf uit de stroom lezen.
+async function leesBody(req) {
+  var b = req.body;
+  if (b && typeof b === 'object' && !Buffer.isBuffer(b)) return b;
+  var raw = typeof b === 'string' ? b : Buffer.isBuffer(b) ? b.toString('utf8') : null;
+  if (raw == null) {
+    raw = await new Promise(function(ok, fout) {
+      var delen = [];
+      req.on('data', function(c) { delen.push(Buffer.from(c)); });
+      req.on('end', function() { ok(Buffer.concat(delen).toString('utf8')); });
+      req.on('error', fout);
+    });
+  }
+  return raw ? JSON.parse(raw) : null;
+}
+
+module.exports = async function handler(req, res) {
+  var ok = sleutelKlopt(sleutelUit(req));
+  if (!ok) { console.log(JSON.stringify({ mcp: req.method, sleutel: 'fout' })); return stuur(res, 404, {}); }
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return stuur(res, 405, { error: 'Alleen POST' }); }
-  var body = req.body;
-  if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { return stuur(res, 400, { jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Geen geldige JSON' } }); } }
+  var body;
+  try { body = await leesBody(req); } catch (e) { return stuur(res, 400, { jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Geen geldige JSON' } }); }
+  // Eén regel per verzoek in het logboek (zonder de sleutel), zodat een probleem te zien is.
+  console.log(JSON.stringify({ mcp: 'POST', rpc: Array.isArray(body) ? body.map(function(m) { return m && m.method; }) : body && body.method, tool: body && body.params && body.params.name }));
   var uit = await mcp.verwerk(body, web.maak(), INFO);
   if (uit === null) { res.statusCode = 202; return res.end(); }
   return stuur(res, 200, uit);
