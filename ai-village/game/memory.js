@@ -18,6 +18,9 @@ function saveDossier(id) {
 
 // A finished task goes into the dossier of whoever did it (and Kevin's, so Kevin knows who did what).
 function rememberTask(t) {
+  try { addToDossiers(t); } catch (e) { console.warn('Kon de taak niet onthouden:', e); }   // memory must never stop a task
+}
+function addToDossiers(t) {
   if (!t || !t.owner && !t.subtasks) return;
   const item = { at: nowStamp(), taskId: t.id, task: String(t.text || '').slice(0, 200), summary: String(t.summary || '').slice(0, 400), outcome: t.outcome || 'done' };
   const who = t.subtasks ? [] : [t.owner];
@@ -150,7 +153,8 @@ function rerenderAnswers() {
       const p = await db.doc('settings/profile').get();
       if (p.exists && typeof p.data().text === 'string') memory.profile = p.data().text;
       const snap = await db.collection('memory').get();
-      for (const d of snap.docs) { const x = d.data() || {}; const id = x.id || d.id; if (id) memory.dossiers[id] = { items: Array.isArray(x.items) ? x.items : [] }; }
+      // what the database gives back is read-only: keep our own copy (Harm hit "object is not extensible", 2026-11-01)
+      for (const d of snap.docs) { const x = JSON.parse(JSON.stringify(d.data() || {})); const id = x.id || d.id; if (id) memory.dossiers[id] = { items: Array.isArray(x.items) ? x.items : [] }; }
     } catch (e) { /* start with an empty memory */ }
   }
   memory.loaded = true;

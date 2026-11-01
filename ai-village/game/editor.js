@@ -316,7 +316,7 @@ function setBrush(r) {
 for (const t of TOOLS) {
   const b = document.createElement('button');
   b.dataset.tool = t.key;
-  b.title = (t.hint ? t.hint + ' · ' : '') + 'key ' + t.key;
+  b.title = (t.hint ? t.hint + ' · ' : '') + 'toets ' + t.key;
   b.innerHTML = `<span class="swatch" style="background: rgb(${t.color})"></span>${t.label}`;
   b.addEventListener('click', () => setTool(t));
   document.getElementById('tools').appendChild(b);

@@ -352,7 +352,7 @@ async function postResult(t) {
   if (office.db) {
     try {
       const snap = await office.db.doc('chats/' + chatId).get();
-      const turns = snap.exists ? (snap.data().turns || []) : [];
+      const turns = snap.exists ? (snap.data().turns || []).slice() : [];   // the database copy is read-only
       turns.push(turn);
       await office.db.doc('chats/' + chatId).set({ turns: turns.slice(-CHAT_LIMIT), updatedAt: nowStamp() });
     } catch (e) { (talk.pendingResults[chatId] = talk.pendingResults[chatId] || []).push(turn); }
@@ -775,6 +775,13 @@ const SHEETS = {
   dock: () => closeDock(),
   profile: () => { document.getElementById('profile').hidden = true; document.getElementById('profile-btn').setAttribute('aria-pressed', 'false'); },
 };
+// Escape closes the box that has the keyboard focus, also when the focus is on a button in it (verbeterplan E3).
+for (const [id, close] of Object.entries(SHEETS)) document.getElementById(id).addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || e.target.matches('input, textarea')) return;   // the text boxes handle Escape themselves
+  e.stopPropagation();
+  close();
+  canvas.focus();
+});
 const sheetWatch = new MutationObserver((changes) => {
   if (!smallScreen()) return;
   for (const c of changes) {

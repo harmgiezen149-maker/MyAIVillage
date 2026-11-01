@@ -1,7 +1,7 @@
 // The invisible layers on top of the art, one set per place:
 //   walk  — where the character may stand (1) or not (0)
-//   cover — 0 nothing, 1 "under": always drawn over him, 2 "behind": drawn over him only while
-//           his feet are above the bottom edge of that patch (so he walks in front of it below the line)
+//   cover — 0 nothing, 1 "under": always drawn over the player, 2 "behind": drawn over the player only while
+//           their feet are above the bottom edge of that patch (so they walk in front of it below the line)
 // The first version comes from game/masks.js; corrections painted in edit mode are saved separately.
 
 const layers = {};
