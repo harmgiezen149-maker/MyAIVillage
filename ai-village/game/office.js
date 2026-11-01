@@ -54,7 +54,9 @@ What the team can do with Harm's accounts:
 - Harm's own apps (only the director who looks after the app and their worker have these tools):
   - Kookboek (Rosie Bell's area): recipes, week menu, shopping list and pantry. Read freely; planning a recipe, adding to the shopping list or adding a recipe is PROPOSED and only done after Harm clicks Approve. Never the food/weight tracker, never delete.
   - Darkglass (Jasper Vale's area): bass presets, setlists and rig. Read freely; making or changing a setlist is PROPOSED and only done after Harm clicks Approve. Never delete, never edit presets, never run the paid analysis.
-Never invent facts about mail, events or app data: look them up with the tools. If something can't be done with these tools, say so plainly.`;
+- Internet (everyone, read-only, connector "Internet"): recent news (Google News, Dutch or English), Wikipedia, Hacker News (tech/AI), arXiv (research papers), and reading a public web page by its address. There is no general search engine: search news/Wikipedia/HN/arXiv, then read pages from the links you find.
+For anything about the world, your field or what is happening now, RESEARCH ONLINE with the internet tool instead of only looking at Harm's mail. Name your sources (title + link) in your results.
+Never invent facts about mail, events, app data or the news: look them up with the tools. If something can't be done with these tools, say so plainly.`;
 
 function today() { return new Date().toString().slice(0, 24); }
 
@@ -390,7 +392,30 @@ function teamTools(t, who) {
         await saveTask(t);
         return 'Proposed. It will be changed only after Harm approves it.';
       } },
-  ].concat(appTools(t, who, call));
+  ].concat(appTools(t, who, call), [internetTool(t, who, call)]);
+}
+
+// ---------- the internet (connector "Internet", Harm 2026-11-01): one tool for everyone ----------
+const NET = 'Internet';
+const NET_ACTIONS = {
+  news_search: 'recent news on a topic (fields: query, lang "nl" or "en", max)',
+  wikipedia: 'look something up on Wikipedia (fields: query, lang)',
+  hacker_news: 'tech/AI stories: search a topic, or no query for the front page (fields: query, max)',
+  arxiv: 'newest research papers on a topic (fields: query, max)',
+  read_page: 'read the text of one public web page (field: url)',
+};
+function internetTool(t, who, call) {
+  const name = firstName(who);
+  return { name: 'internet',
+    description: `Research on the public internet. Pick an action:\n${Object.entries(NET_ACTIONS).map(([k, v]) => `- ${k}: ${v}`).join('\n')}\nName your sources (title + link) in your results.`,
+    inputSchema: { type: 'object', properties: { action: { type: 'string', enum: Object.keys(NET_ACTIONS) }, query: { type: 'string' }, lang: { type: 'string', enum: ['nl', 'en'] }, max: { type: 'number' }, url: { type: 'string' } }, required: ['action'] },
+    execute: async (input, ctx) => {
+      const { action, ...args } = input || {};
+      if (!NET_ACTIONS[action]) return `Unknown action. Use one of: ${Object.keys(NET_ACTIONS).join(', ')}`;
+      const what = { news_search: `zocht nieuws over "${args.query || ''}"`, wikipedia: `zocht op Wikipedia naar "${args.query || ''}"`, hacker_news: args.query ? `zocht op Hacker News naar "${args.query}"` : 'keek op de voorpagina van Hacker News', arxiv: `zocht op arXiv naar "${args.query || ''}"`, read_page: `las een webpagina` }[action];
+      logStep(t, who, `${name} ${what}.`, { tool: `internet_${action}`, ...(action === 'read_page' && args.url ? { link: String(args.url) } : {}) });
+      return compact(await call(NET, action, args, ctx), 14000);
+    } };
 }
 
 // ---------- Harm's own apps (connectors "Kookboek" and "Darkglass", Harm 2026-10-31) ----------

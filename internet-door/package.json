@@ -1,0 +1,8 @@
+{
+  "name": "mijn-dorp-internet",
+  "version": "1.0.0",
+  "description": "Internet door for Harm's AI village: news, Wikipedia, Hacker News, arXiv and reading web pages, as an MCP connector.",
+  "private": true,
+  "scripts": { "test": "node --test tests/*.test.js" },
+  "engines": { "node": ">=20" }
+}
