@@ -671,7 +671,8 @@ getDb().then(async (db) => {
 });
 
 for (const r of residents) loadImage(r.sheet.image, r.sheet.src);
-loading.then(() => {
+// Wait for the pictures AND every script on the page (see allScriptsRun in village.js).
+Promise.all([loading, allScriptsRun]).then(() => {
   for (const r of residents) placeAtStart(r);
   loadChatLog();
 });

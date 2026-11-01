@@ -7,6 +7,7 @@ const TOOLS = [
   { key: '3', label: 'Eronder', hint: 'altijd boven hem: boomkruinen, daken', layer: 'cover', value: 1, color: '70,140,255' },
   { key: '4', label: 'Erachter', hint: 'boven hem als hij erachter loopt', layer: 'cover', value: 2, color: '255,200,0' },
   { key: '5', label: 'Geen dekking', layer: 'cover', value: 0, color: '255,255,255' },
+  { key: '6', label: 'Props verplaatsen', hint: 'sleep een bankje, lantaarn, ton of de jukebox naar een andere plek', mode: 'props', color: '200,130,255' },
 ];
 
 const editor = {
@@ -22,7 +23,48 @@ const editor = {
   tint: document.createElement('canvas'),
   tintFor: '',
   tintDirty: true,
+  drag: null,             // the prop being moved
+  propsChanged: false,
 };
+
+// ---------- props (Harm, 2026-11-01: "laat me de props verplaatsen") ----------
+
+const PROP_DEFAULTS = {
+  map: MAP_PROPS.map((p) => [p[1], p[2]]),
+  rooms: Object.fromEntries(Object.entries(ROOMS).map(([id, r]) => [id, (r.props || []).map((p) => [p[1], p[2]])])),
+};
+function propsOf(place) { return place === 'map' ? MAP_PROPS : (ROOMS[place].props || []); }
+function propBox(p) {
+  const img = images['prop:' + p[0]];
+  const h = img ? (p[3] * img.height) / img.width : p[3];
+  return [p[1] - p[3] / 2, p[2] - h, p[3], h];
+}
+function propAt(place, x, y) {
+  const list = propsOf(place);
+  let best = -1;
+  for (let i = 0; i < list.length; i++) {
+    const [bx, by, bw, bh] = propBox(list[i]);
+    if (x >= bx && x <= bx + bw && y >= by && y <= by + bh && (best < 0 || list[i][2] > list[best][2])) best = i;   // the one in front wins
+  }
+  return best;
+}
+// After a prop moved: people walk around its new place, and the jukebox music follows the jukebox.
+function propsMoved(place) {
+  if (place === 'map') {
+    mapPropSolids = propFootprints(MAP_PROPS);
+    const jb = MAP_PROPS.find((p) => p[0] === 'jukebox');
+    if (jb) MAP_FX.jukebox = [jb[1], jb[2]];
+  }
+  if (typeof invalidateNav === 'function') invalidateNav(place === 'map' ? 'town' : place);
+}
+function applySavedProps(saved) {
+  if (!saved) return;
+  const put = (list, pos) => (pos || []).forEach((q, i) => { if (list[i] && q && q[0] === list[i][0]) { list[i][1] = q[1]; list[i][2] = q[2]; } });
+  put(MAP_PROPS, saved.map);
+  for (const [id, pos] of Object.entries(saved.rooms || {})) if (ROOMS[id]) put(ROOMS[id].props || [], pos);
+  propsMoved('map');
+  for (const id of Object.keys(ROOMS)) propsMoved(id);
+}
 
 const editorPanel = document.getElementById('editor');
 const editorStatus = document.getElementById('editor-status');
@@ -39,6 +81,7 @@ function setEditing(on) {
 
 function setTool(tool) {
   editor.tool = tool;
+  if (tool.mode === 'props') setStatus('Sleep een prop naar een andere plek. Sla daarna op.');
   for (const b of editorPanel.querySelectorAll('[data-tool]')) b.setAttribute('aria-pressed', String(b.dataset.tool === tool.key));
   editor.tintDirty = true;
 }
@@ -92,6 +135,14 @@ function endStroke() {
 function undoLast() {
   const step = editor.undo.pop();
   if (!step) return;
+  if (step.prop) {                               // a prop goes back where it was
+    const p = propsOf(step.place)[step.index];
+    [p[1], p[2]] = step.from;
+    propsMoved(step.place);
+    editor.propsChanged = true;
+    setStatus('Ongedaan gemaakt. Niet opgeslagen wijzigingen');
+    return;
+  }
   const L = layers[step.id];
   for (const [key, old] of step.changes) {
     const [layer, i] = key.split(':');
@@ -101,10 +152,14 @@ function undoLast() {
   if (typeof invalidateNav === 'function') invalidateNav(step.id);
   editor.changed.add(step.id);
   editor.tintDirty = true;
-  setStatus('Undone. Unsaved changes');
+  setStatus('Ongedaan gemaakt. Niet opgeslagen wijzigingen');
 }
 
 function resetPlace() {
+  const defaults = state.scene === 'map' ? PROP_DEFAULTS.map : PROP_DEFAULTS.rooms[state.scene] || [];
+  propsOf(state.scene).forEach((p, i) => { if (defaults[i]) [p[1], p[2]] = defaults[i]; });
+  propsMoved(state.scene);
+  editor.propsChanged = true;
   const id = layerId(state.scene);
   layers[id] = buildLayer(DEFAULT_MASKS[id]);
   if (typeof invalidateNav === 'function') invalidateNav(id);
@@ -140,6 +195,21 @@ function rebuildTint() {
 
 function drawEditor(g) {
   if (!editor.on) return;
+  if (editor.tool.mode === 'props') {             // moving props: a frame around each one
+    g.save();
+    g.lineWidth = 2 / state.camera.zoom;
+    const list = propsOf(state.scene);
+    const hover = editor.mouse ? propAt(state.scene, editor.mouse[0], editor.mouse[1]) : -1;
+    list.forEach((p, i) => {
+      const [x, y, w, h] = propBox(p);
+      const on = (editor.drag && editor.drag.index === i) || i === hover;
+      g.strokeStyle = on ? 'rgba(255,220,120,0.95)' : 'rgba(200,130,255,0.75)';
+      g.setLineDash(on ? [] : [6 / state.camera.zoom, 4 / state.camera.zoom]);
+      g.strokeRect(x, y, w, h);
+    });
+    g.restore();
+    return;
+  }
   if (editor.tintDirty || editor.tintFor !== state.scene + ':' + editor.tool.layer) rebuildTint();
   const L = layerFor(state.scene);
   g.save();
@@ -172,6 +242,17 @@ canvas.addEventListener('pointerdown', (e) => {
     state.cameraFree = true;
     return;
   }
+  if (editor.tool.mode === 'props') {
+    const i = propAt(state.scene, pos[0], pos[1]);
+    if (i < 0) {                                  // not on a prop: look around instead
+      editor.panning = { sx: e.offsetX, sy: e.offsetY, cx: state.camera.x, cy: state.camera.y };
+      state.cameraFree = true;
+      return;
+    }
+    const p = propsOf(state.scene)[i];
+    editor.drag = { place: state.scene, index: i, from: [p[1], p[2]], dx: pos[0] - p[1], dy: pos[1] - p[2] };
+    return;
+  }
   editor.stroke = new Map();
   paintAt(pos[0], pos[1]);
   editor.lastPaint = pos;
@@ -185,6 +266,10 @@ canvas.addEventListener('pointermove', (e) => {
     const p = editor.panning;
     state.camera.x = p.cx - (e.offsetX - p.sx) / state.camera.zoom;
     state.camera.y = p.cy - (e.offsetY - p.sy) / state.camera.zoom;
+  } else if (editor.drag) {
+    const d = editor.drag, p = propsOf(d.place)[d.index];
+    p[1] = Math.round(pos[0] - d.dx);
+    p[2] = Math.round(pos[1] - d.dy);
   } else if (editor.stroke) {
     paintLine(editor.lastPaint, pos);
     editor.lastPaint = pos;
@@ -193,6 +278,16 @@ canvas.addEventListener('pointermove', (e) => {
 
 function endPointer() {
   editor.panning = null;
+  if (editor.drag) {
+    const d = editor.drag, p = propsOf(d.place)[d.index];
+    editor.drag = null;
+    if (p[1] !== d.from[0] || p[2] !== d.from[1]) {
+      editor.undo.push({ prop: true, place: d.place, index: d.index, from: d.from });
+      editor.propsChanged = true;
+      propsMoved(d.place);
+      setStatus('Niet opgeslagen wijzigingen');
+    }
+  }
   endStroke();
 }
 canvas.addEventListener('pointerup', endPointer);
@@ -243,11 +338,19 @@ function getDb() {
 }
 
 async function saveChanges() {
-  if (!editor.changed.size) { setStatus('Niets nieuws om op te slaan.'); return; }
+  if (!editor.changed.size && !editor.propsChanged) { setStatus('Niets nieuws om op te slaan.'); return; }
   const db = await getDb();
   if (!db) { setStatus('Opslaan werkt alleen op de claude.ai-pagina.'); return; }
-  setStatus('Saving…');
+  setStatus('Opslaan…');
   try {
+    if (editor.propsChanged) {
+      await db.doc('settings/props').set({
+        map: MAP_PROPS.map((p) => [p[0], p[1], p[2]]),
+        rooms: Object.fromEntries(Object.entries(ROOMS).map(([id, r]) => [id, (r.props || []).map((p) => [p[0], p[1], p[2]])])),
+        savedAt: new Date().toISOString(),
+      });
+      editor.propsChanged = false;
+    }
     for (const id of [...editor.changed]) {
       const L = layers[id];
       await db.doc('masks/' + id).set({
@@ -256,7 +359,7 @@ async function saveChanges() {
       });
       editor.changed.delete(id);
     }
-    setStatus('Saved ✓ Tell Claude, and the changes go into the project.');
+    setStatus('Opgeslagen ✓');
   } catch (err) {
     setStatus(err && err.code === 'invalid_argument' ? 'Deze pagina kan niet voor je opslaan.' : 'Opslaan lukte nu niet. Probeer het zo nog eens.');
   }
@@ -276,4 +379,38 @@ getDb().then(async (db) => {
       editor.tintDirty = true;
     } catch (err) { /* keep the first version */ }
   }
+});
+
+// ---------- size of the figures (Harm, 2026-11-01) ----------
+// Two sliders: in town and indoors. Saved straight away (this browser at once, the page's storage on claude.ai).
+
+const sizeInputs = { town: document.getElementById('size-town'), room: document.getElementById('size-room') };
+function showSize(which) {
+  sizeInputs[which].value = FIGURE[which];
+  document.getElementById('size-' + which + '-val').textContent = String(FIGURE[which]).replace('.', ',') + '×';
+}
+let sizeSave = null;
+function setSize(which, v) {
+  FIGURE[which] = Math.max(0.5, Math.min(4, Number(v) || 1));
+  showSize(which);
+  try { localStorage.setItem('village-figure', JSON.stringify(FIGURE)); } catch (e) { /* fine */ }
+  clearTimeout(sizeSave);
+  sizeSave = setTimeout(async () => {
+    const db = await getDb();
+    if (db) db.doc('settings/figure').set({ town: FIGURE.town, room: FIGURE.room, savedAt: new Date().toISOString() }).catch(() => {});
+  }, 800);
+}
+for (const which of ['town', 'room']) sizeInputs[which].addEventListener('input', () => setSize(which, sizeInputs[which].value));
+try { const s = JSON.parse(localStorage.getItem('village-figure') || 'null'); if (s) { if (s.town) FIGURE.town = s.town; if (s.room) FIGURE.room = s.room; } } catch (e) { /* fine */ }
+showSize('town'); showSize('room');
+getDb().then(async (db) => {
+  if (!db) return;
+  try {
+    const f = await db.doc('settings/figure').get();
+    if (f.exists) { const d = f.data(); if (d.town) FIGURE.town = d.town; if (d.room) FIGURE.room = d.room; showSize('town'); showSize('room'); }
+  } catch (e) { /* keep */ }
+  try {
+    const pr = await db.doc('settings/props').get();
+    if (pr.exists) applySavedProps(pr.data());
+  } catch (e) { /* keep the first places */ }
 });

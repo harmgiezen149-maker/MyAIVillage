@@ -348,10 +348,22 @@ One Artlist image per house. Every room:
 
 ## Grotere figuren (Harm, 2026-11-01)
 
-- Harm: "maak alle figuren 1,5 keer zo groot", daarna "nog eens een keer zo groot". Ik las dat als nog een stap van 1,5, dus samen **2,25×** (`FIGURE_SCALE` in `game/world.js`). Bedoelde Harm verdubbelen, dan wordt het 3×.
+- Harm: "maak alle figuren 1,5 keer zo groot", daarna "nog eens een keer zo groot". Ik las dat als nog een stap van 1,5, dus samen **2,25×** (`FIGURE` in `game/world.js`; nu met schuifbalken in Kaart bewerken). Bedoelde Harm verdubbelen, dan wordt het 3×.
 - **Alleen in het dorp.** Binnen houden mensen de meubelmaat (Harms eerdere regel). Op 1,5× waren ze al groter dan de bureaus en pasten ze niet meer in de vergaderstoelen.
 - **Alleen de tekening groeit.** Lopen, afstand houden, praten en vergaderen gebruiken de oude maten (`heightIn`, `nav.js`). Op 1,5× met alles meeschalend liep de vergadering vast (13 mensen na 90 seconden nog onderweg); nu zit iedereen binnen 14 seconden.
 - Naamlabels hebben een vaste, leesbare grootte op het scherm.
+
+## Props verplaatsen en grootte van de figuren (Harm, 2026-11-01)
+
+- **Kaart bewerken → Props verplaatsen** (toets 6):
+  - Sleep een bankje, lantaarn, ton, kist, hek, bloembak of de jukebox naar een andere plek, in het dorp en binnen.
+  - Elke prop heeft een stippellijn; de prop onder de muis licht op.
+  - Mensen lopen om de nieuwe plek heen (het looprooster wordt opnieuw berekend). De jukebox neemt zijn muziek mee.
+  - **Ongedaan maken** werkt. **Plek herstellen** zet ook de props van die plek terug. **Opslaan** bewaart de plekken in de opslag van de pagina (`settings/props`).
+- **Schuifbalken "Figuren in het dorp" (0,75–3×) en "Figuren binnen" (0,75–2×)**:
+  - Direct zichtbaar, en meteen bewaard (in deze browser en in `settings/figure`).
+  - Alleen de tekening verandert; lopen en afstand houden blijven op de oude maten.
+- **Opgelost:** bij herladen met plaatjes uit de cache konden de bewoners en de spellus starten vóór het laatste script (meeting.js, talk.js) geladen was. Dat gaf een fout. Nu wachten ze op alle scripts.
 
 ## How the build log works (2026-10-30)
 

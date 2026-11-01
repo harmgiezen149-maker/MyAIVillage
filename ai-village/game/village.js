@@ -57,7 +57,7 @@ function fitZoom() {
   return Math.max(contain, cover / (state.scene === 'map' ? state.zoomDefault.map : 1.6));
 }
 function personHeight() {
-  return state.scene === 'map' ? 92 * FIGURE_SCALE : ROOM_H / 6;    // drawn size: town 92 × FIGURE_SCALE (Harm), rooms a sixth of the room (furniture size)
+  return state.scene === 'map' ? 92 * FIGURE.town : (ROOM_H / 6) * FIGURE.room;    // drawn size: Harm's sliders in Kaart bewerken
 }
 
 // ---------- where he can stand ----------
@@ -68,7 +68,7 @@ function hitsObstacle(x, y, list) {
 function propFootprints(props) {
   return props.filter((p) => p[4] !== false).map(([name, x, y, w]) => [x - w * 0.42, y - w * 0.3, w * 0.84, w * 0.32]);
 }
-const mapPropSolids = propFootprints(MAP_PROPS);
+let mapPropSolids = propFootprints(MAP_PROPS);     // recomputed when Harm moves a prop (Kaart bewerken)
 
 function canStand(x, y) {
   if (!isWalkable(layerFor(state.scene), x, y)) return false;
@@ -807,7 +807,10 @@ document.getElementById('enter').addEventListener('click', () => {
 
 // ---------- go ----------
 
-loading.then(() => {
+// Start once the pictures are in AND every script on the page has run: with pictures from the cache the
+// loading can finish before the last script (talk.js, meeting.js) has run.
+const allScriptsRun = new Promise((resolve) => (document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', resolve) : resolve()));
+Promise.all([loading, allScriptsRun]).then(() => {
   document.getElementById('enter').disabled = false;
   document.getElementById('enter').textContent = 'Het dorp in';
   state.camera.zoom = fitZoom() * state.zoomFactor.map;

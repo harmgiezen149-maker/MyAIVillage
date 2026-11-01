@@ -286,7 +286,11 @@
     <button id="save" class="primary">Opslaan</button>
     <button id="done">Klaar</button>
   </div>
-  <div class="hint">Sleep om te schilderen · Shift-slepen of rechts-slepen om rond te kijken · toetsen 1–5 gereedschap, [ ] penseelgrootte · loop rond om te proberen</div>
+  <div class="row">
+    <label>Figuren in het dorp <input id="size-town" type="range" min="0.75" max="3" step="0.25"></label><span id="size-town-val" class="hint"></span>
+    <label>Figuren binnen <input id="size-room" type="range" min="0.75" max="2" step="0.25"></label><span id="size-room-val" class="hint"></span>
+  </div>
+  <div class="hint">Sleep om te schilderen · "Props verplaatsen": sleep een prop naar een andere plek · Shift-slepen of rechts-slepen om rond te kijken · toetsen 1–6 gereedschap, [ ] penseelgrootte · de grootte van de figuren wordt meteen bewaard</div>
   <div class="hint" id="editor-status" role="status"></div>
   <details id="names-panel">
     <summary>Namen</summary>
