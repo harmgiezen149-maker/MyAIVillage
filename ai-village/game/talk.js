@@ -42,6 +42,7 @@ const talk = {
   villageBusy: false,
   villageLastCall: -1e9,
   villagePausedUntil: 0,
+  pendingResults: {},   // chat id -> answers waiting for the chat to open
 };
 const CHAT_LIMIT = 24;
 const COMMIT_RE = /\b(on it|i'?ll|i will|will do|i'?m on|leave it|consider it|right away|can do|got it|doing it|let me|happy to|of course|sure|okay|ok|absolutely|komt goed|komt in orde|doe ik|ga ik|ik ga|ik pak|pak ik|ik regel|regel ik|ik zorg|zorg ik|ik zet|zet ik|ik zoek|zoek ik|ik maak|maak ik|zal ik|ik zal|meteen|natuurlijk|zeker|prima|oké|is goed|geregeld|op het)\b/i;
@@ -287,7 +288,7 @@ function localCommand(said, chatId) {
 
 // ---------- the chat box (right) ----------
 
-async function openChat(personId) {
+async function openChat(personId, opts) {
   if (personId !== 'kevin' && !residentById(personId)) return;
   if (office.chat && office.chat.id === personId) { document.getElementById('chat').hidden = false; chatInputEl().focus(); return; }
   office.chat = { id: personId, turns: [], busy: false };
@@ -295,9 +296,42 @@ async function openChat(personId) {
     try { const snap = await office.db.doc('chats/' + personId).get(); if (snap.exists) office.chat.turns = (snap.data().turns || []).slice(-CHAT_LIMIT); } catch (e) { /* new chat */ }
   }
   if (!office.chat || office.chat.id !== personId) return;
+  // answers that came in while there was no storage to keep them in
+  for (const turn of talk.pendingResults[personId] || []) if (!office.chat.turns.some((x) => x.taskId && x.taskId === turn.taskId)) office.chat.turns.push(turn);
+  delete talk.pendingResults[personId];
   renderChat();
   document.getElementById('chat').hidden = false;
-  chatInputEl().focus();
+  if (!opts || !opts.quiet) chatInputEl().focus();
+}
+
+// A finished task: the short answer goes back into the chat, with a link to the full PDF report.
+// Asked in a conversation (or a meeting): that person answers in their chat. From the to-do list: Kevin answers.
+async function postResult(t) {
+  const chatId = t.from === 'chat' && t.askedPerson && (t.askedPerson === 'kevin' || residentById(t.askedPerson)) ? t.askedPerson : 'kevin';
+  // Approvals already handled: say what happened, and drop a "please approve" note that is out of date.
+  const handled = (t.approvals || []).filter((a) => a.status === 'done' || a.status === 'declined');
+  const changes = handled.map((a) => `${a.status === 'done' ? '✓' : '✗'} ${a.kind === 'app' ? a.app + ': ' + a.what : (a.payload.summary || a.what)}${a.status === 'declined' ? ' (afgewezen)' : ''}`).join('\n');
+  const staleNote = handled.length && !(t.approvals || []).some((a) => a.status === 'pending') && /goedkeur|keur .*goed|approve|akkoord/i.test(t.noteForHarm || '');
+  const note = t.noteForHarm && !staleNote ? `\n\nVoor jou: ${t.noteForHarm}` : '';
+  const text = (t.outcome === 'could_not' ? 'Dit is niet gelukt. ' : '') + (t.summary || `Klaar: ${t.text}`) + (changes ? `\n\n${changes}` : '') + note;
+  const turn = { role: 'result', content: text, taskId: t.id, task: t.text, at: nowStamp() };
+  if (office.chat && office.chat.id === chatId) {
+    office.chat.turns.push(turn);
+    renderChat();
+    saveChat(office.chat);
+    if (document.getElementById('chat').hidden) document.getElementById('chat').hidden = false;
+    return;
+  }
+  if (office.db) {
+    try {
+      const snap = await office.db.doc('chats/' + chatId).get();
+      const turns = snap.exists ? (snap.data().turns || []) : [];
+      turns.push(turn);
+      await office.db.doc('chats/' + chatId).set({ turns: turns.slice(-CHAT_LIMIT), updatedAt: nowStamp() });
+    } catch (e) { (talk.pendingResults[chatId] = talk.pendingResults[chatId] || []).push(turn); }
+  } else (talk.pendingResults[chatId] = talk.pendingResults[chatId] || []).push(turn);
+  if (document.getElementById('chat').hidden) openChat(chatId, { quiet: true });
+  else toast(`${firstOf(chatId)} heeft antwoord op "${t.text}". Open het gesprek om het te lezen.`);
 }
 function closeChat() {
   document.getElementById('chat').hidden = true;
@@ -345,8 +379,23 @@ function renderChat() {
   log.innerHTML = '';
   for (const turn of c.turns) {
     const div = document.createElement('div');
-    div.className = 'msg ' + (turn.role === 'user' ? 'me' : turn.role === 'note' ? 'hint' : 'them');
-    div.textContent = turn.content;
+    div.className = 'msg ' + (turn.role === 'user' ? 'me' : turn.role === 'note' ? 'hint' : turn.role === 'result' ? 'them result' : 'them');
+    if (turn.role === 'result') {
+      const head = document.createElement('div');
+      head.className = 'result-head';
+      head.textContent = '✓ Klaar: ' + (turn.task || '');
+      const body = document.createElement('div');
+      body.textContent = turn.content;
+      div.append(head, body);
+      const task = office.tasks.get(turn.taskId);
+      if (task) {
+        const link = document.createElement('button');
+        link.className = 'result-link';
+        link.textContent = '📄 Volledig rapport (PDF)';
+        link.onclick = () => offerReport(task);
+        div.appendChild(link);
+      }
+    } else div.textContent = turn.content;
     log.appendChild(div);
   }
   if (c.streaming) { const div = document.createElement('div'); div.className = 'msg them'; div.textContent = c.streaming; log.appendChild(div); }

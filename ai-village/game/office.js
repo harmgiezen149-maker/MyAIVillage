@@ -475,7 +475,8 @@ async function finishIfReady(t) {
   await saveTask(t);
   releasePeople(t);
   toast(`Klaar: ${t.text}`);
-  offerReport(t);
+  // The answer comes back in the chat ("In het kort"), with a link to make the full PDF (Harm, 2026-11-01).
+  if (typeof postResult === 'function') postResult(t);
 }
 
 // ---------- approvals (Harm clicks Approve or Decline) ----------

@@ -305,6 +305,17 @@ One Artlist image per house. Every room:
   - Voorstellen kunnen een agenda noemen.
   - De connector mag daarvoor nu ook `list_calendars`.
 
+## Antwoord in de chat, PDF op verzoek (Harm, 2026-11-01)
+
+- **Oude regel vervangen.** Eerst: bij elke afgeronde taak automatisch een PDF. Harm vond dat te veel. Nu:
+  - Het antwoord ("In het kort") komt als bericht in de chat. Daaronder staat de link **📄 Volledig rapport (PDF)**; de PDF wordt pas gemaakt als Harm erop tikt.
+  - De knop "PDF-rapport" in de takenlijst blijft.
+- **Wie antwoordt:**
+  - Gevraagd in een gesprek of vergadering: die persoon antwoordt in zijn eigen chat.
+  - Getypt in de takenlijst: Kevin antwoordt in zijn chat.
+  - Staat er geen ander gesprek open, dan gaat dat gesprek vanzelf open; anders volgt een melding.
+- **Wijzigingen:** goedgekeurde of afgewezen wijzigingen staan eronder (✓ / ✗). Een "keur het goed"-opmerking die al achterhaald is, wordt weggelaten. Wat Harm echt nog moet doen staat erbij als "Voor jou: …".
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
