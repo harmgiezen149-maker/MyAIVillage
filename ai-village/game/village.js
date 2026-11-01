@@ -117,6 +117,31 @@ function leaveBuilding() {
   });
 }
 
+// The way to where Harm clicked: along open ground, around walls, furniture and people standing still.
+// Clicking at (or near) a door walks in through it; indoors, clicking at the exit walks out.
+function planPlayerRoute(again) {
+  const p = state.player, where = state.scene;
+  state.routeFor = state.target;
+  if (!again) state.routeTries = 0;
+  let goal = state.target.slice(), finish = null;
+  if (where === 'map') {
+    const b = BUILDINGS.find((x) => Math.hypot(goal[0] - x.door[0], goal[1] - x.door[1]) < 45);
+    if (b) { goal = [b.door[0], b.door[1] + 30]; finish = b.door.slice(); if (!again) state.doorArmed = true; }   // a click on the door means: go in
+  } else {
+    const [ex, ey] = ROOMS[where].exit;
+    if (Math.hypot(goal[0] - ex, goal[1] - ey) < 90) { goal = [ex, ey - 24]; finish = [ex, ey + 14]; }
+  }
+  const H = personHeight();
+  const avoid = typeof residents === 'undefined' ? [] : residents
+    .filter((r) => r.where === where && !r.moving && Math.hypot(r.x - goal[0], r.y - goal[1]) > H * 0.5)
+    .map((r) => [r.x, r.y, H * 0.3]);
+  let path = typeof findPath === 'function' ? findPath(where, [p.x, p.y], goal, avoid) : null;
+  if (!path && avoid.length) path = findPath(where, [p.x, p.y], goal);
+  state.route = path ? path.slice(1) : [goal];
+  if (finish) state.route.push(finish);
+  state.routeStuck = 0;
+}
+
 function transition(swap) {
   state.fade = 1;
   state.cameraFree = false;
@@ -134,14 +159,20 @@ function update(dt) {
   if (keys.has('ArrowUp') || keys.has('w')) dy -= 1;
   if (keys.has('ArrowDown') || keys.has('s')) dy += 1;
   if (dx || dy) { state.target = null; state.cameraFree = false; }
-  if (state.target) {
-    const tx = state.target[0] - p.x, ty = state.target[1] - p.y;
-    const d = Math.hypot(tx, ty);
-    if (d < 4) state.target = null;
-    else { dx = tx / d; dy = ty / d; }
+  if (state.meeting) state.target = null;                       // seated at the head of the table
+  // Click or tap: first a route along the paths (game/nav.js), then follow it point by point (Harm, 2026-11-01).
+  if (!state.target) state.route = null;
+  else if (state.routeFor !== state.target) planPlayerRoute();
+  let stepCap = Infinity;
+  if (state.route) {
+    while (state.route.length && Math.hypot(state.route[0][0] - p.x, state.route[0][1] - p.y) < 3) state.route.shift();
+    if (!state.route.length) { state.target = null; state.route = null; }
+    else {
+      const tx = state.route[0][0] - p.x, ty = state.route[0][1] - p.y, d = Math.hypot(tx, ty);
+      dx = tx / d; dy = ty / d; stepCap = d;                    // never overshoot a turn
+    }
   }
-  if (state.meeting) { dx = 0; dy = 0; state.target = null; }   // seated at the head of the table
-  const speed = (state.scene === 'map' ? 190 : 230) * dt;
+  const speed = Math.min(stepCap, (state.scene === 'map' ? 190 : 230) * dt);
   p.moving = false;
   const before = [p.x, p.y];
   if (dx || dy) {
@@ -150,7 +181,17 @@ function update(dt) {
     if (canStand(p.x + mx, p.y + my)) { p.x += mx; p.y += my; p.moving = true; }
     else if (canStand(p.x + mx, p.y)) { p.x += mx; p.moving = true; }
     else if (canStand(p.x, p.y + my)) { p.y += my; p.moving = true; }
-    else state.target = null;
+    else if (!state.route) state.target = null;
+    // following a route but not getting anywhere: work out the way again from here (a couple of times at most)
+    if (state.route) {
+      const moved = Math.hypot(p.x - before[0], p.y - before[1]);
+      state.routeStuck = moved < speed * 0.3 ? (state.routeStuck || 0) + dt : 0;
+      if (state.routeStuck > 0.4) {
+        state.routeStuck = 0;
+        if ((state.routeTries = (state.routeTries || 0) + 1) > 3) { state.target = null; state.route = null; }
+        else planPlayerRoute(true);
+      }
+    }
     if (Math.abs(dx) > 0.2) p.facing = dx > 0 ? 1 : -1;
     p.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
   }

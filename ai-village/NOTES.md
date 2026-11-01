@@ -282,6 +282,17 @@ One Artlist image per house. Every room:
   - Tikken op iemand opent het gesprek.
 - **Apps live:** na Harms OK zijn de kookboek- en darkglass-koppelingen samengevoegd naar main; beide productie-deploys staan op READY. Harm heeft in beide apps een sleutel gemaakt en de connectors **Kookboek** en **Darkglass** op claude.ai gezet (2026-11-01). Het dorp declareert nu beide connectors (versie 1793519140-48ad). Beide adressen stonden kort in de chat: Harm is gevraagd een nieuwe sleutel te maken en alleen het nieuwe adres op claude.ai te zetten.
 
+## Harm loopt via een route (Harm, 2026-11-01)
+
+- **Probleem:** bij klikken of tikken liep Harm in een rechte lijn en botste overal tegenaan.
+- **Nu:**
+  - Bij een klik wordt eerst een route berekend met dezelfde routeplanner als de bewoners (`game/nav.js`): over begaanbare grond, om muren, meubels en stilstaande bewoners heen. Daarna loopt hij die route punt voor punt, zonder bochten te missen.
+  - Klik op of vlak bij een deur (binnen 45): hij loopt erheen en gaat naar binnen. Binnen: klik bij de uitgang en hij loopt naar buiten.
+  - Raakt hij toch vast, dan rekent hij de route opnieuw uit (hooguit 3 keer).
+  - Pijltjestoetsen en WASD werken zoals altijd.
+- **Getest:** 40 willekeurige bestemmingen, 40 keer aangekomen, bijna nooit langs iets geschoven; deur in en uitgang uit werken.
+- Rosie vond via de Kookboek-connector de kiprecepten: de koppeling werkt echt (Harm, 2026-11-01).
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
