@@ -382,7 +382,7 @@ One Artlist image per house. Every room:
 - **Session opened:** ~17:25 UTC (18:25 CET)
 - **End:** _open_
 - **Artlist credits:** start 1,340 / end _open_
-- **Claude usage:** start 9% of plan / end _open_
+- **Claude usage:** start 9% of plan / end _open (not reported; can no longer be looked up)_
 - **Claude plan:** Pro
 - **Usage limits / extra usage:** none so far
 - **Built:**
@@ -398,7 +398,7 @@ One Artlist image per house. Every room:
 ### Day 2 — 2026-10-31
 
 - **Artlist plan upgraded by Harm:** now **AI Suite 40K** (40,000 credits/month, renews 2026-11-07). Balance at start of Day 2: 23,610 credits.
-- **Claude usage:** start 26% of plan (reported by Harm, logged 09:40 UTC) / end _open_
+- **Claude usage:** start 26% of plan (reported by Harm, logged 09:40 UTC) / end _open (not reported; can no longer be looked up)_
 - **Built:**
   - Job-themed town map: one 2K edit of the 4:3 map giving every building its agent's look (see "Agents and their buildings"). Nano Banana 2, **130 credits**. Balance after: 23,480.
     - Uploaded by Harm, saved as `art/maps/town-jobs-4x3.png` (2400 × 1792).
@@ -442,7 +442,24 @@ One Artlist image per house. Every room:
 - **Office build (2026-10-31, evening):** to-do list, team access to Gmail (read + drafts) and Calendar (read + add with Harm's OK), chats that create tasks, PDF task reports. No Artlist credits. Published to the village page.
 - **Talking build (2026-10-31, late evening):** T to talk, M M for Kevin, Kevin's line, come here / back to work, meeting chat, village talk log (C). No Artlist credits. Built, tested and published (Harm approved the publish).
 
+### Day 3 — 2026-11-01
+
+- **Session:** from about 08:56 CET (Harm's first screenshot of the day) to the evening, with gaps. This entry was written late (at the start of phase 1 of the improvement plan); Claude should have kept it up to date during the day.
+- **Artlist:** plan now **Max Pro** (40,000 credits/month, renews 2026-11-07). Balance checked 2026-11-01 ~17:00 UTC: **9,430 credits left**. **No Artlist credits used today** (no images made). The drop from the last logged balance comes from use outside this project or before this log was kept up.
+- **Claude usage:** start _open_ / end _open_. Harm to report from claude.ai → Settings → Usage.
+- **Usage limits hit / extra usage:** none reported.
+- **Built today** (details in the sections above):
+  - Rosie found the chicken recipes through the Kookboek connector: the app doors work for real.
+  - Fixes: max 16 tools per call; Harm walks along a planned route; answers in the chat with the PDF on request.
+  - Calendar: all of Harm's calendars, with Dutch local times.
+  - Questions to every director: everyone answers; Kevin splits and bundles.
+  - Internet: a free connector (Vercel project `mijn-dorp-internet`). Connecting on claude.ai first failed; repaired; new key; new name **Dorpsinternet**.
+  - Figures bigger, with size sliders. Props can be moved.
+  - Improvement plan (`VERBETERPLAN.md`). Harm approved all four phases; phase 1 started.
+
 ## Open questions
 
 - Future art downloads: allow `cms-toolkit-artifacts.artlist.io` in the environment's network settings, or Harm uploads files in chat.
-- Price per Artlist credit: work it out from the plan price (monthly price ÷ 16,500), or use a fixed number from Harm?
+- Price per Artlist credit: work it out from the plan price (monthly price ÷ 40,000 on Max Pro), or use a fixed number from Harm?
+- The free 10th director spot (chair at the council table and the Guest House): a new director, or leave it free?
+- Sounds: the Artlist sound files could not be downloaded (403). Harm uploads them, or the village keeps its own soft sound.
