@@ -280,7 +280,7 @@ One Artlist image per house. Every room:
   - Knijpen om te zoomen. Naamlabels hebben een leesbare minimumgrootte.
   - Op een telefoon beginnen de vergadergezichten kleiner.
   - Tikken op iemand opent het gesprek.
-- **Apps live:** na Harms OK zijn de kookboek- en darkglass-koppelingen samengevoegd naar main; beide productie-deploys staan op READY. Nog te doen door Harm: in elke app de sleutel maken en de connectors **Kookboek** en **Darkglass** toevoegen op claude.ai. Daarna declareer en publiceer ik die connectors voor het dorp.
+- **Apps live:** na Harms OK zijn de kookboek- en darkglass-koppelingen samengevoegd naar main; beide productie-deploys staan op READY. Harm heeft in beide apps een sleutel gemaakt en de connectors **Kookboek** en **Darkglass** op claude.ai gezet (2026-11-01). Het dorp declareert nu beide connectors (versie 1793519140-48ad). Beide adressen stonden kort in de chat: Harm is gevraagd een nieuwe sleutel te maken en alleen het nieuwe adres op claude.ai te zetten.
 
 ## How the build log works (2026-10-30)
 
