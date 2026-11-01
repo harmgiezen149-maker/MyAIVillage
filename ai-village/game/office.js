@@ -301,33 +301,50 @@ const APPS = {
     ] },
 };
 
+// Two tools per app (one to read, one to propose a change), so nobody goes over Claude's limit of
+// 16 tools per call (Harm hit it on 2026-11-01: Rosie had 19).
 function appTools(t, who, call) {
   const r = residents.find((x) => x.id === who);
   const app = r && APPS[r.house];
   if (!app) return [];
   const name = firstName(who);
-  const tools = app.reads.map(([tool, description, props, required]) => ({
-    name: `${app.key}_${tool}`, description: `${app.label} app: ${description}`,
-    inputSchema: { type: 'object', properties: props, ...(required ? { required } : {}) },
-    execute: async (input, ctx) => {
-      logStep(t, who, `${name} keek in de ${app.label}-app (${tool.replace(/_/g, ' ')}).`, { tool: `${app.key}_${tool}` });
-      return compact(await call(app.server, tool, input, ctx), 14000);
-    } }));
-  for (const [tool, description, props, required] of app.writes) {
-    tools.push({ name: `${app.key}_propose_${tool}`,
-      description: `${app.label} app: PROPOSE this change; it is NOT done yet. Harm sees it and approves or declines. ${description} Also give "what": one plain line in Dutch for Harm saying what will change.`,
-      inputSchema: { type: 'object', properties: { ...props, what: { type: 'string' } }, required: [...(required || []), 'what'] },
+  const merge = (list) => {
+    const props = {};
+    for (const [, , p] of list) Object.assign(props, p);
+    return props;
+  };
+  const help = (list) => list.map(([tool, description, , required]) => `- ${tool}: ${description}${required ? ' Needs: ' + required.join(', ') + '.' : ''}`).join('\n');
+  const reads = app.reads.map(([tool]) => tool), writes = app.writes.map(([tool]) => tool);
+  return [
+    { name: `${app.key}_read`,
+      description: `Read from Harm's ${app.label} app. Pick an action and give its fields:\n${help(app.reads)}`,
+      inputSchema: { type: 'object', properties: { action: { type: 'string', enum: reads }, ...merge(app.reads) }, required: ['action'] },
+      execute: async (input, ctx) => {
+        const { action, ...args } = input || {};
+        if (!reads.includes(action)) return `Unknown action. Use one of: ${reads.join(', ')}`;
+        logStep(t, who, `${name} keek in de ${app.label}-app (${String(action).replace(/_/g, ' ')}).`, { tool: `${app.key}_${action}` });
+        return compact(await call(app.server, action, args, ctx), 14000);
+      } },
+    { name: `${app.key}_propose`,
+      description: `PROPOSE a change in Harm's ${app.label} app; it is NOT done yet. Harm sees it and approves or declines. Pick an action, give its fields, and "what": one plain line in Dutch for Harm saying what will change.\n${help(app.writes)}`,
+      inputSchema: { type: 'object', properties: { action: { type: 'string', enum: writes }, ...merge(app.writes), what: { type: 'string' } }, required: ['action', 'what'] },
       execute: async (input) => {
-        const payload = { ...input };
-        const what = String(payload.what || tool.replace(/_/g, ' '));
-        delete payload.what;
-        t.approvals.push({ id: newId(), kind: 'app', server: app.server, app: app.label, tool, by: who, payload, what, status: 'pending', at: nowStamp() });
+        const { action, what: rawWhat, ...payload } = input || {};
+        if (!writes.includes(action)) return `Unknown action. Use one of: ${writes.join(', ')}`;
+        const what = String(rawWhat || String(action).replace(/_/g, ' '));
+        t.approvals.push({ id: newId(), kind: 'app', server: app.server, app: app.label, tool: action, by: who, payload, what, status: 'pending', at: nowStamp() });
         logStep(t, who, `${name} stelde een wijziging voor in de ${app.label}-app: ${what}. Wacht op Harms OK.`);
         await saveTask(t);
         return 'Proposed. It will be done only after Harm approves it.';
-      } });
-  }
-  return tools;
+      } },
+  ];
+}
+
+// Claude takes at most 16 tools per call. Never send more (the last ones are the least needed).
+const MAX_TOOLS = 16;
+function capTools(tools) {
+  if (tools.length > MAX_TOOLS) console.warn('Too many tools, dropping:', tools.slice(MAX_TOOLS).map((x) => x.name));
+  return tools.slice(0, MAX_TOOLS);
 }
 
 const RESULT_SHAPE = `When you are finished, reply with only JSON:
@@ -373,7 +390,7 @@ ${ACCESS_TEXT}
 
 Do the task properly with the tools: do it yourself, or hand it (or a part) to ${firstName(w.id)} with hand_to_worker and then check what comes back. Use note to tell Harm what you're doing at each main step. Keep it to what the task needs.
 ${RESULT_SHAPE}`;
-  const out = await office.sample.json(prompt, { model: MODELS.director, modelTier: 'complex', tools });
+  const out = await office.sample.json(prompt, { model: MODELS.director, modelTier: 'complex', tools: capTools(tools) });
   t.summary = String(out.summary || '');
   t.whatWasDone = Array.isArray(out.whatWasDone) ? out.whatWasDone.map(String) : [];
   t.results = Array.isArray(out.results) ? out.results.map((r) => ({ title: String(r.title || ''), body: String(r.body || '') })) : [];
@@ -400,7 +417,7 @@ Today is ${today()}.
 ${ACCESS_TEXT}
 
 Do it with the tools. Use note for your main steps. When done, reply with a clear report for ${firstName(d.id)}: what you did, what you found or made (include draft subjects, event details, key facts), and anything you couldn't do.`;
-  const { text } = await office.sample(prompt, { model: MODELS.worker, modelTier: 'default', tools: teamTools(t, w.id), signal: ctx && ctx.signal });
+  const { text } = await office.sample(prompt, { model: MODELS.worker, modelTier: 'default', tools: capTools(teamTools(t, w.id)), signal: ctx && ctx.signal });
   logStep(t, w.id, `${firstName(w.id)} bracht verslag uit aan ${firstName(d.id)}.`);
   lineAdd(w.id, d.id, text.slice(0, 600), 'say', t.id);
   t.workerReports = (t.workerReports || []).concat([{ at: nowStamp(), text: text.slice(0, 6000) }]);
@@ -511,7 +528,7 @@ function renderTodo() {
       <span class="todo-text">${esc(t.text)}</span></div>
       <div class="todo-meta">${esc(statusText(t))}${t.from === 'chat' ? ` · persoonlijk gevraagd aan ${esc(firstName(t.askedPerson))}` : ''}${t.status === 'done' ? ' · ' + esc(timeOf(t.doneAt)) : ''}</div>`;
     const last = (t.log || []).slice(-1)[0];
-    if (t.status !== 'done' && last) li.insertAdjacentHTML('beforeend', `<div class="todo-latest">${esc(last.text)}</div>`);
+    if (t.status !== 'done' && t.status !== 'paused' && last) li.insertAdjacentHTML('beforeend', `<div class="todo-latest">${esc(last.text)}</div>`);
     if (t.status === 'paused') {
       li.insertAdjacentHTML('beforeend', `<div class="todo-latest">${esc(t.pauseReason || '')}</div>`);
       const b = document.createElement('button'); b.textContent = 'Verder'; b.className = 'small';
