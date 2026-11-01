@@ -316,6 +316,23 @@ One Artlist image per house. Every room:
   - Staat er geen ander gesprek open, dan gaat dat gesprek vanzelf open; anders volgt een melding.
 - **Wijzigingen:** goedgekeurde of afgewezen wijzigingen staan eronder (✓ / ✗). Een "keur het goed"-opmerking die al achterhaald is, wordt weggelaten. Wat Harm echt nog moet doen staat erbij als "Voor jou: …".
 
+## Vragen aan iedere directeur (Harm, 2026-11-01)
+
+- **Fout:** Harm vroeg in de vergadering iedere directeur om 3 interessante punten en kreeg er maar 3 terug.
+  - De vergadering liet maar 1 tot 4 mensen antwoorden (Kevin + Margot, Theo, Nova).
+  - Hun antwoorden kwamen in hun eigen chats terecht, niet in de vergadering.
+- **Nu:**
+  - **Vergadering:** vraagt Harm iets aan iedereen of aan een groep ("iedere directeur", "jullie allemaal"), dan antwoordt iedereen uit die groep, ieder voor zijn eigen gebied.
+  - **Antwoorden terug in de vergadering:** taken uit de vergadering komen terug in de vergaderchat, met de PDF-link. Is de vergadering al voorbij, dan antwoordt Kevin in zijn chat.
+  - **Kevin verdeelt:** gaat een taak (takenlijst of Kevins chat) over meerdere of alle directeuren, dan geeft Kevin iedere directeur een eigen deel en bundelt hij de antwoorden tot één antwoord, met per directeur een stuk.
+    - In de takenlijst staat dat als één taak, met per directeur een regel (klaar / bezig / Verder).
+    - Goedkeuringen van de delen staan bij die taak.
+  - **Hooguit 3 tegelijk:** er werken nooit meer dan 3 directeuren tegelijk, zodat zo'n rondvraag Harms Claude-limiet niet in één keer opmaakt.
+  - **Belpaneel:** toont hooguit 3 gezichten, plus "+ N anderen aan de telefoon".
+- **Getest:**
+  - Takenlijst: 9 directeuren, nooit meer dan 3 tegelijk, één gebundeld antwoord bij Kevin.
+  - Vergadering: 10 antwoorden (Kevin + 9), en 9 resultaten terug in de vergaderchat.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

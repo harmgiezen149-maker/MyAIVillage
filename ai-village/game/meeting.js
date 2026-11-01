@@ -194,8 +194,10 @@ function peopleOnCall() {
 const callPanel = document.getElementById('call');
 let callShown = '';
 function updateCallPanel() {
-  const people = peopleOnCall();
-  const key = people.map((p) => p.id + ':' + p.name + ':' + p.job).join('|');
+  const everyone = peopleOnCall();
+  const people = everyone.slice(0, 3);                // at most three faces; the rest as one line
+  const more = everyone.length - people.length;
+  const key = people.map((p) => p.id + ':' + p.name + ':' + p.job).join('|') + '+' + more;
   if (key === callShown) return;
   callShown = key;
   callPanel.innerHTML = '';
@@ -218,6 +220,12 @@ function updateCallPanel() {
     text.firstChild.textContent = p.name;
     card.append(face, text);
     callPanel.appendChild(card);
+  }
+  if (more > 0) {
+    const line = document.createElement('div');
+    line.className = 'caller caller-more';
+    line.textContent = `+ ${more} ${more === 1 ? 'ander' : 'anderen'} aan de telefoon`;
+    callPanel.appendChild(line);
   }
 }
 setInterval(updateCallPanel, 200);

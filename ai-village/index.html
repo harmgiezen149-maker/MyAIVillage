@@ -70,6 +70,7 @@
   .caller img, .caller .initials { width: 64px; height: 64px; border-radius: 8px; border: 2px solid var(--accent); object-fit: cover; flex: none; }
   .caller .initials { display: grid; place-items: center; font-size: 24px; color: var(--accent); background: rgba(0,0,0,.3); }
   .caller-name { color: var(--accent); font-size: 16px; }
+  .caller-more { animation: none; font-size: 13px; color: var(--muted); padding: 6px 12px; justify-content: center; }
   .caller-status { color: var(--muted); font-size: 12px; }
   @keyframes ring { 50% { box-shadow: 0 0 0 4px rgba(242,193,78,.18); } }
   @media (prefers-reduced-motion: reduce) { .caller { animation: none; } }
@@ -117,6 +118,9 @@
   .todo-item.needs_harm .todo-meta { color: var(--accent); }
   .todo-approval { margin: 7px 0 0 26px; padding: 8px 10px; border: 1px dashed var(--accent); border-radius: 8px; font-size: 13px; }
   .todo-approval .todo-meta { margin-left: 0; }
+  .todo-parts { margin: 6px 0 0 26px; display: grid; gap: 3px; font-size: 12.5px; color: var(--muted); }
+  .todo-part.done { color: var(--text); }
+  .todo-part button.small { margin: 0 0 0 8px; padding: 2px 8px; }
   .todo-empty { color: var(--muted); font-size: 13px; padding: 8px 2px; }
   @keyframes pulse { 50% { box-shadow: 0 0 0 4px rgba(242,193,78,.2); } }
   @media (prefers-reduced-motion: reduce) { .todo-item .todo-check { animation: none !important; } }

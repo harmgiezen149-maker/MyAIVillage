@@ -81,10 +81,13 @@ function logStep(t, who, text, extra) {
 async function createTask(text, from = 'todo', opts = {}) {
   const t = {
     id: newId(), text: text.trim(), from, words: opts.words || text.trim(), createdAt: nowStamp(),
-    status: 'new', owner: opts.owner || null, worker: null, askedPerson: opts.askedPerson || null,
+    status: opts.status || 'new', owner: opts.owner || null, worker: null, askedPerson: opts.askedPerson || null,
+    brief: opts.brief || '', parentId: opts.parentId || null,
     log: [], drafts: [], approvals: [], results: [], whatWasDone: [], summary: '',
   };
-  logStep(t, 'harm', from === 'todo' ? `Harm zette "${t.text}" op de takenlijst.` : `Harm vroeg ${firstName(opts.askedPerson)}: "${t.words}"`);
+  logStep(t, from === 'split' ? 'kevin' : 'harm', from === 'todo' ? `Harm zette "${t.text}" op de takenlijst.`
+    : from === 'split' ? `Kevin gaf ${firstName(t.owner)} een deel van de vraag.`
+    : `Harm vroeg ${firstName(opts.askedPerson)}${from === 'meeting' ? ' in de vergadering' : ''}: "${t.words}"`);
   if (opts.autoCreated) logStep(t, 'office', `${firstName(opts.askedPerson)} zei het te doen, dus de taak is gemaakt van Harms woorden.`);
   await saveTask(t);
   runTask(t);
@@ -99,7 +102,11 @@ async function runTask(t) {
   office.running.add(t.id);
   try {
     if (!t.owner || t.status === 'new') await kevinRoutes(t);
-    if (t.status !== 'needs_harm' && t.status !== 'done') await directorWorks(t);
+    if (t.status === 'split') return;                    // Kevin handed parts to several directors (see splitTask)
+    if (t.status !== 'needs_harm' && t.status !== 'done') {
+      await workSlot();
+      try { await directorWorks(t); } finally { freeSlot(); }
+    }
     await finishIfReady(t);
   } catch (e) {
     t.status = 'paused';
@@ -111,6 +118,20 @@ async function runTask(t) {
     releasePeople(t);
     renderTodo();
   }
+}
+
+// At most 3 directors work at the same time, so a question to everyone doesn't use up Harm's Claude limit at once.
+const MAX_PARALLEL = 3;
+office.active = 0;
+office.waiters = [];
+async function workSlot() {
+  if (office.active >= MAX_PARALLEL) await new Promise((resolve) => office.waiters.push(resolve));
+  office.active++;
+}
+function freeSlot() {
+  office.active--;
+  const next = office.waiters.shift();
+  if (next) next();
 }
 
 function sampleErrorText(e) {
@@ -139,10 +160,13 @@ Today is ${today()}. The directors:
 ${rosterText()}
 
 Pick the ONE director whose area fits best. Write them a short brief: what Harm wants, what "done" looks like, anything to watch out for.
+BUT if Harm asks several or all directors for something (for example "each director", "iedere directeur", "alle directeuren", "everyone"), list EVERY director who should do a part in "directors" (all of them for each/every director). Each will do the part for their own area and you bundle the answers.
 ${ACCESS_TEXT}
 
-Reply with only JSON: {"director": "<director id from the list>", "why": "<one sentence>", "brief": "<2-5 sentences>", "callLine": "<the first thing you say on the phone, one short sentence>"}`;
+Reply with only JSON: {"director": "<director id from the list>", "directors": ["<only when more than one director should do a part: their ids>"], "why": "<one sentence>", "brief": "<2-5 sentences>", "callLine": "<the first thing you say on the phone, one short sentence>"}`;
     const out = await office.sample.json(prompt, { model: MODELS.kevin, modelTier: 'complex', cache: false });
+    const many = Array.isArray(out.directors) ? [...new Set(out.directors.filter((id) => DIRECTORS.some((d) => d.id === id)))] : [];
+    if (many.length > 1) { await splitTask(t, many, String(out.brief || ''), String(out.why || '')); return; }
     owner = DIRECTORS.some((d) => d.id === out.director) ? out.director : DIRECTORS[0].id;
     brief = String(out.brief || '');
     t.kevinWhy = String(out.why || '');
@@ -152,12 +176,77 @@ Reply with only JSON: {"director": "<director id from the list>", "why": "<one s
     logStep(t, 'kevin', `Kevin belde ${firstName(owner)}: "${callLine}"`);
     lineAdd('kevin', owner, `${callLine} ${brief}`.trim(), 'call', t.id);
   } else {
-    brief = `Harm vroeg het ${firstName(owner)} rechtstreeks.`;
+    brief = t.brief || `Harm vroeg het ${firstName(owner)} rechtstreeks.`;
   }
   t.owner = owner;
   t.brief = brief;
   t.status = 'assigned';
   await saveTask(t);
+}
+
+// One question for several directors: each gets their own part; Kevin bundles the answers into one.
+async function splitTask(t, ids, brief, why) {
+  t.status = 'split';
+  t.owner = null;
+  t.brief = brief;
+  t.kevinWhy = why;
+  t.subtasks = [];
+  logStep(t, 'kevin', `Kevin verdeelt de vraag over ${ids.length} directeuren: ${ids.map(firstName).join(', ')}.`);
+  await saveTask(t);
+  for (const [i, id] of ids.entries()) {
+    const d = residents.find((r) => r.id === id);
+    const line = `${firstName(id)}, Harm vraagt iedere directeur hierom; wil jij het voor ${d.building.job.toLowerCase()} doen?`;
+    setTimeout(() => startCall('kevin', id, line), i * 1500);
+    lineAdd('kevin', id, `${line} ${brief}`.trim(), 'call', t.id);
+    const sub = await createTask(`${t.text} — deel van ${firstName(id)}`, 'split', {
+      owner: id, parentId: t.id, status: 'assigned', words: t.words,
+      brief: `${brief} Harm asked this of several directors; do the part for your own area (${d.building.job}). Keep it short; Kevin bundles everyone's answers.`,
+    });
+    t.subtasks.push(sub.id);
+  }
+  await saveTask(t);
+}
+
+// When every part is done, Kevin bundles them into one answer for Harm.
+async function combineParent(parentId) {
+  const p = office.tasks.get(parentId);
+  if (!p || p.status === 'done' || p.combining) return;
+  const subs = (p.subtasks || []).map((id) => office.tasks.get(id)).filter(Boolean);
+  if (!subs.length || subs.length < (p.subtasks || []).length || subs.some((x) => x.status !== 'done')) { renderTodo(); return; }
+  p.combining = true;
+  try {
+    logStep(p, 'kevin', 'Kevin bundelt de antwoorden.');
+    const parts = subs.map((x) => {
+      const d = residents.find((r) => r.id === x.owner);
+      return `${d.name} (${d.building.job}):\nSummary: ${x.summary}\n${(x.results || []).map((r) => `- ${r.title}: ${r.body}`).join('\n')}`;
+    }).join('\n\n');
+    const out = await office.sample.json(`You are Kevin, Chief of Staff to Harm. Harm asked: "${p.text}". Each director did their part:
+
+${parts}
+
+${LANG_TEXT}
+Bundle this for Harm without losing anyone's points. Reply with only JSON:
+{"summary": "<a short opening line, then per director their name and their points, each on its own line (plain text, no Markdown)>",
+ "results": [{"title": "<director name · area>", "body": "<their points>"}],
+ "noteForHarm": "<anything Harm must do; empty if nothing>"}`, { model: MODELS.kevin, modelTier: 'complex', cache: false });
+    p.summary = String(out.summary || '');
+    p.results = Array.isArray(out.results) ? out.results.map((r) => ({ title: String(r.title || ''), body: String(r.body || '') })) : [];
+    p.noteForHarm = String(out.noteForHarm || '');
+    p.whatWasDone = subs.map((x) => `${firstName(x.owner)}: ${x.summary}`);
+    p.drafts = subs.flatMap((x) => x.drafts || []);
+    p.approvals = subs.flatMap((x) => x.approvals || []);
+    p.status = 'finishing';
+    await saveTask(p);
+    await finishIfReady(p);
+  } catch (e) {
+    p.status = 'paused';
+    p.pauseReason = sampleErrorText(e);
+    logStep(p, 'office', 'Gepauzeerd: ' + p.pauseReason);
+    await saveTask(p);
+  } finally {
+    p.combining = false;
+    renderTodo();
+  }
 }
 
 function startCall(a, b, line) {
@@ -465,15 +554,16 @@ Do it with the tools. Use note for your main steps. When done, reply with a clea
 }
 
 async function finishIfReady(t) {
-  if (t.status === 'needs_harm' || t.status === 'paused' || t.status === 'kevin' || t.status === 'new') return;
-  if (t.approvals.some((a) => a.status === 'pending')) { t.status = 'needs_harm'; await saveTask(t); return; }
+  if (t.status === 'needs_harm' || t.status === 'paused' || t.status === 'kevin' || t.status === 'new' || t.status === 'split') return;
+  if (!t.subtasks && t.approvals.some((a) => a.status === 'pending')) { t.status = 'needs_harm'; await saveTask(t); return; }
   if (t.status !== 'finishing' && t.status !== 'working') return;
   t.status = 'done';
   t.doneAt = nowStamp();
-  logStep(t, 'kevin', `Kevin streepte het af.`);
-  lineAdd('kevin', 'harm', `Klaar: ${t.text}. Het is afgestreept op je lijst.`, 'say', t.id);
+  logStep(t, 'kevin', t.parentId ? `${firstName(t.owner)} leverde het deel in bij Kevin.` : `Kevin streepte het af.`);
+  if (!t.parentId) lineAdd('kevin', 'harm', `Klaar: ${t.text}. Het is afgestreept op je lijst.`, 'say', t.id);
   await saveTask(t);
   releasePeople(t);
+  if (t.parentId) { combineParent(t.parentId); return; }   // a part: Kevin bundles it with the others
   toast(`Klaar: ${t.text}`);
   // The answer comes back in the chat ("In het kort"), with a link to make the full PDF (Harm, 2026-11-01).
   if (typeof postResult === 'function') postResult(t);
@@ -533,17 +623,20 @@ async function offerReport(t) {
 }
 
 // A task from a conversation goes straight to the person who said they'd do it (Kevin's go through Kevin).
-async function makeChatTask(personId, task, words, autoCreated) {
+async function makeChatTask(personId, task, words, autoCreated, from = 'chat') {
   const p = personById(personId);
   const owner = personId === 'kevin' ? null : (p.role === 'Director' ? p.id : p.boss.id);
-  const t = await createTask(task, 'chat', { words, owner, askedPerson: personId, autoCreated });
-  if (p.role === 'Worker') t.brief = `Harm vroeg het ${p.name} rechtstreeks; geef het aan ${firstName(p.id)} en controleer het werk.`;
-  return t;
+  const brief = p.role === 'Worker' ? `Harm vroeg het ${p.name} rechtstreeks; geef het aan ${firstName(p.id)} en controleer het werk.` : '';
+  return createTask(task, from, { words, owner, askedPerson: personId, autoCreated, brief });
 }
 
 // ---------- the to-do panel ----------
 
 function statusText(t) {
+  if (t.status === 'split') {
+    const subs = (t.subtasks || []).map((id) => office.tasks.get(id)).filter(Boolean);
+    return `Kevin verzamelt de antwoorden (${subs.filter((x) => x.status === 'done').length}/${(t.subtasks || []).length} klaar)`;
+  }
   const who = t.owner ? firstName(t.owner) : 'Kevin';
   return ({ new: 'Nieuw', kevin: 'Kevin pakt het op', assigned: `Bij ${who}`, working: t.worker ? `${firstName(t.worker)} werkt eraan, ${who} controleert` : `${who} werkt eraan`,
     needs_harm: 'Wacht op jouw OK', finishing: 'Bijna klaar', done: 'Klaar', paused: 'Gepauzeerd' })[t.status] || t.status;
@@ -552,7 +645,9 @@ function statusText(t) {
 function renderTodo() {
   const list = document.getElementById('todo-list');
   if (!list) return;
-  const tasks = [...office.tasks.values()].sort((a, b) => (a.status === 'done') - (b.status === 'done') || b.createdAt.localeCompare(a.createdAt));
+  // parts of a question to several directors are shown under that question, not as tasks of their own
+  const tasks = [...office.tasks.values()].filter((t) => !t.parentId || !office.tasks.has(t.parentId))
+    .sort((a, b) => (a.status === 'done') - (b.status === 'done') || b.createdAt.localeCompare(a.createdAt));
   const open = tasks.filter((t) => t.status !== 'done').length;
   const badge = document.getElementById('todo-count');
   badge.textContent = open ? String(open) : '';
@@ -565,25 +660,46 @@ function renderTodo() {
     li.className = 'todo-item ' + t.status;
     li.innerHTML = `<div class="todo-row"><span class="todo-check" aria-hidden="true">${t.status === 'done' ? '✓' : ''}</span>
       <span class="todo-text">${esc(t.text)}</span></div>
-      <div class="todo-meta">${esc(statusText(t))}${t.from === 'chat' ? ` · persoonlijk gevraagd aan ${esc(firstName(t.askedPerson))}` : ''}${t.status === 'done' ? ' · ' + esc(timeOf(t.doneAt)) : ''}</div>`;
+      <div class="todo-meta">${esc(statusText(t))}${t.from === 'chat' ? ` · persoonlijk gevraagd aan ${esc(firstName(t.askedPerson))}` : t.from === 'meeting' ? ` · in de vergadering gevraagd aan ${esc(firstName(t.askedPerson))}` : ''}${t.status === 'done' ? ' · ' + esc(timeOf(t.doneAt)) : ''}</div>`;
+    const subs = (t.subtasks || []).map((id) => office.tasks.get(id)).filter(Boolean);
     const last = (t.log || []).slice(-1)[0];
     if (t.status !== 'done' && t.status !== 'paused' && last) li.insertAdjacentHTML('beforeend', `<div class="todo-latest">${esc(last.text)}</div>`);
     if (t.status === 'paused') {
       li.insertAdjacentHTML('beforeend', `<div class="todo-latest">${esc(t.pauseReason || '')}</div>`);
       const b = document.createElement('button'); b.textContent = 'Verder'; b.className = 'small';
-      b.onclick = () => { t.status = t.owner ? 'assigned' : 'new'; saveTask(t); runTask(t); };
+      b.onclick = () => {
+        if (t.subtasks) { t.status = 'split'; saveTask(t); combineParent(t.id); return; }   // bundling stopped: try the bundling again
+        t.status = t.owner ? 'assigned' : 'new'; saveTask(t); runTask(t);
+      };
       li.appendChild(b);
     }
-    for (const ap of (t.approvals || []).filter((a) => a.status === 'pending' || a.status === 'approving')) {
+    if (subs.length && t.status !== 'done') {
+      const parts = document.createElement('div');
+      parts.className = 'todo-parts';
+      for (const x of subs) {
+        const row = document.createElement('div');
+        row.className = 'todo-part ' + x.status;
+        row.textContent = `${x.status === 'done' ? '✓' : '·'} ${firstName(x.owner)}: ${statusText(x)}`;
+        if (x.status === 'paused') {
+          const b = document.createElement('button'); b.textContent = 'Verder'; b.className = 'small';
+          b.onclick = () => { x.status = 'assigned'; saveTask(x); runTask(x); };
+          row.appendChild(b);
+        }
+        parts.appendChild(row);
+      }
+      li.appendChild(parts);
+    }
+    const sources = t.status === 'done' ? [t] : [t, ...subs];
+    for (const [src, ap] of sources.flatMap((src) => (src.approvals || []).filter((a) => a.status === 'pending' || a.status === 'approving').map((a) => [src, a]))) {
       const p = ap.payload;
       const box = document.createElement('div');
       box.className = 'todo-approval';
       box.innerHTML = `<div><b>${ap.kind === 'app' ? esc(ap.app) : ap.kind === 'create_event' ? 'In de agenda zetten' : 'Afspraak wijzigen'}:</b> ${esc(ap.kind === 'app' ? ap.what : (p.summary || ap.what || ''))}</div>
         <div class="todo-meta">${esc((p.startTime || '').replace('T', ' ').slice(0, 16))}${p.endTime ? ' – ' + esc(p.endTime.slice(11, 16)) : ''}${p.location ? ' · ' + esc(p.location) : ''}</div>`;
       const ok = document.createElement('button'); ok.textContent = ap.status === 'approving' ? 'Bezig…' : 'Goedkeuren'; ok.className = 'small primary'; ok.disabled = ap.status === 'approving';
-      ok.onclick = () => decide(t.id, ap.id, true);
+      ok.onclick = () => decide(src.id, ap.id, true);
       const no = document.createElement('button'); no.textContent = 'Afwijzen'; no.className = 'small'; no.disabled = ap.status === 'approving';
-      no.onclick = () => decide(t.id, ap.id, false);
+      no.onclick = () => decide(src.id, ap.id, false);
       box.append(ok, no);
       li.appendChild(box);
     }

@@ -146,7 +146,7 @@ async function askPerson(id, turns, opts = {}) {
   const said = opts.said || '';
   const tools = [{ name: 'create_task', description: "Put a task on Harm's to-do list for you to do. Call this whenever you agree to do something Harm asks. Use Harm's own words. Returns 'created'.",
     inputSchema: { type: 'object', properties: { task: { type: 'string' } }, required: ['task'] },
-    execute: async ({ task }) => { created = await makeChatTask(id, String(task), said, false); return 'created'; } }];
+    execute: async ({ task }) => { created = await makeChatTask(id, String(task), said, false, opts.from || 'chat'); return 'created'; } }];
   if (id === 'kevin') {
     tools.push(
       { name: 'call_person', description: 'Phone someone in the village and ask them to come to Harm: they stop what they are doing and walk over. Use when Harm asks you to get, call, fetch or bring someone.',
@@ -194,7 +194,7 @@ IMPORTANT: if Harm asks you to do something and you agree ("on it", "I'll do it"
   // A promise to do something must always become a real task, even if they forgot to create it.
   if (!created && said && COMMIT_RE.test(text)) {
     const check = await office.sample.json(`Harm said to ${nameOf(id)}: "${said}"\n${nameOf(id)} replied: "${text}"\n\nDid they agree or promise to do something for Harm (e.g. "komt goed", "ik pak het op", "on it", "I'll do it")? Walking over or going back to work does not count. Reply with only JSON: {"committed": true|false, "task": "<if committed: the task in Harm's own words, as a short to-do line in Dutch>"}`, { modelTier: 'quick', cache: false }).catch(() => null);
-    if (check && check.committed && check.task) created = await makeChatTask(id, String(check.task), said, true);
+    if (check && check.committed && check.task) created = await makeChatTask(id, String(check.task), said, true, opts.from || 'chat');
   }
   if (created) notes.push(`📋 Op je takenlijst gezet: "${created.text}"`);
   return { text, created, notes };
@@ -304,16 +304,28 @@ async function openChat(personId, opts) {
   if (!opts || !opts.quiet) chatInputEl().focus();
 }
 
-// A finished task: the short answer goes back into the chat, with a link to the full PDF report.
-// Asked in a conversation (or a meeting): that person answers in their chat. From the to-do list: Kevin answers.
-async function postResult(t) {
-  const chatId = t.from === 'chat' && t.askedPerson && (t.askedPerson === 'kevin' || residentById(t.askedPerson)) ? t.askedPerson : 'kevin';
+// The short answer for Harm: the summary, what happened to proposed changes, and what Harm still has to do.
+function resultText(t) {
   // Approvals already handled: say what happened, and drop a "please approve" note that is out of date.
   const handled = (t.approvals || []).filter((a) => a.status === 'done' || a.status === 'declined');
   const changes = handled.map((a) => `${a.status === 'done' ? '✓' : '✗'} ${a.kind === 'app' ? a.app + ': ' + a.what : (a.payload.summary || a.what)}${a.status === 'declined' ? ' (afgewezen)' : ''}`).join('\n');
   const staleNote = handled.length && !(t.approvals || []).some((a) => a.status === 'pending') && /goedkeur|keur .*goed|approve|akkoord/i.test(t.noteForHarm || '');
   const note = t.noteForHarm && !staleNote ? `\n\nVoor jou: ${t.noteForHarm}` : '';
   const text = (t.outcome === 'could_not' ? 'Dit is niet gelukt. ' : '') + (t.summary || `Klaar: ${t.text}`) + (changes ? `\n\n${changes}` : '') + note;
+  return text;
+}
+
+// A finished task: the short answer goes back into the chat, with a link to the full PDF report.
+// Asked in a conversation (or a meeting): that person answers in their chat. From the to-do list: Kevin answers.
+async function postResult(t) {
+  if (t.from === 'meeting' && state.meeting) {      // asked in the meeting that is still going on: answer there
+    talk.meeting.turns.push({ who: t.askedPerson || 'kevin', text: resultText(t), result: true, taskId: t.id, task: t.text });
+    if (office.db) office.db.doc('chats/meeting').set({ turns: talk.meeting.turns.slice(-80), updatedAt: nowStamp() }).catch(() => {});
+    if (!talk.dock.open || talk.dock.tab !== 'meeting') openDock('meeting'); else renderMeeting();
+    return;
+  }
+  const chatId = t.from === 'chat' && t.askedPerson && (t.askedPerson === 'kevin' || residentById(t.askedPerson)) ? t.askedPerson : 'kevin';   // meeting over, or from the to-do list: Kevin answers
+  const text = resultText(t);
   const turn = { role: 'result', content: text, taskId: t.id, task: t.text, at: nowStamp() };
   if (office.chat && office.chat.id === chatId) {
     office.chat.turns.push(turn);
@@ -539,10 +551,11 @@ function renderMeeting() {
     people.map((id) => `<button class="chip ${m.to === id ? 'on' : ''} ${residentById(id) && residentById(id).role === 'Worker' ? 'worker' : ''}" data-to="${esc(id)}">${face(id)}<span class="nm">${esc(firstOf(id))}</span><span class="tp">${esc(chipTopic(id))}</span></button>`).join('');
   const log = document.getElementById('meet-log');
   log.innerHTML = m.turns.length ? m.turns.map((t) => t.who === 'harm'
-    ? `<div class="msg me">${t.to !== 'everyone' ? `<span class="to">to ${esc(firstOf(t.to))}</span> ` : ''}${esc(t.text)}</div>`
+    ? `<div class="msg me">${t.to !== 'everyone' ? `<span class="to">aan ${esc(firstOf(t.to))}</span> ` : ''}${esc(t.text)}</div>`
     : t.who === 'note' ? `<div class="msg hint">${esc(t.text)}</div>`
+      : t.result ? `<div class="msg them with-face result">${face(t.who, 'face sm')}<div><div class="result-head">✓ Klaar: ${esc(t.task || '')}</div><b>${esc(firstOf(t.who))}</b><br><span style="white-space:pre-wrap">${esc(t.text)}</span>${office.tasks.has(t.taskId) ? `<br><button class="result-link" data-task="${esc(t.taskId)}">📄 Volledig rapport (PDF)</button>` : ''}</div></div>`
       : `<div class="msg them with-face">${face(t.who, 'face sm')}<div><b>${esc(firstOf(t.who))}</b><br>${esc(t.text)}</div></div>`).join('')
-    : `<div class="msg hint">Talk to the whole room, or click a name to talk to just that person.</div>`;
+    : `<div class="msg hint">Praat met de hele zaal, of tik op een naam om alleen met die persoon te praten.</div>`;
   if (m.busy) log.insertAdjacentHTML('beforeend', '<div class="msg hint">…</div>');
   log.scrollTop = log.scrollHeight;
   document.getElementById('meet-input').placeholder = m.to === 'everyone' ? 'Zeg iets tegen iedereen…' : `Zeg iets tegen ${firstOf(m.to)}…`;
@@ -579,12 +592,14 @@ ${before}
 Harm: "${said}"
 
 Today is ${today()}. ${LANG_TEXT}
-Write the replies (in Dutch) of the people who would naturally answer (1 to 4 of them, most relevant first; Kevin first if Harm gave an order to the team). Each answers in their own voice and personality, short and plain (1-3 sentences). No invented facts about mail or calendar.
-If someone agrees to do something, fill "commits" with the task in Harm's words (Dutch) (the person who agrees should be the one whose area it is). Otherwise leave it empty.
+Write the replies (in Dutch) of the people who would naturally answer. Usually that is 1 to 4 people, most relevant first (Kevin first if Harm gave an order to the team).
+BUT if Harm addresses everyone or a whole group ("iedereen", "iedere directeur", "alle directeuren", "jullie allemaal", "each director", "the workers"...), EVERY person in that group answers, each for their own area: for "every director" that is all directors in the room. Never leave someone out who was asked.
+Each answers in their own voice and personality, short and plain (1-3 sentences). No invented facts about mail, calendar or apps.
+If someone agrees to do something, fill "commits" with the task in Harm's words (Dutch), for their own part (the person who agrees should be the one whose area it is). When every director takes their own part, Kevin does not add an extra task for the same thing. Otherwise leave it empty.
 Reply with only JSON: {"replies": [{"who": "<id from the list>", "text": "...", "commits": ""}]}`;
       const out = await office.sample.json(prompt, { model: MODELS.director, modelTier: 'complex', cache: false });
       markSampleOk();
-      const replies = (out && Array.isArray(out.replies) ? out.replies : []).filter((r) => people.includes(r.who)).slice(0, 5);
+      const replies = (out && Array.isArray(out.replies) ? out.replies : []).filter((r) => people.includes(r.who)).slice(0, people.length);
       for (const r of replies) {
         m.turns.push({ who: r.who, text: String(r.text || '') });
         let task = String(r.commits || '').trim();
@@ -593,11 +608,11 @@ Reply with only JSON: {"replies": [{"who": "<id from the list>", "text": "...", 
           const check = await office.sample.json(`Harm said to the room: "${said}"\n${nameOf(r.who)} replied: "${r.text}"\n\nDid ${nameOf(r.who)} agree or promise to do something for Harm? Reply with only JSON: {"committed": true|false, "task": "<if committed: the task in Harm's own words, in Dutch>"}`, { modelTier: 'quick', cache: false }).catch(() => null);
           if (check && check.committed && check.task) { task = String(check.task); auto = true; }
         }
-        if (task) { const t = await makeChatTask(r.who, task, said, auto); m.turns.push({ who: 'note', text: `📋 Op je takenlijst gezet voor ${firstOf(r.who)}: "${t.text}"` }); }
+        if (task) { const t = await makeChatTask(r.who, task, said, auto, 'meeting'); m.turns.push({ who: 'note', text: `📋 Op je takenlijst gezet voor ${firstOf(r.who)}: "${t.text}"` }); }
       }
       if (!replies.length) m.turns.push({ who: 'note', text: 'Niemand antwoordde. Nog eens proberen?' });
     } else {
-      const res = await askPerson(m.to, [{ role: 'user', content: said }], { said,
+      const res = await askPerson(m.to, [{ role: 'user', content: said }], { said, from: 'meeting',
         context: `You are in a meeting in the Council Hall with Harm, ${KEVIN.name} and the team. Harm is speaking to you directly, in front of everyone. What was said so far:\n${before}` });
       m.turns.push({ who: m.to, text: res.text });
       for (const n of res.notes) m.turns.push({ who: 'note', text: n });
@@ -685,6 +700,10 @@ document.getElementById('meet-roster').addEventListener('click', (e) => {
   talk.meeting.to = b.dataset.to;
   renderMeeting();
   document.getElementById('meet-input').focus();
+});
+document.getElementById('meet-log').addEventListener('click', (e) => {
+  const b = e.target.closest('.result-link[data-task]');
+  if (b && office.tasks.has(b.dataset.task)) offerReport(office.tasks.get(b.dataset.task));
 });
 const meetInput = document.getElementById('meet-input');
 meetInput.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); sendMeeting(); } if (e.key === 'Escape') closeDock(); });
