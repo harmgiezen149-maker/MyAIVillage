@@ -1,0 +1,49 @@
+# Runs the village tests and the internet-door tests on every push and pull request (verbeterplan F1).
+# Only the folders the tests need are checked out: the original drawings in ai-village/art (about 470 MB) are skipped.
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  village:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            ai-village/game
+            ai-village/assets
+            ai-village/tests
+          sparse-checkout-cone-mode: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        working-directory: ai-village/tests
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Village tests (fake Claude, fake apps, fake database)
+        working-directory: ai-village/tests
+        run: npm test
+
+  internet-door:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: internet-door
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Internet door tests
+        working-directory: internet-door
+        run: npm test

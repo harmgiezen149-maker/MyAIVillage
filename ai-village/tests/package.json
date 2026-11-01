@@ -3,7 +3,7 @@
   "private": true,
   "description": "Browser tests for Mijn AI-dorp, with a fake Claude, fake apps and a fake database (nothing real is called).",
   "scripts": {
-    "test": "node --test --test-concurrency=1 ./"
+    "test": "node --test --test-concurrency=1"
   },
   "devDependencies": {
     "playwright": "1.63.0"
