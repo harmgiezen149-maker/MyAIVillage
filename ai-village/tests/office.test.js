@@ -36,6 +36,19 @@ test('a task with a draft and a calendar proposal, repaired answer, resume, appr
     await page.waitForSelector('#chat .msg.result .feedback button');
     assert.match(await page.textContent('#chat .msg.result'), /Volledig rapport/);
     assert.match(await page.textContent('#todo-usage'), /Vandaag \d+ aanroep/);
+    // the full report opens on screen first (Harm, 2026-11-02); the PDF is a button inside it
+    await page.click('#chat .msg.result .result-link');
+    await page.waitForSelector('#report-view:not([hidden])');
+    const rv = await page.textContent('#rv-body');
+    assert.match(rv, /In het kort/); assert.match(rv, /Concepten in je Gmail/); assert.match(rv, /Agenda- en app-wijzigingen/);
+    assert.equal(await page.textContent('#rv-title'), 'Regel een etentje');
+    assert.match(await page.textContent('#rv-pdf'), /Opslaan als PDF/);
+    await page.keyboard.press('Escape');
+    assert.equal(await page.isVisible('#report-view'), false, 'Escape closes the report');
+    await page.click('#todo-list .todo-item.done button');      // "Rapport bekijken" in the to-do list
+    assert.equal(await page.isVisible('#report-view'), true);
+    await page.click('#rv-close');
+    assert.equal(await page.isVisible('#report-view'), false);
     assert.deepEqual(v.errors, []);
   } finally { await v.close(); }
 });

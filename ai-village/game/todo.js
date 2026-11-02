@@ -111,8 +111,8 @@ function taskItem(t) {
       li.appendChild(box);
     }
     if (t.status === 'done') {
-      const b = document.createElement('button'); b.textContent = 'PDF-rapport'; b.className = 'small';
-      b.onclick = () => offerReport(t);
+      const b = document.createElement('button'); b.textContent = 'Rapport bekijken'; b.className = 'small';
+      b.onclick = () => showReport(t);
       li.appendChild(b);
       li.addEventListener('mouseenter', () => showDone(t, li));
       li.addEventListener('mouseleave', hideDone);

@@ -143,6 +143,9 @@ function feedbackRow(taskId) {
 function rerenderAnswers() {
   if (typeof renderChat === 'function') renderChat();
   if (typeof renderMeeting === 'function' && talk && talk.dock && talk.dock.open) renderMeeting();
+  // the report overlay: swap its thumbs row for the updated one
+  const old = document.querySelector('#rv-body .rv-feedback');
+  if (old && typeof reportView !== 'undefined' && reportView.task) { const fb = feedbackRow(reportView.task.id); fb.classList.add('rv-feedback'); old.replaceWith(fb); }
 }
 
 (async () => {

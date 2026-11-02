@@ -418,8 +418,8 @@ function renderChat() {
       if (task) {
         const link = document.createElement('button');
         link.className = 'result-link';
-        link.textContent = '📄 Volledig rapport (PDF)';
-        link.onclick = () => offerReport(task);
+        link.textContent = '📄 Volledig rapport';
+        link.onclick = () => showReport(task);   // first on screen; saving as a PDF is a button in there (Harm, 2026-11-02)
         div.appendChild(link);
         if (typeof feedbackRow === 'function') div.appendChild(feedbackRow(task.id));
       }
@@ -572,7 +572,7 @@ function renderMeeting() {
   log.innerHTML = m.turns.length ? m.turns.map((t) => t.who === 'harm'
     ? `<div class="msg me">${t.to !== 'everyone' ? `<span class="to">aan ${esc(firstOf(t.to))}</span> ` : ''}${esc(t.text)}</div>`
     : t.who === 'note' ? `<div class="msg hint">${esc(t.text)}</div>`
-      : t.result ? `<div class="msg them with-face result">${face(t.who, 'face sm')}<div><div class="result-head">✓ Klaar: ${esc(t.task || '')}</div><b>${esc(firstOf(t.who))}</b><br><span style="white-space:pre-wrap">${esc(t.text)}</span>${office.tasks.has(t.taskId) ? `<br><button class="result-link" data-task="${esc(t.taskId)}">📄 Volledig rapport (PDF)</button><div class="fb-slot" data-task="${esc(t.taskId)}"></div>` : ''}</div></div>`
+      : t.result ? `<div class="msg them with-face result">${face(t.who, 'face sm')}<div><div class="result-head">✓ Klaar: ${esc(t.task || '')}</div><b>${esc(firstOf(t.who))}</b><br><span style="white-space:pre-wrap">${esc(t.text)}</span>${office.tasks.has(t.taskId) ? `<br><button class="result-link" data-task="${esc(t.taskId)}">📄 Volledig rapport</button><div class="fb-slot" data-task="${esc(t.taskId)}"></div>` : ''}</div></div>`
       : `<div class="msg them with-face">${face(t.who, 'face sm')}<div><b>${esc(firstOf(t.who))}</b><br>${esc(t.text)}</div></div>`).join('')
     : `<div class="msg hint">Praat met de hele zaal, of tik op een naam om alleen met die persoon te praten.</div>`;
   if (typeof feedbackRow === 'function') for (const slot of log.querySelectorAll('.fb-slot[data-task]')) slot.appendChild(feedbackRow(slot.dataset.task));
@@ -725,7 +725,7 @@ document.getElementById('meet-roster').addEventListener('click', (e) => {
 });
 document.getElementById('meet-log').addEventListener('click', (e) => {
   const b = e.target.closest('.result-link[data-task]');
-  if (b && office.tasks.has(b.dataset.task)) offerReport(office.tasks.get(b.dataset.task));
+  if (b && office.tasks.has(b.dataset.task)) showReport(office.tasks.get(b.dataset.task));
 });
 const meetInput = document.getElementById('meet-input');
 meetInput.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); sendMeeting(); } if (e.key === 'Escape') closeDock(); });

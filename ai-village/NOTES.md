@@ -481,6 +481,24 @@ One Artlist image per house. Every room:
   - Een gewone `main` maken betekent pushen naar een nieuwe branch. Dat doe ik alleen als Harm daar ja op zegt.
   - Daarna kan Harm in GitHub (Settings → Branches) `main` als standaard instellen.
 
+## Rapport eerst op het scherm (Harm, 2026-11-02)
+
+- Harm: "voordat een PDF gegenereerd wordt, wil ik de output eerst visueel in het scherm zien als een losse overlay. Het is namelijk niet altijd nodig om de informatie als een los bestand op te moeten slaan."
+- Waar het rapport opent:
+  - "📄 Volledig rapport" onder een antwoord in de chat of de vergadering;
+  - "Rapport bekijken" in de takenlijst.
+- Het rapport opent als overlay over het dorp, in dezelfde papierstijl als de PDF en met dezelfde onderdelen:
+  - in het kort, top 3, voor jou, let op;
+  - wie het deden, resultaten, wat er is gedaan;
+  - concepten, agenda- en app-wijzigingen;
+  - bronnen, met klikbare links.
+  - Het verslag van de stagiair en het logboek stap voor stap zijn uitklapbaar.
+  - Onderaan staan 👍/👎.
+- **💾 Opslaan als PDF** staat in de overlay. Er wordt pas een bestand gemaakt als Harm daarop drukt.
+- Sluiten gaat met Sluiten, Escape of een klik naast het rapport. Op de telefoon vult het rapport het hele scherm.
+- Getest in `tests/office.test.js`: het rapport opent vanuit de chat en vanuit de takenlijst, en sluit weer. Er zijn screenshots bekeken op computer en telefoon.
+- Online gezet als versie 1793634705-a054.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
