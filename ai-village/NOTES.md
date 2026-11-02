@@ -435,6 +435,52 @@ One Artlist image per house. Every room:
   - De oude tests (fase 2, vergadering met iedereen, praten) werken nog.
 - Online gezet als versie 1793554464-8d1b.
 
+## Verbeterplan: fase 4 uitgevoerd, en Harms meldingen van 1 november 's avonds (2026-11-01/02)
+
+**Harms meldingen tussendoor**
+- **Fout "Cannot add property 1, object is not extensible":**
+  - Oorzaak: wat de opslag van claude.ai teruggeeft is alleen-lezen. Het nieuwe geheugen (fase 3) probeerde daar iets aan toe te voegen, precies op het moment dat een taak klaar was. Daardoor pauzeerden taken waarvan het werk al gedaan was.
+  - Opgelost: het geheugen en de gesprekken maken eerst een eigen kopie. Het geheugen kan een taak nooit meer stoppen.
+  - **Verder** (en Alles hervatten) rondt een taak waarvan het werk al klaar was gewoon af, zonder het opnieuw te doen.
+  - De nagemaakte database in de tests geeft nu ook alleen-lezen gegevens terug, zodat zo'n fout voortaan door de tests wordt gevonden.
+- **"Het zoeken op internet is heel beperkt":**
+  - De fout "connector access isn't confirmed" kwam doordat de connector Dorpsinternet nog niet op claude.ai stond. Harm moet hem nog toevoegen, met het nieuwe adres. De sleutel is opnieuw vernieuwd op 2 november, 's ochtends vroeg (UTC).
+  - Nieuw in de internetdeur:
+    - **web_search** ("breed zoeken"): Google Nieuws, Bing Nieuws, Wikipedia en de onafhankelijke zoekmachine Marginalia tegelijk, gemengd en zonder dubbele adressen.
+    - **scholar**: wetenschappelijk onderzoek in alle vakgebieden via OpenAlex (250+ miljoen artikelen, met citaties en samenvatting).
+  - DuckDuckGo en Mojeek weigeren verzoeken van servers (fout 403). Dat omzeilen we bewust niet door ons als browser voor te doen, want dat gaat tegen hun regels in. Een echte algemene zoekmachine (Google- of Bing-zoeken) kan alleen met een betaalde sleutel, en dat past niet in Harms regel "alleen mijn abonnementen".
+  - Marginalia is op dit moment vaak traag. Hij krijgt hooguit 5 seconden en anders tellen de andere bronnen.
+  - Zelftest: `https://mijn-dorp-internet.vercel.app/api/zelftest`. Gemeten op 2 november: 12 resultaten per zoekvraag, en onderzoek en nieuws werken.
+
+**Fase 4: onderhoud en afwerking**
+- **F1 Tests:**
+  - Vaste tests in `ai-village/tests/` (zie de README daar), 10 stuks. Ze gebruiken een nagemaakte Claude, nagemaakte apps en een nagemaakte database.
+  - GitHub draait ze bij elke wijziging (`.github/workflows/tests.yml`), samen met de tests van de internetdeur. Daarbij worden alleen de mappen opgehaald die de tests nodig hebben, dus de 469 MB aan tekeningen niet.
+  - De eerste run op GitHub was groen.
+- **F3 Code opgedeeld:** office.js (969 regels) is gesplitst in:
+  - office.js (591 regels): taken, Kevin, directeuren, goedkeuren;
+  - tools.js: Gmail, agenda's, apps en internet;
+  - todo.js: de takenlijst, het archief en de briefing.
+  - De tests vonden meteen een laadvolgorde-fout. Die is opgelost: de opstart wacht tot alle scripts geladen zijn.
+- **E1:** "key 1" heet nu "toets 1". De tabnaam "My AI Village" blijft staan tot Harm zegt dat die "Mijn AI-dorp" moet worden.
+- **E2:** de editor zit op de telefoon onderin, compact, met één schuivende rij gereedschap en een korte uitleg.
+- **E3:** Escape sluit het vak waarin je bent, ook als je op een knop staat. Schuifjes en uitklappers zijn zichtbaar met de Tab-toets. Er zijn beschrijvingen voor schermlezers, bijvoorbeeld bij de takenlijst, 👍/👎 en 🗑.
+- **E4 Geluid:** het dorp blijft zijn eigen zachte geluid maken. Echte geluiden komen pas als Harm de bestanden uploadt.
+- **A6 Snelheidslimiet:**
+  - Kookboek en Darkglass hebben nu ook een limiet van 300 verzoeken per uur, met een teller in hun eigen Redis. Daarna geven ze fout 429 tot het volgende uur.
+  - Getest: Kookboek 627 tests, Darkglass 55 tests. Beide staan op main en zijn opnieuw gepubliceerd.
+- **F2 Zware repository (beslissing voor Harm):** de originele tekeningen (469 MB) staan in de geschiedenis van git. Ze echt weghalen kan op twee manieren, en beide herschrijven de geschiedenis (force push):
+  - naar Git LFS;
+  - naar Google Drive.
+  - Dat doe ik alleen met Harms uitdrukkelijke ja. Wat al wel is gedaan zonder risico: de tests op GitHub halen de tekeningen niet op.
+- **F4 Eén gedeelde deurcode:**
+  - Besloten: niet samenvoegen. Elke deur hoort bij zijn eigen app (Kookboek, Darkglass, internet) en wordt los gepubliceerd.
+  - Een gedeeld pakket zou een extra npm-pakket of submodule vragen. Dat is meer gedoe dan de ongeveer 70 regels protocolcode die nu in elk project staan.
+  - Elke kopie heeft eigen tests die het protocol bewaken.
+- **F5 Branchnaam:**
+  - Een gewone `main` maken betekent pushen naar een nieuwe branch. Dat doe ik alleen als Harm daar ja op zegt.
+  - Daarna kan Harm in GitHub (Settings → Branches) `main` als standaard instellen.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
@@ -525,11 +571,23 @@ One Artlist image per house. Every room:
   - Questions to every director: everyone answers; Kevin splits and bundles.
   - Internet: a free connector (Vercel project `mijn-dorp-internet`). Connecting on claude.ai first failed; repaired; new key; new name **Dorpsinternet**.
   - Figures bigger, with size sliders. Props can be moved.
-  - Improvement plan (`VERBETERPLAN.md`). Harm approved all four phases; phase 1 started.
+  - Improvement plan (`VERBETERPLAN.md`). Harm approved all four phases; phases 1-3 were finished and published the same day.
+
+### Day 4 — 2026-11-02
+
+- **Session:** continued from the night before (phase 4). Early morning UTC: phase 4 finished.
+- **Artlist:** no credits used (no images, sounds or video made).
+- **Claude usage:** _open_. Harm to report from claude.ai → Settings → Usage.
+- **Usage limits hit / extra usage:** none reported.
+- **Built:** the read-only fix, broad search and science in the internet door, phase 4 (tests on GitHub, code split up, phone editor, keyboard use, speed limits on the Kookboek and Darkglass doors). Details in "Verbeterplan: fase 4".
 
 ## Open questions
 
 - Future art downloads: allow `cms-toolkit-artifacts.artlist.io` in the environment's network settings, or Harm uploads files in chat.
 - Price per Artlist credit: work it out from the plan price (monthly price ÷ 40,000 on Max Pro), or use a fixed number from Harm?
 - The free 10th director spot (chair at the council table and the Guest House): a new director, or leave it free?
-- Sounds: the Artlist sound files could not be downloaded (403). Harm uploads them, or the village keeps its own soft sound.
+- Sounds: the Artlist sound files could not be downloaded (403). Harm uploads them, or the village keeps its own soft sound (for now: its own sound).
+- Kevin on a lighter model (C3)? Only if Harm wants it.
+- Tab name "My AI Village" → "Mijn AI-dorp"?
+- F2: move the original drawings out of git history (Git LFS or Google Drive)? Needs a history rewrite and Harm's explicit yes.
+- F5: make a `main` branch from the current branch? Needs Harm's yes.
