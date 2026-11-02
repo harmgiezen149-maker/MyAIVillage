@@ -19,10 +19,10 @@ async function roep(tools, name, args) {
   return { fout: !!out.result.isError, tekst: out.result.content[0].text, data: out.result.isError ? null : JSON.parse(out.result.content[0].text) };
 }
 
-test('alleen lezen, vijf bronnen', async function() {
+test('alleen lezen, zeven bronnen', async function() {
   var lijst = await mcp.verwerk({ jsonrpc: '2.0', id: 1, method: 'tools/list' }, web.maak(), { name: 't', version: '1' });
   var tools = lijst.result.tools;
-  assert.deepEqual(tools.map(function(t) { return t.name; }), ['news_search', 'wikipedia', 'hacker_news', 'arxiv', 'read_page']);
+  assert.deepEqual(tools.map(function(t) { return t.name; }), ['web_search', 'scholar', 'news_search', 'wikipedia', 'hacker_news', 'arxiv', 'read_page']);
   assert.ok(tools.every(function(t) { return t.annotations.readOnlyHint === true; }));
 });
 
@@ -88,8 +88,56 @@ test('de deur: zonder juiste sleutel een kale 404', async function() {
   var stroom = Readable.from([Buffer.from(JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list' }))]);
   stroom.method = 'POST'; stroom.url = '/api/mcp/' + 'x'.repeat(43); stroom.query = {};
   var uitStroom = res(); await handler(stroom, uitStroom);
-  assert.equal(uitStroom.body.result.tools.length, 5);
+  assert.equal(uitStroom.body.result.tools.length, 7);
   delete process.env.MCP_SLEUTEL;
   var zonder = res(); await handler({ method: 'POST', query: { sleutel: '' }, body: {} }, zonder);
   assert.equal(zonder.statusCode, 404, 'zonder ingestelde sleutel is de deur dicht');
+});
+
+var GN = '<rss><channel><item><title>Muziek helpt slapen - NOS</title><link>https://news.google.com/x1</link><pubDate>Sun, 01 Nov 2026</pubDate><source url="https://nos.nl">NOS</source></item></channel></rss>';
+var BING = '<rss xmlns:News="https://www.bing.com/news/search?q=x&amp;format=rss"><channel><item><title>Slaap en muziek</title>'
+  + '<link>http://www.bing.com/news/apiclick.aspx?ref=FexRss&amp;aid=&amp;tid=1&amp;url=https%3a%2f%2fwww.ad.nl%2fslaap&amp;c=2</link>'
+  + '<description>Rustige muziek &amp; slaap.</description><pubDate>Sat, 31 Oct 2026</pubDate><News:Source>AD</News:Source></item>'
+  + '<item><title>Dubbel</title><link>https://nos.nl/a?x=1</link><description>d</description></item></channel></rss>';
+var WIKI = JSON.stringify({ query: { search: [{ title: 'Slaap', snippet: '<span>Slaap</span> is rust' }] } });
+
+test('breed zoeken: Google Nieuws, Bing Nieuws, Wikipedia en Marginalia gemengd', async function() {
+  var t = gereedschap({
+    'https://news.google.com/rss/search?q=muziek%20slaap': { body: GN, type: 'application/rss+xml' },
+    'https://www.bing.com/news/search?format=rss&q=muziek%20slaap': { body: BING, type: 'application/rss+xml' },
+    'https://nl.wikipedia.org/w/api.php': { body: WIKI, type: 'application/json' },
+    'https://api.marginalia.nu/': { body: JSON.stringify({ results: [{ url: 'https://klein.example/c', title: 'Klein web', description: 'd' }] }), type: 'application/json' },
+  });
+  var r = await roep(t, 'web_search', { query: 'muziek slaap' });
+  assert.equal(r.fout, false, r.tekst);
+  assert.deepEqual(r.data.resultaten.map(function(x) { return x.link; }), ['https://news.google.com/x1', 'https://www.ad.nl/slaap', 'https://nl.wikipedia.org/wiki/Slaap', 'https://klein.example/c', 'https://nos.nl/a?x=1']);
+  assert.equal(r.data.resultaten[1].bron, 'Bing Nieuws · AD');
+  assert.equal(r.data.resultaten[1].fragment, 'Rustige muziek & slaap.');
+  assert.equal(r.data.resultaten[2].fragment, 'Slaap is rust');
+  assert.deepEqual(r.data.bronnen, ['Google Nieuws', 'Bing Nieuws', 'Wikipedia', 'Marginalia']);
+});
+
+test('breed zoeken: valt een bron uit, dan tellen de andere; niets gevonden is een nette melding', async function() {
+  var t = gereedschap({
+    'https://news.google.com/': { status: 503, body: '' },
+    'https://www.bing.com/news/search': { body: BING, type: 'application/rss+xml' },
+    'https://api.marginalia.nu/': { status: 500, body: '' },
+  });
+  var r = await roep(t, 'web_search', { query: 'muziek slaap' });
+  assert.equal(r.fout, false);
+  assert.equal(r.data.aantal, 2);
+  assert.ok(r.data.niet_gelukt.some(function(x) { return /Google Nieuws/.test(x); }));
+  var niets = await roep(gereedschap({}), 'web_search', { query: 'x' });
+  assert.equal(niets.fout, true);
+  assert.match(niets.tekst, /Niets gevonden/);
+});
+
+test('wetenschap via OpenAlex: samenvatting terug in volgorde, open link', async function() {
+  var t = gereedschap({ 'https://api.openalex.org/works?search=sleep%20music': { type: 'application/json', body: JSON.stringify({ meta: { count: 1234 }, results: [{
+    display_name: 'Music for sleep', publication_year: 2024, cited_by_count: 87, doi: 'https://doi.org/10.1/x',
+    authorships: [{ author: { display_name: 'A. Slaap' } }], primary_location: { source: { display_name: 'Sleep Journal' } },
+    open_access: { oa_url: 'https://open.example/paper.pdf' }, abstract_inverted_index: { Music: [0], improves: [1], sleep: [2] } }] }) } });
+  var r = await roep(t, 'scholar', { query: 'sleep music' });
+  assert.equal(r.data.totaal_gevonden, 1234);
+  assert.deepEqual(r.data.artikelen[0], { titel: 'Music for sleep', jaar: 2024, auteurs: ['A. Slaap'], tijdschrift: 'Sleep Journal', geciteerd: 87, samenvatting: 'Music improves sleep', link: 'https://open.example/paper.pdf' });
 });

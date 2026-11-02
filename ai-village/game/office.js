@@ -79,7 +79,7 @@ What the team can do with Harm's accounts:
 - Harm's own apps (only the director who looks after the app and their worker have these tools):
   - Kookboek (Rosie Bell's area): recipes, week menu, shopping list and pantry. Read freely; planning a recipe, adding to the shopping list or adding a recipe is PROPOSED and only done after Harm clicks Approve. Never the food/weight tracker, never delete.
   - Darkglass (Jasper Vale's area): bass presets, setlists and rig. Read freely; making or changing a setlist is PROPOSED and only done after Harm clicks Approve. Never delete, never edit presets, never run the paid analysis.
-- Internet (everyone, read-only, connector "Dorpsinternet"): recent news (Google News, Dutch or English), Wikipedia, Hacker News (tech/AI), arXiv (research papers), and reading a public web page by its address. There is no general search engine: search news/Wikipedia/HN/arXiv, then read pages from the links you find.
+- Internet (everyone, read-only, connector "Dorpsinternet"): search the whole web (web_search), scientific research in all fields (scholar), recent news (Google News, Dutch or English), Wikipedia, Hacker News (tech/AI), arXiv, and reading a public web page from the links you found.
 For anything about the world, your field or what is happening now, RESEARCH ONLINE with the internet tool instead of only looking at Harm's mail. Name your sources (title + link) in your results.
 Never invent facts about mail, events, app data or the news: look them up with the tools. If something can't be done with these tools, say so plainly.`;
 

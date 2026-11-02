@@ -7,8 +7,8 @@ var web = require('./_lib/web');
 // Alleen lezen van openbaar internet. Geen API-sleutels, geen kosten.
 
 var INFO = {
-  name: 'internet', version: '1.0.0',
-  instructions: "Public internet for Harm's AI village: Google News (nl/en), Wikipedia, Hacker News, arXiv, and reading a web page by its address. Read-only. There is no general web search engine: search news, Wikipedia, Hacker News or arXiv, then read pages from the links you find. Always name your sources."
+  name: 'internet', version: '1.1.0',
+  instructions: "Public internet for Harm's AI village: broad search (Google News, Bing News, Wikipedia, Marginalia together), scientific research (OpenAlex), Google News (nl/en), Wikipedia, Hacker News, arXiv, and reading a web page by its address. Read-only. Search, then read the best pages from the links you find. Always name your sources."
 };
 
 function sleutelKlopt(gekregen) {
