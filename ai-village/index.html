@@ -199,10 +199,12 @@
   .todo-empty { color: var(--muted); font-size: 13px; padding: 8px 2px; }
   @keyframes pulse { 50% { box-shadow: 0 0 0 4px rgba(242,193,78,.2); } }
   @media (prefers-reduced-motion: reduce) { .todo-item .todo-check { animation: none !important; } }
-  #todo-pop { position: fixed; z-index: 7; width: min(340px, calc(100vw - 32px)); max-height: 70vh; overflow-y: auto; pointer-events: none;
+  #todo-pop { position: fixed; z-index: 40; width: min(340px, calc(100vw - 32px)); max-height: 70vh; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
     background: #24190f; border: 1px solid var(--accent); border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.4; box-shadow: 0 12px 30px rgba(0,0,0,.5); }
   #todo-pop[hidden] { display: none; }
-  #todo-pop .pop-title { color: var(--accent); font-size: 15px; }
+  #todo-pop .pop-title { color: var(--accent); font-size: 15px; padding-right: 34px; }
+  #todo-pop .pop-close { position: sticky; top: 0; float: right; margin: 0 0 0 6px; padding: 2px 8px; z-index: 1; }
+  #todo-pop .pop-full { margin: 10px 0 2px; }
   #todo-pop .pop-meta { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
   #todo-pop .pop-h { color: var(--accent); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; margin-top: 9px; }
   #todo-pop p { margin: 4px 0; }
@@ -353,7 +355,7 @@
     <ul id="profile-links"></ul>
   </div>
 </div>
-<div id="todo-pop" role="tooltip" hidden></div>
+<div id="todo-pop" role="dialog" aria-label="Wat er is gedaan" hidden></div>
 <div id="report-view" role="dialog" aria-modal="true" aria-labelledby="rv-title" hidden>
   <div class="rv-sheet">
     <div class="rv-head">

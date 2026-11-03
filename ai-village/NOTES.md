@@ -513,6 +513,23 @@ One Artlist image per house. Every room:
 - Getest in `tests/smoke.test.js`: `#rosie`, `#kevin` en `#taken`, het meelopende adres en de lijst met snelkoppelingen.
 - Online gezet als versie 1793728681-9957.
 
+## Taakkaart scrollbaar, en waarom het internet bleef falen (Harm, 2026-11-03)
+
+- Harm: "als ik een taak aanklik dan komt de uitgebreide tekst ernaast, alleen kan ik er niet doorheen scrollen."
+  - Oorzaak: de kaart naast een afgeronde taak liet geen muis of vinger toe.
+  - Nu:
+    - de kaart blijft open als je er met de muis naartoe gaat, en scrollt met het wiel of met de vinger;
+    - een tik op een taak opent de kaart, ✕ of een tik ernaast sluit hem;
+    - onderaan staat "📄 Volledig rapport".
+    - De plek waar je gebleven bent, blijft bewaard als de lijst wordt bijgewerkt.
+  - Getest in `tests/smoke.test.js`.
+- In Harms schermafbeelding stond nog steeds "connector access isn't confirmed" bij Dorpsinternet.
+  - Het logboek van Vercel liet zien dat Harms connector op claude.ai de **sleutel van 1 november** gebruikt. Die was op 2 november vervangen, dus de deur weigerde hem (404).
+  - Harm koos: de deur neemt weer de sleutel die de connector al heeft. `MCP_SLEUTEL` is teruggezet en de deur is opnieuw gepubliceerd.
+  - Gecontroleerd: met die sleutel geeft de deur nu 405 "alleen POST" in plaats van 404, dus de sleutel wordt herkend.
+  - Het adres met de sleutel van 2 november werkt daardoor niet meer.
+- Online gezet als versie 1793728935-7792 (dorp) en dpl_45x6pDn2Y4QJpw67fjnCzobbKvgv (deur).
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

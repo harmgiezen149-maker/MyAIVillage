@@ -65,3 +65,32 @@ test('direct links: #rosie opens the talk with Rosie, #taken the to-do list; the
     assert.deepEqual(v.errors, []);
   } finally { await v.close(); }
 });
+
+test('the card beside a done task can be scrolled, and opens the full report', async () => {
+  const v = await openVillage(srv.url);
+  const { page } = v;
+  try {
+    await page.evaluate(() => {
+      const long = Array.from({ length: 40 }, (_, i) => `Stap ${i + 1}: iets gedaan`);
+      office.tasks.set('tlong', { id: 'tlong', text: 'Lange taak', from: 'todo', words: 'x', createdAt: new Date().toISOString(), doneAt: new Date().toISOString(),
+        status: 'done', owner: 'imani-okafor', summary: 'Samenvatting.', whatWasDone: long, drafts: [], approvals: [], results: [], log: [] });
+      renderTodo();
+    });
+    await page.click('#todo-btn');
+    await page.hover('#todo-list .todo-item.done .todo-text');
+    await page.waitForSelector('#todo-pop:not([hidden])');
+    await page.hover('#todo-pop .pop-title');                      // move onto the card: it stays open
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(400);
+    assert.equal(await page.isVisible('#todo-pop'), true, 'still open after moving onto it');
+    assert.ok(await page.evaluate(() => document.getElementById('todo-pop').scrollTop) > 100, 'the card scrolled');
+    await page.click('#todo-pop .pop-full');
+    assert.equal(await page.isVisible('#report-view'), true, 'full report from the card');
+    await page.click('#rv-close');
+    await page.click('#todo-list .todo-item.done .todo-text');      // a tap opens it again (touch screens)
+    assert.equal(await page.isVisible('#todo-pop'), true);
+    await page.click('#todo-pop .pop-close');
+    assert.equal(await page.isVisible('#todo-pop'), false);
+    assert.deepEqual(v.errors, []);
+  } finally { await v.close(); }
+});

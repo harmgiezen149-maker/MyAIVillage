@@ -114,10 +114,13 @@ function taskItem(t) {
       const b = document.createElement('button'); b.textContent = 'Rapport bekijken'; b.className = 'small';
       b.onclick = () => showReport(t);
       li.appendChild(b);
+      // The card beside a done task (Harm, 2026-11-03: "ik kan er niet doorheen scrollen"): it stays open while the
+      // pointer moves onto it, so it can be scrolled; on a touch screen a tap opens it and ✕ or a tap elsewhere closes it.
       li.addEventListener('mouseenter', () => showDone(t, li));
-      li.addEventListener('mouseleave', hideDone);
+      li.addEventListener('mouseleave', () => hideDoneSoon());
       li.addEventListener('focusin', () => showDone(t, li));
-      li.addEventListener('focusout', hideDone);
+      li.addEventListener('focusout', (e) => { if (!document.getElementById('todo-pop').contains(e.relatedTarget)) hideDoneSoon(); });
+      li.addEventListener('click', (e) => { if (!e.target.closest('button')) showDone(t, li); });
       li.tabIndex = 0;
     }
     if ((t.status === 'done' || t.status === 'paused' || t.status === 'needs_harm') && !office.running.has(t.id)) li.appendChild(deleteButton(t));
@@ -223,24 +226,41 @@ async function deleteTask(t) {
 }
 
 // Hover a crossed-off task: exactly what was done.
+let hideTimer = null;
+function hideDoneSoon() { clearTimeout(hideTimer); hideTimer = setTimeout(hideDone, 350); }
 function showDone(t, li) {
-  office.hoverId = t.id;
+  clearTimeout(hideTimer);
   const pop = document.getElementById('todo-pop');
+  const keepScroll = office.hoverId === t.id && !pop.hidden ? pop.scrollTop : 0;   // the list redraws while the team works: keep the place
+  office.hoverId = t.id;
   const people = ['kevin', t.owner, t.worker].filter(Boolean).map(firstName).join(' → ');
-  pop.innerHTML = `<div class="pop-title">${esc(t.text)}</div>
+  pop.innerHTML = `<button class="small pop-close" aria-label="Sluiten">✕</button><div class="pop-title">${esc(t.text)}</div>
     <div class="pop-meta">${esc(people)} · klaar ${esc(new Date(t.doneAt).toLocaleString('nl-NL'))}</div>
     ${t.summary ? `<p>${esc(t.summary)}</p>` : ''}
     ${t.whatWasDone.length ? `<div class="pop-h">Wat er is gedaan</div><ol>${t.whatWasDone.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
     ${t.drafts.length ? `<div class="pop-h">Concepten in je Gmail</div><ul>${t.drafts.map((d) => `<li>${esc(d.subject)}${d.to.length ? ' → ' + esc(d.to.join(', ')) : ''}</li>`).join('')}</ul>` : ''}
     ${(t.approvals || []).length ? `<div class="pop-h">Agenda en app-wijzigingen</div><ul>${t.approvals.map((a) => `<li>${a.kind === 'app' ? esc(a.app) + ': ' + esc(a.what) : esc(a.payload.summary || a.what)}: ${esc({ done: 'gedaan', declined: 'afgewezen', pending: 'wacht op jou', approving: 'bezig' }[a.status] || a.status)}</li>`).join('')}</ul>` : ''}
-    ${t.noteForHarm ? `<div class="pop-h">Voor jou</div><p>${esc(t.noteForHarm)}</p>` : ''}`;
+    ${t.noteForHarm ? `<div class="pop-h">Voor jou</div><p>${esc(t.noteForHarm)}</p>` : ''}
+    <button class="small pop-full">📄 Volledig rapport</button>`;
+  pop.querySelector('.pop-close').onclick = () => hideDone();
+  pop.querySelector('.pop-full').onclick = () => { hideDone(); showReport(t); };
   const r = li.getBoundingClientRect();
   pop.hidden = false;
   const w = pop.offsetWidth;
   pop.style.top = Math.max(8, Math.min(window.innerHeight - pop.offsetHeight - 8, r.top)) + 'px';
   pop.style.left = (r.left - w - 12 > 8 ? r.left - w - 12 : Math.min(window.innerWidth - w - 8, r.right + 12)) + 'px';
+  pop.scrollTop = keepScroll;
 }
-function hideDone() { office.hoverId = null; document.getElementById('todo-pop').hidden = true; }
+function hideDone() { clearTimeout(hideTimer); office.hoverId = null; document.getElementById('todo-pop').hidden = true; }
+{
+  const pop = document.getElementById('todo-pop');
+  pop.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+  pop.addEventListener('mouseleave', () => hideDoneSoon());
+  pop.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Escape') hideDone(); });
+  pop.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });     // scrolling the card never zooms the village
+  // a tap or click outside the card and the list closes it
+  document.addEventListener('pointerdown', (e) => { if (!pop.hidden && !pop.contains(e.target) && !e.target.closest('.todo-item.done')) hideDone(); });
+}
 
 // ---------- wiring (to-do panel) ----------
 
