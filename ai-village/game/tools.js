@@ -48,8 +48,13 @@ function teamTools(t, who) {
       const res = await office.mcp.callTool(server, tool, input, { signal: ctx && ctx.signal });
       return res.payload !== undefined ? res.payload : res.content;
     } catch (e) {
+      // not allowed yet for this page: Harm gets a bar with a button (game/connectors.js); the team says so plainly
+      if (typeof isConsentError === 'function' && isConsentError(e)) {
+        needsConsent(server);
+        throw new Error(`${server} has not been allowed for this page yet. Harm now sees a button "${server} toestaan" at the top of the village. Do not try ${server} again in this task; tell Harm to press that button and ask again.`);
+      }
       const why = { needs_reauth: `koppel ${server} opnieuw in claude.ai → Instellingen → Connectors`, server_not_connected: `${server} is niet gekoppeld in claude.ai → Instellingen → Connectors`,
-        not_in_manifest: `Harm heeft ${server} niet toegestaan voor deze pagina`, approval_required: `Harm moet ${server} goedkeuren voor deze pagina` }[e.code];
+        not_in_manifest: `Harm heeft ${server} niet toegestaan voor deze pagina` }[e.code];
       throw new Error(why || `${server} zei: ${e.message || e.code}`);
     }
   };

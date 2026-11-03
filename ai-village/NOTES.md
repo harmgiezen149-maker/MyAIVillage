@@ -567,6 +567,20 @@ One Artlist image per house. Every room:
   - Ook geprobeerd met een echte klik op een figuur in beeld.
 - Online gezet als versie 1793729803-10b1.
 
+## Dorpsinternet: toestemming op de pagina (Harm, 2026-11-03 avond)
+
+- Harm stuurde een rapport van Nova ("laatste nieuws over Claude") met opnieuw de melding "connector access isn't confirmed for this artifact right now".
+- Het logboek van Vercel liet zien dat claude.ai om 18:04 UTC wél verbinding maakte met de deur (initialize, tools/list), met de goede sleutel.
+- Bij Nova's zoekopdrachten om 18:16 UTC kwam er geen enkel verzoek aan. claude.ai hield ze dus al tegen, omdat Harm Dorpsinternet nog niet had toegestaan voor deze pagina.
+- claude.ai kan die vraag alleen stellen als Harm zelf ergens op klikt, niet midden in het werk van een directeur.
+- Nieuw (`game/connectors.js`):
+  - Gebeurt dit, dan verschijnt bovenin een balk: "🔌 Dorpsinternet heeft jouw toestemming nodig" met de knop **Dorpsinternet toestaan**.
+  - Die knop doet één onschuldige leesvraag vanuit Harms klik, zodat claude.ai om toestemming kan vragen.
+  - De directeur krijgt te horen dat Harm op die knop moet drukken, en blijft het in die taak niet steeds opnieuw proberen.
+  - **Over mij → Koppelingen → Koppelingen testen** test Gmail, Agenda, Kookboek, Darkglass en Dorpsinternet, met ✓ of de reden waarom niet.
+- Getest in `tests/office.test.js`.
+- Online gezet als versie 1793730308-392d.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

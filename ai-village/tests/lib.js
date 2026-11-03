@@ -56,6 +56,7 @@ function installFake(cfg) {
         await wait(60);
         if (f.failOnce && text.includes(f.failOnce)) { f.failOnce = null; throw { code: 'rate_limited', message: 'limit' }; }
         const t = (n) => opts.tools.find((x) => x.name === n);
+        if (cfg.useNet) { try { await t('internet').execute({ action: 'web_search', query: 'Claude' }); } catch (e) { f.netError = e.message; } }
         if (cfg.draftAndEvent) {
           await t('gmail_create_draft').execute({ to: ['a@b.nl'], subject: 'Hallo', body: 'x' });
           await t('calendar_propose_event').execute({ summary: 'Etentje', startTime: '2026-11-06T19:00:00', endTime: '2026-11-06T21:00:00' });
@@ -69,6 +70,7 @@ function installFake(cfg) {
   };
   const mcp = { callTool: async (server, tool) => {
     f.mcp.push(server + ':' + tool);
+    if (server === 'Dorpsinternet' && cfg.netUnconfirmed && !f.netAllowed) throw { code: 'unconfirmed', message: "connector access isn't confirmed for this artifact right now" };
     if (tool === 'create_draft') return { payload: { id: 'd1' } };
     if (tool === 'create_event') { if (f.calFailOnce) { f.calFailOnce = false; throw { code: 'server_unavailable', message: 'timeout' }; } return { payload: {} }; }
     if (tool === 'list_events') return { payload: { events: [{ summary: 'Etentje' }] } };

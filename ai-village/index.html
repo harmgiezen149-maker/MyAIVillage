@@ -143,6 +143,12 @@
   .profile-body h3 { font-size: 13px; font-weight: normal; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 14px 0 4px; }
   .profile-hint { color: var(--muted); font-size: 12.5px; margin: 0 0 4px; }
   #profile-dossiers { margin: 0 0 10px; padding-left: 18px; font-size: 13px; }
+  #consent-bar { top: 64px; left: 50%; transform: translateX(-50%); z-index: 45; background: var(--panel); border: 1px solid var(--accent); border-radius: 10px;
+    padding: 8px 10px 8px 14px; flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 24px); font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+  #consent-bar[hidden] { display: none; }
+  #consent-bar button.small { margin: 0; }
+  #connectors-list { list-style: none; margin: 6px 0 10px; padding: 0; font-size: 13px; }
+  #connectors-list li { padding: 3px 0; }
   #people { top: 62px; right: 16px; width: min(380px, calc(100vw - 32px)); max-height: calc(100vh - 140px); display: flex; flex-direction: column; }
   #people-list { list-style: none; margin: 0; padding: 6px 8px 10px; overflow-y: auto; }
   .people-row { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0; padding: 6px 8px; text-align: left; background: transparent; border: 1px solid transparent; border-radius: 8px; }
@@ -337,6 +343,7 @@
 </div>
 <div class="hud" id="help"><span>Lopen: pijltjes / WASD of klikken · Zoomen: muiswiel · Loop een deur in om naar binnen te gaan · T: praat met wie naast je staat · M M: Kevin · M: geluid · C: dorpspraat · Vergadering: iedereen naar het Raadhuis · E: kaart bewerken</span></div>
 <div id="toast" role="status"></div>
+<div class="hud" id="consent-bar" role="alert" hidden></div>
 <div class="hud" id="call" role="status" aria-live="polite" hidden></div>
 <div id="hover-card" role="tooltip" hidden></div>
 <div class="panel" id="todo" role="dialog" aria-label="Takenlijst" hidden>
@@ -366,6 +373,10 @@
     <p class="profile-hint">Elke directeur onthoudt de laatste 12 taken en wat jij ervan vond (👍/👎 onder een antwoord).</p>
     <ul id="profile-dossiers"></ul>
     <button id="profile-forget" class="small">Geheugen van het team wissen</button>
+    <h3>Koppelingen</h3>
+    <p class="profile-hint">Test of het dorp bij je mail, agenda, apps en Dorpsinternet kan. Vraagt claude.ai om toestemming, kies dan Toestaan.</p>
+    <button id="connectors-test" class="small">Koppelingen testen</button>
+    <ul id="connectors-list"></ul>
     <h3>Snelkoppelingen</h3>
     <p class="profile-hint">Een directe link opent het dorp meteen in het gesprek met die persoon. Zet hem bijvoorbeeld op het beginscherm van je telefoon.</p>
     <ul id="profile-links"></ul>
@@ -458,5 +469,6 @@
 <script src="game/memory.js"></script>
 <script src="game/links.js"></script>
 <script src="game/visit.js"></script>
+<script src="game/connectors.js"></script>
 </body>
 </html>
