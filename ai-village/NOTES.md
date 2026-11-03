@@ -530,6 +530,20 @@ One Artlist image per house. Every room:
   - Het adres met de sleutel van 2 november werkt daardoor niet meer.
 - Online gezet als versie 1793728935-7792 (dorp) en dpl_45x6pDn2Y4QJpw67fjnCzobbKvgv (deur).
 
+## Toetsenbord pas als Harm een tekstvak aantikt (Harm, 2026-11-03)
+
+- Harm: "als ik een lijst open waarin een invoerveld zit, wordt automatisch het keyboard geopend op mijn telefoon, daardoor kan ik de inhoud niet lezen."
+- Op een aanraakscherm zet het dorp de cursor niet meer vanzelf in een tekstvak. Dat geldt voor:
+  - de takenlijst, het gesprek en de vergadering;
+  - Over mij en het vak "Wat kan beter?" na 👎.
+- Het toetsenbord komt pas als Harm op het tekstvak tikt.
+- Met muis en toetsenbord (computer) staat de cursor er wel meteen in, zodat je direct kunt typen.
+- De herkenning: het apparaat heeft geen muis om mee te zweven, of het wijst met de vinger (`(hover: none), (pointer: coarse)`). Het zit in `focusTyping()` in office.js.
+- Getest in `tests/smoke.test.js`:
+  - telefoon: geen toetsenbord bij het openen, wel als je op het tekstvak tikt;
+  - computer: de cursor staat wel meteen in het vak.
+- Online gezet als versie 1793729160-9c15.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

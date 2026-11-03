@@ -94,3 +94,29 @@ test('the card beside a done task can be scrolled, and opens the full report', a
     assert.deepEqual(v.errors, []);
   } finally { await v.close(); }
 });
+
+test('phone: opening a box does not pop up the keyboard; tapping the text box does', async () => {
+  const v = await openVillage(srv.url, { phone: true });
+  const { page } = v;
+  const typing = () => page.evaluate(() => { const a = document.activeElement; return !!a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && a.type !== 'range'; });
+  try {
+    await page.tap('#todo-btn');
+    assert.equal(await typing(), false, 'to-do list: no keyboard');
+    await page.tap('#kevin-btn');
+    assert.equal(await typing(), false, 'chat: no keyboard');
+    await page.tap('#chat-input');
+    assert.equal(await typing(), true, 'tapping the box brings the keyboard');
+    await page.evaluate(() => closeChat());
+    await page.tap('#more-btn'); await page.tap('#profile-btn');
+    assert.equal(await typing(), false, 'Over mij: no keyboard');
+    assert.deepEqual(v.errors, []);
+  } finally { await v.close(); }
+});
+
+test('computer: opening the to-do list still puts the cursor in the box', async () => {
+  const v = await openVillage(srv.url);
+  try {
+    await v.page.click('#todo-btn');
+    assert.equal(await v.page.evaluate(() => document.activeElement.id), 'todo-input');
+  } finally { await v.close(); }
+});

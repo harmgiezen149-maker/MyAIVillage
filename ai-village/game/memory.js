@@ -74,7 +74,7 @@ function openProfile() {
   if (!document.getElementById('todo').hidden) document.getElementById('todo-close').click();   // same corner: one at a time
   panel.hidden = false;
   document.getElementById('profile-btn').setAttribute('aria-pressed', 'true');
-  box.focus();
+  focusTyping(box);
 }
 function closeProfile() {
   document.getElementById('profile').hidden = true;
@@ -135,7 +135,7 @@ function feedbackRow(taskId) {
     input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') send(); });
     ok.onclick = send;
     row.append(input, ok);
-    input.focus();
+    focusTyping(input);
   };
   row.append(up, down);
   return row;

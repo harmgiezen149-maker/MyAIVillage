@@ -51,6 +51,12 @@ loadUsage();
 // ---------- helpers ----------
 
 function nowStamp() { return new Date().toISOString(); }
+
+// On a phone or tablet, putting the cursor in a text box pops up the keyboard over what Harm wants to read
+// (Harm, 2026-11-03). So on a touch screen a box only gets the cursor when Harm taps it; with a mouse and
+// keyboard it still gets it straight away, so typing can start at once.
+const TOUCH_SCREEN = window.matchMedia('(hover: none), (pointer: coarse)');
+function focusTyping(el) { if (el && !TOUCH_SCREEN.matches) el.focus(); }
 function timeOf(iso) { return new Date(iso).toTimeString().slice(0, 5); }
 function newId() { return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 function personById(id) { return id === 'kevin' ? { id: 'kevin', name: KEVIN.name, role: 'Kevin' } : residents.find((r) => r.id === id); }

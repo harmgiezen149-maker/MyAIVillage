@@ -269,7 +269,7 @@ document.getElementById('todo-btn').addEventListener('click', () => {
   panel.hidden = !panel.hidden;
   if (!panel.hidden && typeof closeProfile === 'function' && !document.getElementById('profile').hidden) closeProfile();
   document.getElementById('todo-btn').setAttribute('aria-pressed', String(!panel.hidden));
-  if (!panel.hidden) document.getElementById('todo-input').focus();
+  if (!panel.hidden) focusTyping(document.getElementById('todo-input'));
 });
 document.getElementById('todo-close').addEventListener('click', () => { document.getElementById('todo').hidden = true; document.getElementById('todo-btn').setAttribute('aria-pressed', 'false'); canvas.focus(); });
 const todoInput = document.getElementById('todo-input');
@@ -278,7 +278,7 @@ todoInput.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { document.getElementById('todo-close').click(); return; }
   if (e.key === 'Enter' && todoInput.value.trim()) { createTask(todoInput.value, 'todo'); todoInput.value = ''; }
 });
-document.getElementById('todo-add').addEventListener('click', () => { if (todoInput.value.trim()) { createTask(todoInput.value, 'todo'); todoInput.value = ''; todoInput.focus(); } });
+document.getElementById('todo-add').addEventListener('click', () => { if (todoInput.value.trim()) { createTask(todoInput.value, 'todo'); todoInput.value = ''; focusTyping(todoInput); } });
 
 const todoSearch = document.getElementById('todo-search');
 todoSearch.addEventListener('input', () => renderTodo());

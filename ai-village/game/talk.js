@@ -302,7 +302,7 @@ function localCommand(said, chatId) {
 
 async function openChat(personId, opts) {
   if (personId !== 'kevin' && !residentById(personId)) return;
-  if (office.chat && office.chat.id === personId) { document.getElementById('chat').hidden = false; if (typeof setHash === 'function') setHash(linkName(personId)); chatInputEl().focus(); return; }
+  if (office.chat && office.chat.id === personId) { document.getElementById('chat').hidden = false; if (typeof setHash === 'function') setHash(linkName(personId)); focusTyping(chatInputEl()); return; }
   office.chat = { id: personId, turns: [], busy: false };
   if (typeof setHash === 'function') setHash(linkName(personId));   // the address now links to this conversation
   if (office.db) {
@@ -314,7 +314,7 @@ async function openChat(personId, opts) {
   delete talk.pendingResults[personId];
   renderChat();
   document.getElementById('chat').hidden = false;
-  if (!opts || !opts.quiet) chatInputEl().focus();
+  if (!opts || !opts.quiet) focusTyping(chatInputEl());
 }
 
 // The short answer for Harm: the summary, what happened to proposed changes, and what Harm still has to do.
@@ -696,7 +696,7 @@ window.addEventListener('keydown', (e) => {
     soundTimer = setTimeout(() => { soundTimer = null; toggleSound(); }, 400);
   } else if (k === 't') {
     e.preventDefault();
-    if (state.meeting) { openDock('meeting'); document.getElementById('meet-input').focus(); return; }
+    if (state.meeting) { openDock('meeting'); focusTyping(document.getElementById('meet-input')); return; }
     const id = nearestPerson();
     if (!id) { toast('Loop eerst naar iemand toe en druk dan op T (of tik op iemand).'); return; }
     if (office.chat && office.chat.id === id && !document.getElementById('chat').hidden) closeChat();
@@ -723,7 +723,7 @@ document.getElementById('meet-roster').addEventListener('click', (e) => {
   if (!b) return;
   talk.meeting.to = b.dataset.to;
   renderMeeting();
-  document.getElementById('meet-input').focus();
+  focusTyping(document.getElementById('meet-input'));
 });
 document.getElementById('meet-log').addEventListener('click', (e) => {
   const b = e.target.closest('.result-link[data-task]');
