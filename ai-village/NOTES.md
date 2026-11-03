@@ -499,6 +499,20 @@ One Artlist image per house. Every room:
 - Getest in `tests/office.test.js`: het rapport opent vanuit de chat en vanuit de takenlijst, en sluit weer. Er zijn screenshots bekeken op computer en telefoon.
 - Online gezet als versie 1793634705-a054.
 
+## Directe links naar een gesprek (Harm, 2026-11-03)
+
+- Harm koos: "Link naar een directeur" (een snelkoppeling, bijvoorbeeld op het beginscherm van de telefoon).
+- `https://claude.ai/artifact/6w8CwvAmosjzt8C26LowVc#<voornaam>` opent het dorp meteen in het gesprek met die persoon. Na "Het dorp in" gaat het gesprek vanzelf open.
+  - Voorbeelden: `#kevin`, `#rosie`, `#jasper`.
+  - `#taken` opent de takenlijst.
+- claude.ai geeft alleen een eenvoudige `#naam` door aan de pagina, dus geen `#sleutel=waarde`.
+- Het adres loopt mee met het open gesprek. Sluit Harm het gesprek, dan valt de `#naam` weg.
+- Waar je de links vindt:
+  - de knop 🔗 in de kop van een gesprek kopieert de link naar dat gesprek;
+  - **Over mij → Snelkoppelingen** heeft een kopieerknop voor Kevin, elke directeur en de takenlijst.
+- Getest in `tests/smoke.test.js`: `#rosie`, `#kevin` en `#taken`, het meelopende adres en de lijst met snelkoppelingen.
+- Online gezet als versie 1793728681-9957.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

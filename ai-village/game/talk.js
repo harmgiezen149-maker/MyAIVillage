@@ -302,8 +302,9 @@ function localCommand(said, chatId) {
 
 async function openChat(personId, opts) {
   if (personId !== 'kevin' && !residentById(personId)) return;
-  if (office.chat && office.chat.id === personId) { document.getElementById('chat').hidden = false; chatInputEl().focus(); return; }
+  if (office.chat && office.chat.id === personId) { document.getElementById('chat').hidden = false; if (typeof setHash === 'function') setHash(linkName(personId)); chatInputEl().focus(); return; }
   office.chat = { id: personId, turns: [], busy: false };
+  if (typeof setHash === 'function') setHash(linkName(personId));   // the address now links to this conversation
   if (office.db) {
     try { const snap = await office.db.doc('chats/' + personId).get(); if (snap.exists) office.chat.turns = (snap.data().turns || []).slice(-CHAT_LIMIT); } catch (e) { /* new chat */ }
   }
@@ -362,6 +363,7 @@ async function postResult(t) {
 }
 function closeChat() {
   document.getElementById('chat').hidden = true;
+  if (typeof setHash === 'function') setHash('');
   office.chat = null;
   canvas.focus();
 }

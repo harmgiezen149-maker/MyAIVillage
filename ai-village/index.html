@@ -143,6 +143,9 @@
   .profile-body h3 { font-size: 13px; font-weight: normal; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 14px 0 4px; }
   .profile-hint { color: var(--muted); font-size: 12.5px; margin: 0 0 4px; }
   #profile-dossiers { margin: 0 0 10px; padding-left: 18px; font-size: 13px; }
+  #profile-links { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+  #profile-links li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid rgba(242,193,78,.12); }
+  #profile-links button.small { margin: 0; white-space: nowrap; }
   /* the report on screen (Harm, 2026-11-02): paper look like the PDF, over the village */
   #report-view { position: fixed; inset: 0; z-index: 50; background: rgba(12,8,4,.62); display: flex; align-items: center; justify-content: center; padding: 24px 16px; }
   #report-view[hidden] { display: none; }
@@ -345,6 +348,9 @@
     <p class="profile-hint">Elke directeur onthoudt de laatste 12 taken en wat jij ervan vond (👍/👎 onder een antwoord).</p>
     <ul id="profile-dossiers"></ul>
     <button id="profile-forget" class="small">Geheugen van het team wissen</button>
+    <h3>Snelkoppelingen</h3>
+    <p class="profile-hint">Een directe link opent het dorp meteen in het gesprek met die persoon. Zet hem bijvoorbeeld op het beginscherm van je telefoon.</p>
+    <ul id="profile-links"></ul>
   </div>
 </div>
 <div id="todo-pop" role="tooltip" hidden></div>
@@ -380,7 +386,7 @@
   </div>
 </div>
 <div class="panel" id="chat" role="dialog" aria-label="Gesprek" hidden>
-  <div class="panel-head"><img id="chat-face" alt=""><div id="chat-who"><div id="chat-name"></div><div id="chat-role"></div></div><button id="chat-close" class="small" style="margin:0">Sluiten</button></div>
+  <div class="panel-head"><img id="chat-face" alt=""><div id="chat-who"><div id="chat-name"></div><div id="chat-role"></div></div><button id="chat-link" class="small" style="margin:0" title="Directe link naar dit gesprek kopiëren" aria-label="Directe link naar dit gesprek kopiëren">🔗</button><button id="chat-close" class="small" style="margin:0">Sluiten</button></div>
   <div id="chat-log" aria-live="polite"></div>
   <div id="chat-form"><input id="chat-input" type="text" placeholder="Zeg iets…" aria-label="Je bericht" autocomplete="off" enterkeyhint="send"><button id="chat-send" class="primary">Stuur</button></div>
 </div>
@@ -432,5 +438,6 @@
 <script src="game/todo.js"></script>
 <script src="game/talk.js"></script>
 <script src="game/memory.js"></script>
+<script src="game/links.js"></script>
 </body>
 </html>

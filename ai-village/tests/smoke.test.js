@@ -45,3 +45,23 @@ test('phone: Meer menu, compact editor at the bottom, one sheet at a time', asyn
     assert.deepEqual(v.errors, []);
   } finally { await v.close(); }
 });
+
+test('direct links: #rosie opens the talk with Rosie, #taken the to-do list; the address follows the conversation', async () => {
+  const v = await openVillage(srv.url + '#rosie');
+  const { page } = v;
+  try {
+    await page.waitForFunction(() => !document.getElementById('chat').hidden && office.chat && office.chat.id === 'rosie-bell');
+    assert.match(await page.textContent('#chat-name'), /Rosie/);
+    assert.equal(await page.evaluate(() => location.hash), '#rosie');
+    await page.evaluate(() => closeChat());
+    assert.equal(await page.evaluate(() => location.hash), '');
+    await page.evaluate(() => { location.hash = 'kevin'; });
+    await page.waitForFunction(() => office.chat && office.chat.id === 'kevin' && !document.getElementById('chat').hidden);
+    await page.evaluate(() => { location.hash = 'taken'; });
+    await page.waitForFunction(() => !document.getElementById('todo').hidden);
+    await page.click('#profile-btn');
+    assert.equal(await page.locator('#profile-links [data-link]').count(), 11, 'Kevin, nine directors and the to-do list');
+    assert.equal(await page.getAttribute('#profile-links [data-link]', 'data-link'), 'https://claude.ai/artifact/6w8CwvAmosjzt8C26LowVc#kevin');
+    assert.deepEqual(v.errors, []);
+  } finally { await v.close(); }
+});
