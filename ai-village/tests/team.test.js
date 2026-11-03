@@ -106,3 +106,49 @@ test('memory loaded from the (read-only) database still grows; a task stuck whil
     assert.deepEqual(v.errors, []);
   } finally { await v.close(); }
 });
+
+test('recurring tasks: plan per director with time and days, pause, delete; an answer from the cloud shows up in that director\'s chat', async () => {
+  const v = await openVillage(srv.url);
+  const { page } = v;
+  try {
+    await page.click('#todo-btn');
+    await page.click('#plans-btn');
+    await page.selectOption('#plan-owner', 'margot-finch');
+    await page.fill('#plan-text', 'Bekijk mijn agenda en mail en geef een update met advies.');
+    await page.fill('#plan-time', '07:30');
+    await page.click('#plan-days [data-preset="all"]');
+    await page.click('#plan-save');
+    await page.waitForFunction(() => Object.keys(window.__fake.store).some((k) => k.startsWith('schedules/')));
+    const plan = await page.evaluate(() => Object.entries(window.__fake.store).find(([k]) => k.startsWith('schedules/'))[1]);
+    assert.equal(plan.owner, 'margot-finch'); assert.equal(plan.time, '07:30'); assert.deepEqual(plan.days, [1, 2, 3, 4, 5, 6, 7]); assert.equal(plan.active, true);
+    assert.match(await page.textContent('#plan-list'), /Margot · 07:30 · elke dag/);
+    await page.click('#plan-list [data-act="toggle"]');
+    await page.waitForFunction(() => Object.values(window.__fake.store).some((x) => x.time === '07:30' && x.active === false));
+    assert.match(await page.textContent('#plan-list'), /gepauzeerd/);
+    // the cloud wrote an answer with a draft and a calendar proposal
+    await page.evaluate((id) => {
+      const now = new Date().toISOString();
+      window.__fake.store['tasks/tsched-' + id + '-20261104'] = { id: 'tsched-' + id + '-20261104', text: 'Bekijk mijn agenda en mail', words: 'x', from: 'schedule', scheduleId: id, createdAt: now, updatedAt: now, doneAt: now,
+        status: 'needs_harm', outcome: 'done', owner: 'margot-finch', worker: null, askedPerson: null, parentId: null, announced: false, calls: 0,
+        summary: 'Drie afspraken vandaag; twee mails vragen om antwoord.', results: [], whatWasDone: ['Agenda bekeken'], noteForHarm: 'Keur de afspraak goed.',
+        drafts: [{ at: now, by: 'margot-finch', to: ['anna@example.org'], subject: 'Re: etentje', body: 'Hoi Anna', url: '', id: 'd1' }],
+        approvals: [{ id: 'a1', kind: 'create_event', by: 'margot-finch', status: 'pending', at: now, payload: { summary: 'Bellen met Anna', startTime: '2026-11-05T10:00:00', endTime: '2026-11-05T10:15:00' } }],
+        sources: [], suspicious: '', log: [{ at: now, who: 'margot-finch', text: 'Agenda bekeken.' }] };
+    }, plan.id);
+    await page.evaluate(() => pickUpNew());
+    await page.waitForFunction(() => office.chat && office.chat.id === 'margot-finch' && office.chat.turns.some((t) => t.role === 'result'), null, { timeout: 10000 });
+    assert.equal(await page.evaluate((id) => window.__fake.store['tasks/tsched-' + id + '-20261104'].announced, plan.id), true, 'told once, not again on the next visit');
+    await page.evaluate(() => closeChat());
+    await page.click('#todo-btn');
+    await page.click('.todo-approval button.primary');                  // Harm approves the calendar proposal in the village
+    await page.waitForFunction(() => [...office.tasks.values()].some((t) => t.from === 'schedule' && t.status === 'done'));
+    assert.ok(await page.evaluate(() => window.__fake.mcp.includes('Google Calendar:create_event')));
+    // delete the plan (click twice)
+    await page.evaluate(() => closeChat());
+    await page.click('#plans-btn');
+    const del = page.locator('#plan-list [data-act="del"]');
+    await del.click(); await del.click();
+    await page.waitForFunction(() => !Object.keys(window.__fake.store).some((k) => k.startsWith('schedules/')));
+    assert.deepEqual(v.errors, []);
+  } finally { await v.close(); }
+});

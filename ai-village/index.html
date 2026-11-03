@@ -143,6 +143,23 @@
   .profile-body h3 { font-size: 13px; font-weight: normal; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 14px 0 4px; }
   .profile-hint { color: var(--muted); font-size: 12.5px; margin: 0 0 4px; }
   #profile-dossiers { margin: 0 0 10px; padding-left: 18px; font-size: 13px; }
+  #plans { top: 62px; right: 16px; width: min(420px, calc(100vw - 32px)); max-height: calc(100vh - 140px); overflow-y: auto; }
+  .plan-form { padding: 10px 12px 4px; display: grid; gap: 6px; font-size: 13.5px; }
+  .plan-form select, .plan-form input[type=time] { font: inherit; font-size: 14px; color: var(--text); background: rgba(0,0,0,.32); border: 1px solid var(--panel-edge); border-radius: 8px; padding: 6px 8px; }
+  .plan-form textarea { width: 100%; box-sizing: border-box; resize: vertical; }
+  .plan-row { display: flex; gap: 8px; align-items: center; }
+  .plan-days { display: flex; flex-wrap: wrap; gap: 4px; }
+  .plan-days button.small { margin: 0; padding: 4px 9px; }
+  .plan-days button[aria-pressed="true"] { background: var(--accent); color: #2a1c0e; }
+  .plan-days button.link { background: transparent; border-color: transparent; text-decoration: underline; color: var(--muted); }
+  #plan-list { list-style: none; margin: 0; padding: 0 12px 12px; }
+  .plan { border-top: 1px solid rgba(242,193,78,.16); padding: 9px 2px; font-size: 13.5px; }
+  .plan.off { opacity: .6; }
+  .plan-top { display: flex; gap: 10px; }
+  .plan-top img { width: 38px; height: 38px; border-radius: 7px; object-fit: cover; flex: none; }
+  .plan-text { margin-top: 2px; white-space: pre-wrap; }
+  .plan-btns { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 0 48px; }
+  .plan-btns button.small { margin: 0; }
   #consent-bar { top: 64px; left: 50%; transform: translateX(-50%); z-index: 45; background: var(--panel); border: 1px solid var(--accent); border-radius: 10px;
     padding: 8px 10px 8px 14px; flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 24px); font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
   #consent-bar[hidden] { display: none; }
@@ -150,6 +167,7 @@
   #connectors-list { list-style: none; margin: 6px 0 10px; padding: 0; font-size: 13px; }
   #connectors-list li { padding: 3px 0; }
   #people { top: 62px; right: 16px; width: min(380px, calc(100vw - 32px)); max-height: calc(100vh - 140px); display: flex; flex-direction: column; }
+  #people[hidden] { display: none; }               /* the id's display:flex must not beat [hidden] */
   #people-list { list-style: none; margin: 0; padding: 6px 8px 10px; overflow-y: auto; }
   .people-row { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0; padding: 6px 8px; text-align: left; background: transparent; border: 1px solid transparent; border-radius: 8px; }
   .people-row:hover, .people-row:focus-visible { border-color: var(--accent); background: rgba(242,193,78,.08); }
@@ -353,10 +371,28 @@
   <div id="todo-usage" class="todo-usage"></div>
   <div id="todo-tools">
     <button id="briefing-btn" class="small" title="Agenda, belangrijke mail, reizen, eten en AI-nieuws van vandaag, gebundeld door Kevin">☀️ Briefing</button>
+    <button id="plans-btn" class="small" title="Taken die een directeur elke dag of op vaste dagen doet, ook als het dorp dicht is">⏰ Terugkerend</button>
     <button id="resume-all" class="small" hidden title="Alle gepauzeerde taken gaan verder">Alles hervatten</button>
     <input id="todo-search" type="search" placeholder="Zoeken…" aria-label="Taken zoeken" autocomplete="off">
   </div>
   <ul id="todo-list" aria-label="Je taken"></ul>
+</div>
+<div class="panel" id="plans" role="dialog" aria-label="Terugkerende taken" hidden>
+  <div class="panel-head"><h2>Terugkerende taken</h2><button id="plans-close" class="small" aria-label="Terugkerende taken sluiten" style="margin:0">Sluiten</button></div>
+  <div class="plan-form">
+    <label for="plan-owner">Directeur</label>
+    <select id="plan-owner"></select>
+    <label for="plan-text">Wat moet er gebeuren?</label>
+    <textarea id="plan-text" rows="3" maxlength="800" placeholder="Bijvoorbeeld: bekijk mijn agenda van vandaag en de mail van het afgelopen etmaal. Geef een korte update, en advies welke mails een antwoord nodig hebben (schrijf daar een concept voor) en welke afspraken ik in mijn agenda moet zetten."></textarea>
+    <div class="plan-row"><label for="plan-time">Hoe laat</label><input id="plan-time" type="time" value="08:00"></div>
+    <div id="plan-days" class="plan-days" role="group" aria-label="Op welke dagen">
+      <button class="small" data-day="1" aria-pressed="true">ma</button><button class="small" data-day="2" aria-pressed="true">di</button><button class="small" data-day="3" aria-pressed="true">wo</button><button class="small" data-day="4" aria-pressed="true">do</button><button class="small" data-day="5" aria-pressed="true">vr</button><button class="small" data-day="6" aria-pressed="false">za</button><button class="small" data-day="7" aria-pressed="false">zo</button>
+      <button class="small link" data-preset="work">werkdagen</button><button class="small link" data-preset="all">elke dag</button>
+    </div>
+    <div class="plan-row"><button id="plan-save" class="primary">Inplannen</button><button id="plan-cancel" class="small" hidden>Annuleren</button></div>
+    <p class="profile-hint">Dit gebeurt ook als het dorp dicht is: een geplande taak van Claude kijkt elk uur (van 6 tot 23 uur) of er iets aan de beurt is. Het begint dus binnen een uur na de tijd die je kiest. Concepten komen in je Gmail (nooit verstuurd); agenda-items wachten hier op jouw Goedkeuren.</p>
+  </div>
+  <ul id="plan-list"></ul>
 </div>
 <div class="panel" id="people" role="dialog" aria-label="Wie is waar" hidden>
   <div class="panel-head"><h2>Wie is waar</h2><button id="people-close" class="small" aria-label="Wie is waar sluiten" style="margin:0">Sluiten</button></div>
@@ -415,7 +451,7 @@
   </div>
 </div>
 <div class="panel" id="chat" role="dialog" aria-label="Gesprek" hidden>
-  <div class="panel-head"><img id="chat-face" alt="Loop naar deze persoon" title="Loop naar deze persoon"><div id="chat-who"><div id="chat-name"></div><div id="chat-role"></div></div><button id="chat-link" class="small" style="margin:0" title="Directe link naar dit gesprek kopiëren" aria-label="Directe link naar dit gesprek kopiëren">🔗</button><button id="chat-close" class="small" style="margin:0">Sluiten</button></div>
+  <div class="panel-head"><img id="chat-face" alt="Loop naar deze persoon" title="Loop naar deze persoon"><div id="chat-who"><div id="chat-name"></div><div id="chat-role"></div></div><button id="chat-plan" class="small" style="margin:0" title="Een terugkerende taak voor deze directeur inplannen" aria-label="Terugkerende taak inplannen">⏰</button><button id="chat-link" class="small" style="margin:0" title="Directe link naar dit gesprek kopiëren" aria-label="Directe link naar dit gesprek kopiëren">🔗</button><button id="chat-close" class="small" style="margin:0">Sluiten</button></div>
   <div id="chat-log" aria-live="polite"></div>
   <div id="chat-form"><input id="chat-input" type="text" placeholder="Zeg iets…" aria-label="Je bericht" autocomplete="off" enterkeyhint="send"><button id="chat-send" class="primary">Stuur</button></div>
 </div>
@@ -470,5 +506,6 @@
 <script src="game/links.js"></script>
 <script src="game/visit.js"></script>
 <script src="game/connectors.js"></script>
+<script src="game/schedules.js"></script>
 </body>
 </html>

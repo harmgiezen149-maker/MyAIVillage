@@ -581,6 +581,40 @@ One Artlist image per house. Every room:
 - Getest in `tests/office.test.js`.
 - Online gezet als versie 1793730308-392d.
 
+## Terugkerende taken per directeur (Harm, 2026-11-03)
+
+- Harm vroeg: "kan ik directeuren ook een terugkerende taak geven, bijvoorbeeld dat ze elke dag op een bepaald moment mijn agenda en mail bekijken en een update geven en advies om eventuele reactiemails te sturen of agenda-items aan te maken".
+- Harm koos:
+  - **ook als het dorp dicht is**;
+  - zelf taken aanmaken bij iedere directeur, inplannen en stoppen;
+  - tijd en dagen per taak instellen.
+- **In het dorp** (`game/schedules.js`):
+  - Taken → **⏰ Terugkerend**, of de knop ⏰ in het gesprek met een directeur.
+  - Je kiest een directeur, de opdracht, de tijd en de dagen (los, of "werkdagen" of "elke dag").
+  - Per taak: Pauzeren/Hervatten, Bewerken, Nu doen (één keer, in het dorp) en Verwijderen (twee keer klikken).
+  - Opgeslagen in `schedules/<id>`.
+- **In de cloud:**
+  - De geplande taak **"Mijn AI-dorp: terugkerende taken"** (trig_01Krd8SpfDGivoRvESq9EuuR) draait elk uur om :07, van 06:07 tot 22:07 (Europe/Amsterdam). Hij draait op Harms Claude-abonnement, zonder API-sleutels.
+  - Hij leest de plannen. Is er niets aan de beurt, dan stopt hij meteen.
+  - Anders claimt hij het plan (`lastRunDay`) en doet het werk als die directeur:
+    - Gmail: zoeken, lezen en concepten; nooit versturen.
+    - Agenda: alleen lezen in alle agenda's. Nieuwe afspraken alleen als voorstel, dat Harm in het dorp goedkeurt.
+  - Hij schrijft het antwoord als taak `tasks/tsched-<plan>-<datum>`.
+  - De opdracht staat ook in `agents/terugkerende-taken.md`.
+- **Het antwoord:**
+  - Staat het dorp open, dan haalt het elke minuut nieuwe antwoorden op.
+  - Ging het dorp dicht, dan komt het antwoord bij het openen.
+  - De directeur meldt het in het eigen gesprek, één keer (`announced`).
+- **Let op:**
+  - Een geplande taak kan ik niet zelf aan Harms connectors koppelen ("connectors parameter is not available for this organization"). Harm moet bij deze geplande taak op claude.ai **Gmail** en **Google Calendar** toevoegen. Zolang dat niet gebeurd is, schrijft de taak eerlijk "niet gelukt" met die uitleg.
+  - Elk uur start er een korte sessie (17 per dag) die alleen kijkt of er iets aan de beurt is. Dat telt licht mee in Harms gebruik. Minder vaak kan, maar dan schuiven de tijden op.
+- Ook gerepareerd: het vak "Wie is waar" bleef onzichtbaar over het scherm liggen, door een stijlregel die het verbergen overschreef.
+- Getest in `tests/team.test.js`:
+  - inplannen, pauzeren en verwijderen;
+  - een antwoord uit de cloud met een concept en een afspraakvoorstel, gemeld in Margots gesprek;
+  - de afspraak goedkeuren.
+- Online gezet als versie 1793730723-cbf3.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

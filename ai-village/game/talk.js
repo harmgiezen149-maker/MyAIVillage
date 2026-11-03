@@ -342,7 +342,8 @@ async function postResult(t) {
     if (!talk.dock.open || talk.dock.tab !== 'meeting') openDock('meeting'); else renderMeeting();
     return;
   }
-  const chatId = t.from === 'chat' && t.askedPerson && (t.askedPerson === 'kevin' || residentById(t.askedPerson)) ? t.askedPerson : 'kevin';   // meeting over, or from the to-do list: Kevin answers
+  const chatId = t.from === 'schedule' && t.owner && residentById(t.owner) ? t.owner     // a recurring task: that director answers in their own chat
+    : t.from === 'chat' && t.askedPerson && (t.askedPerson === 'kevin' || residentById(t.askedPerson)) ? t.askedPerson : 'kevin';   // meeting over, or from the to-do list: Kevin answers
   const text = resultText(t);
   const turn = { role: 'result', content: text, taskId: t.id, task: t.text, at: nowStamp() };
   if (office.chat && office.chat.id === chatId) {
@@ -777,6 +778,7 @@ const SHEETS = {
   todo: () => document.getElementById('todo-close').click(),
   chat: () => closeChat(),
   dock: () => closeDock(),
+  plans: () => { document.getElementById('plans').hidden = true; },
   people: () => { document.getElementById('people').hidden = true; document.getElementById('people-btn').setAttribute('aria-pressed', 'false'); },
   profile: () => { document.getElementById('profile').hidden = true; document.getElementById('profile-btn').setAttribute('aria-pressed', 'false'); },
 };
