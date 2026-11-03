@@ -143,6 +143,16 @@
   .profile-body h3 { font-size: 13px; font-weight: normal; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 14px 0 4px; }
   .profile-hint { color: var(--muted); font-size: 12.5px; margin: 0 0 4px; }
   #profile-dossiers { margin: 0 0 10px; padding-left: 18px; font-size: 13px; }
+  #people { top: 62px; right: 16px; width: min(380px, calc(100vw - 32px)); max-height: calc(100vh - 140px); display: flex; flex-direction: column; }
+  #people-list { list-style: none; margin: 0; padding: 6px 8px 10px; overflow-y: auto; }
+  .people-row { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0; padding: 6px 8px; text-align: left; background: transparent; border: 1px solid transparent; border-radius: 8px; }
+  .people-row:hover, .people-row:focus-visible { border-color: var(--accent); background: rgba(242,193,78,.08); }
+  .people-row img { width: 40px; height: 40px; border-radius: 7px; object-fit: cover; border: 1.5px solid var(--panel-edge); flex: none; }
+  .people-txt { display: flex; flex-direction: column; flex: 1; min-width: 0; font-size: 13.5px; }
+  .people-txt small { color: var(--muted); font-size: 11.5px; }
+  .people-where { font-size: 11.5px; color: var(--muted); text-align: right; max-width: 40%; }
+  .caller[data-id] { cursor: pointer; }
+  #chat-face { cursor: pointer; }
   #profile-links { list-style: none; margin: 0; padding: 0; font-size: 13px; }
   #profile-links li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid rgba(242,193,78,.12); }
   #profile-links button.small { margin: 0; white-space: nowrap; }
@@ -319,6 +329,7 @@
   <button id="zoom-out" class="extra" aria-label="Uitzoomen">−</button>
   <button id="zoom-in" class="extra" aria-label="Inzoomen">+</button>
   <button id="sound" class="extra" aria-pressed="true">Geluid aan</button>
+  <button id="people-btn" class="extra" aria-pressed="false" aria-controls="people" title="Iedereen in het dorp; tik op iemand om erheen te lopen">Wie is waar</button>
   <button id="profile-btn" class="extra" aria-pressed="false" aria-controls="profile" title="Vertel het team wie je bent en wat je belangrijk vindt">Over mij</button>
   <button id="log-btn" class="extra" title="De lijn van Kevin en dorpspraat (C)">Logboek</button>
   <button id="meeting" class="extra" aria-pressed="false" title="Iedereen naar het Raadhuis">Vergadering</button>
@@ -339,6 +350,11 @@
     <input id="todo-search" type="search" placeholder="Zoeken…" aria-label="Taken zoeken" autocomplete="off">
   </div>
   <ul id="todo-list" aria-label="Je taken"></ul>
+</div>
+<div class="panel" id="people" role="dialog" aria-label="Wie is waar" hidden>
+  <div class="panel-head"><h2>Wie is waar</h2><button id="people-close" class="small" aria-label="Wie is waar sluiten" style="margin:0">Sluiten</button></div>
+  <p class="profile-hint" style="padding:8px 12px 0;margin:0">Tik op iemand en je loopt erheen, ook als diegene binnen zit.</p>
+  <ul id="people-list"></ul>
 </div>
 <div class="panel" id="profile" role="dialog" aria-label="Over mij" hidden>
   <div class="panel-head"><h2>Over mij</h2><button id="profile-close" class="small" aria-label="Over mij sluiten" style="margin:0">Sluiten</button></div>
@@ -388,7 +404,7 @@
   </div>
 </div>
 <div class="panel" id="chat" role="dialog" aria-label="Gesprek" hidden>
-  <div class="panel-head"><img id="chat-face" alt=""><div id="chat-who"><div id="chat-name"></div><div id="chat-role"></div></div><button id="chat-link" class="small" style="margin:0" title="Directe link naar dit gesprek kopiëren" aria-label="Directe link naar dit gesprek kopiëren">🔗</button><button id="chat-close" class="small" style="margin:0">Sluiten</button></div>
+  <div class="panel-head"><img id="chat-face" alt="Loop naar deze persoon" title="Loop naar deze persoon"><div id="chat-who"><div id="chat-name"></div><div id="chat-role"></div></div><button id="chat-link" class="small" style="margin:0" title="Directe link naar dit gesprek kopiëren" aria-label="Directe link naar dit gesprek kopiëren">🔗</button><button id="chat-close" class="small" style="margin:0">Sluiten</button></div>
   <div id="chat-log" aria-live="polite"></div>
   <div id="chat-form"><input id="chat-input" type="text" placeholder="Zeg iets…" aria-label="Je bericht" autocomplete="off" enterkeyhint="send"><button id="chat-send" class="primary">Stuur</button></div>
 </div>
@@ -441,5 +457,6 @@
 <script src="game/talk.js"></script>
 <script src="game/memory.js"></script>
 <script src="game/links.js"></script>
+<script src="game/visit.js"></script>
 </body>
 </html>

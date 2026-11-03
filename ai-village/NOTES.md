@@ -544,6 +544,29 @@ One Artlist image per house. Every room:
   - computer: de cursor staat wel meteen in het vak.
 - Online gezet als versie 1793729160-9c15.
 
+## Naar iemand toe lopen (Harm, 2026-11-03)
+
+- Harm: "Ik wil op een afbeelding van een character kunnen klikken en dat ik dan naar dit character toe loop." Harm koos alle vier de plekken:
+  - **Figuur in het dorp:** een klik laat Harm erheen lopen, en pas bij aankomst gaat het gesprek open. Voorheen opende het gesprek meteen.
+  - **Gezichten "aan de telefoon"** (de kaartjes bovenin): een klik laat Harm naar die persoon lopen.
+  - **Gezicht in het gespreksvak:** een klik laat Harm lopen naar degene met wie je praat.
+  - **Nieuwe knop "Wie is waar"** (op de telefoon onder ☰ Meer):
+    - iedereen met gezicht, rol en waar diegene is ("in het Posthuis", "in het dorp", "in de vergadering");
+    - tik op iemand en Harm loopt erheen.
+- Zit iemand binnen, dan loopt Harm naar dat huis en gaat naar binnen. Is Harm zelf binnen, dan gaat Harm eerst naar buiten.
+- Beweegt de persoon, dan loopt Harm mee. Zodra Harm dichtbij is, blijft de persoon staan en wacht.
+- Stoppen: met de pijltjes of WASD lopen, of ergens anders klikken.
+- Zit iemand in de vergadering, of zit Harm zelf in de vergadering, dan zegt het dorp dat.
+- Kevin loopt altijd al mee met Harm.
+- Code in `game/visit.js` (`walkTo`). Getest in `tests/walk.test.js`:
+  - iemand buiten, met het gesprek bij aankomst;
+  - iemand binnen;
+  - het gezicht aan de telefoon;
+  - de lijst;
+  - stoppen met de pijltjes.
+  - Ook geprobeerd met een echte klik op een figuur in beeld.
+- Online gezet als versie 1793729803-10b1.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

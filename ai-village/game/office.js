@@ -564,8 +564,8 @@ canvas.addEventListener('pointerdown', (e) => {
   const p = personAt(wx, wy);
   if (!p) return;
   e.stopImmediatePropagation();
-  state.target = null;
-  openChat(p.role === 'Kevin' ? 'kevin' : p.id);
+  // walk over first; the conversation opens on arrival (Harm, 2026-11-03; see game/visit.js)
+  walkTo(p.role === 'Kevin' ? 'kevin' : p.id, { talk: true, quiet: true });
 }, true);
 
 // Who's on the phone: Kevin calling a director, a director calling their worker.

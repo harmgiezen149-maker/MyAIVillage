@@ -205,6 +205,9 @@ function updateCallPanel() {
   for (const p of people) {
     const card = document.createElement('div');
     card.className = 'caller';
+    card.dataset.id = p.id;                   // a click walks Harm over (game/visit.js)
+    card.title = `Loop naar ${p.name}`;
+    card.setAttribute('role', 'button');
     const face = document.createElement('img');
     face.alt = '';
     face.src = `assets/portraits/${p.id}.jpg`;

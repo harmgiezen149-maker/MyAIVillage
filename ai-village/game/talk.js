@@ -268,6 +268,8 @@ function updateSummoned(r, dt) {
 
 // Someone Harm is talking to (chat box open) stands still and faces Harm while Harm is close.
 function heldByHarm(r) {
+  // Harm is walking over to them (game/visit.js): wait once Harm is close
+  if (typeof visit !== 'undefined' && visit.id === r.id && !r.seated && r.where === state.scene && Math.hypot(state.player.x - r.x, state.player.y - r.y) < heightIn(r.where) * 4) return true;
   if (!office.chat || office.chat.id !== r.id || r.seated || r.where !== state.scene) return false;
   return Math.hypot(state.player.x - r.x, state.player.y - r.y) < heightIn(r.where) * 3;
 }
@@ -775,6 +777,7 @@ const SHEETS = {
   todo: () => document.getElementById('todo-close').click(),
   chat: () => closeChat(),
   dock: () => closeDock(),
+  people: () => { document.getElementById('people').hidden = true; document.getElementById('people-btn').setAttribute('aria-pressed', 'false'); },
   profile: () => { document.getElementById('profile').hidden = true; document.getElementById('profile-btn').setAttribute('aria-pressed', 'false'); },
 };
 // Escape closes the box that has the keyboard focus, also when the focus is on a button in it (verbeterplan E3).
