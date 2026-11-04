@@ -5,6 +5,7 @@
 // harmless read-only call from Harm's click, which brings up claude.ai's question. "Over mij" can test all of them.
 
 const CONNECTOR_TESTS = {
+  'Internet': ['wikipedia', { query: 'Nederland' }],
   'Dorpsinternet': ['wikipedia', { query: 'Nederland' }],
   'Gmail': ['list_drafts', { pageSize: 1 }],
   'Google Calendar': ['list_calendars', { pageSize: 1 }],
@@ -39,6 +40,7 @@ async function testConnector(server) {
   const [tool, input] = CONNECTOR_TESTS[server];
   try {
     await office.mcp.callTool(server, tool, input);
+    if (server === 'Internet' || server === 'Dorpsinternet') { try { localStorage.setItem('village-net-name', server); } catch (e) { /* fine */ } }
     connectors.waiting.delete(server);
     renderConsentBar();
     return '';
@@ -47,7 +49,7 @@ async function testConnector(server) {
     if (code === 'server_not_connected') return 'niet gekoppeld: voeg de connector toe in claude.ai → Instellingen → Connectors';
     if (code === 'needs_reauth') return 'opnieuw inloggen nodig in claude.ai → Instellingen → Connectors';
     if (code === 'not_in_manifest') return 'staat niet in de toestemmingen van de pagina (meld dit aan Claude)';
-    if (isConsentError(e)) return 'nog niet toegestaan: kies Toestaan als claude.ai erom vraagt';
+    if (isConsentError(e)) return `nog niet toegestaan: kies Toestaan als claude.ai erom vraagt (${code || 'melding'}: ${String(e.message || '').slice(0, 120)})`;
     return (e && (e.message || code)) || 'onbekende fout';
   }
 }
@@ -67,8 +69,15 @@ document.getElementById('consent-bar').addEventListener('click', async (e) => {
 document.getElementById('connectors-test').addEventListener('click', async () => {
   const ul = document.getElementById('connectors-list');
   ul.innerHTML = Object.keys(CONNECTOR_TESTS).map((s) => `<li data-c="${esc(s)}"><b>${esc(s)}</b> <span>bezig…</span></li>`).join('');
+  const results = {};
   for (const s of Object.keys(CONNECTOR_TESTS)) {
-    const why = await testConnector(s);
-    ul.querySelector(`[data-c="${CSS.escape(s)}"] span`).textContent = why ? '✗ ' + why : '✓ werkt';
+    results[s] = await testConnector(s);
+    ul.querySelector(`[data-c="${CSS.escape(s)}"] span`).textContent = results[s] ? '✗ ' + results[s] : '✓ werkt';
+  }
+  const works = ['Internet', 'Dorpsinternet'].find((n) => !results[n]);
+  if (works) { try { localStorage.setItem('village-net-name', works); } catch (e) { /* fine */ } }
+  // the internet has two possible names; when one works, the other one does not matter
+  for (const [a, b] of [['Internet', 'Dorpsinternet'], ['Dorpsinternet', 'Internet']]) {
+    if (!results[a] && results[b]) { ul.querySelector(`[data-c="${b}"]`).remove(); connectors.waiting.delete(b); renderConsentBar(); }
   }
 });

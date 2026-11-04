@@ -70,7 +70,7 @@ function installFake(cfg) {
   };
   const mcp = { callTool: async (server, tool) => {
     f.mcp.push(server + ':' + tool);
-    if (server === 'Dorpsinternet' && cfg.netUnconfirmed && !f.netAllowed) throw { code: 'unconfirmed', message: "connector access isn't confirmed for this artifact right now" };
+    if ((server === 'Dorpsinternet' || server === 'Internet') && cfg.netUnconfirmed && !f.netAllowed) throw { code: 'unconfirmed', message: "connector access isn't confirmed for this artifact right now" };
     if (tool === 'create_draft') return { payload: { id: 'd1' } };
     if (tool === 'create_event') { if (f.calFailOnce) { f.calFailOnce = false; throw { code: 'server_unavailable', message: 'timeout' }; } return { payload: {} }; }
     if (tool === 'list_events') return { payload: { events: [{ summary: 'Etentje' }] } };

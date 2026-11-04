@@ -90,17 +90,18 @@ test('a connector not yet allowed for the page: a bar with a button; the button 
   try {
     await page.click('#todo-btn');
     await page.fill('#todo-input', 'Wat is het laatste nieuws over Claude?'); await page.keyboard.press('Enter');
-    await page.waitForSelector('#consent-bar:not([hidden]) [data-allow="Dorpsinternet"]', { timeout: 15000 });
+    await page.waitForSelector('#consent-bar:not([hidden]) [data-allow="Internet"]', { timeout: 15000 });
     assert.match(await page.evaluate(() => window.__fake.netError), /toestaan/, 'the director is told what Harm must do');
     await page.evaluate(() => { window.__fake.netAllowed = true; });     // Harm says yes in claude.ai's question
-    await page.click('[data-allow="Dorpsinternet"]');
+    await page.click('[data-allow="Internet"]');
     await page.waitForSelector('#consent-bar', { state: 'hidden' });
     // Over mij: test all connectors
     await page.click('#profile-btn');
     await page.click('#connectors-test');
     await page.waitForFunction(() => [...document.querySelectorAll('#connectors-list li span')].every((x) => !/bezig/.test(x.textContent)));
-    assert.equal(await page.locator('#connectors-list li').count(), 5);
-    assert.match(await page.textContent('#connectors-list'), /Dorpsinternet ✓ werkt/);
+    assert.ok(await page.locator('#connectors-list li').count() >= 5);
+    assert.match(await page.textContent('#connectors-list'), /Internet ✓ werkt/);
+    assert.equal(await page.evaluate(() => localStorage.getItem('village-net-name')), 'Internet', 'the working name is remembered');
     assert.deepEqual(v.errors, []);
   } finally { await v.close(); }
 });

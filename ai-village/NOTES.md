@@ -615,6 +615,18 @@ One Artlist image per house. Every room:
   - de afspraak goedkeuren.
 - Online gezet als versie 1793730723-cbf3.
 
+## Internet-connector heet "Internet", niet "Dorpsinternet" (2026-11-04)
+
+- Na Harms "Toestaan" gaf de test nog steeds "nog niet toegestaan" voor Dorpsinternet, en er kwam geen enkel verzoek bij de deur aan.
+- De lijst met connectors van Harm op claude.ai bevat **geen "Dorpsinternet"**, alleen **"Internet"**. Die wijst inmiddels naar de deur met de goede sleutel (claude.ai maakte op 3 november om 18:04 UTC verbinding).
+  - Het dorp vroeg dus om een connector die niet bestaat.
+  - In de lijst staat "Internet" als "opnieuw verbinden nodig". Dat kan ook alleen voor deze gesprekssessie gelden, want Kookboek en Darkglass staan er ook zo en werken in het dorp wel.
+- Opgelost:
+  - De pagina mag nu beide namen gebruiken (Internet en Dorpsinternet, met dezelfde 7 tools).
+  - Het dorp probeert eerst "Internet" en dan "Dorpsinternet", en onthoudt welke werkt.
+  - "Koppelingen testen" laat beide zien, of alleen de werkende, en bij een fout ook de echte melding.
+- Online gezet als versie 1793779729-1bf5.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
