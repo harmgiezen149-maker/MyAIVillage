@@ -160,6 +160,33 @@
   .plan-text { margin-top: 2px; white-space: pre-wrap; }
   .plan-btns { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 0 48px; }
   .plan-btns button.small { margin: 0; }
+  #session { right: 16px; top: 70px; width: min(520px, calc(100vw - 32px)); height: min(78vh, calc(100vh - 100px)); display: flex; flex-direction: column; z-index: 35; }
+  #session[hidden] { display: none; }
+  .session-face { width: 46px; height: 46px; border-radius: 9px; border: 2px solid var(--accent); object-fit: cover; }
+  .session-who { flex: 1; min-width: 0; }
+  .session-who h2 { flex: none; }
+  .session-sub { font-size: 12px; color: var(--muted); }
+  #session-log { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.5; }
+  #session-log .msg { white-space: pre-wrap; max-width: 92%; }
+  #session-log .msg a { color: var(--accent); }
+  #session-staged { margin: 0 12px 8px; padding: 10px 12px; border: 1px dashed var(--accent); border-radius: 10px; font-size: 13.5px; max-height: 34%; overflow-y: auto; }
+  #session-staged ul { margin: 6px 0 8px; padding-left: 18px; }
+  #session-staged li { margin-bottom: 6px; }
+  #session-staged button { margin: 0 6px 0 0; }
+  .session-form { display: flex; gap: 6px; padding: 8px 12px 6px; border-top: 1px solid var(--panel-edge); }
+  .session-form textarea { flex: 1; min-width: 0; resize: none; font: inherit; font-size: 15px; }
+  .session-foot { font-size: 11.5px; color: var(--muted); padding: 2px 12px 10px; }
+  #rosie-bar { bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 44; background: var(--panel); border: 1px solid var(--accent); border-radius: 12px; padding: 8px 10px; flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 24px); font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+  #rosie-bar[hidden] { display: none; }
+  #rosie-bar img { width: 36px; height: 36px; border-radius: 7px; object-fit: cover; }
+  #rosie-bar button.small { margin: 0; }
+  #chat-session-row { padding: 8px 12px 0; }
+  #chat-session-row[hidden] { display: none; }
+  #chat-session { width: 100%; margin: 0; }
+  @media (max-width: 700px) {
+    #session { left: 0 !important; right: 0; top: auto; bottom: 0; width: 100% !important; height: 86vh !important; border-radius: 16px 16px 0 0; }
+    #session-log { font-size: 16px; }
+  }
   #consent-bar { top: 64px; left: 50%; transform: translateX(-50%); z-index: 45; background: var(--panel); border: 1px solid var(--accent); border-radius: 10px;
     padding: 8px 10px 8px 14px; flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 24px); font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
   #consent-bar[hidden] { display: none; }
@@ -362,6 +389,14 @@
 <div class="hud" id="help"><span>Lopen: pijltjes / WASD of klikken · Zoomen: muiswiel · Loop een deur in om naar binnen te gaan · T: praat met wie naast je staat · M M: Kevin · M: geluid · C: dorpspraat · Vergadering: iedereen naar het Raadhuis · E: kaart bewerken</span></div>
 <div id="toast" role="status"></div>
 <div class="hud" id="consent-bar" role="alert" hidden></div>
+<div class="hud" id="rosie-bar" role="status" hidden><img src="assets/portraits/rosie-bell.jpg" alt=""><span>Rosie heeft vanavond tijd om je dag met je door te nemen.</span><button id="rosie-yes" class="small primary">Ja, graag</button><button id="rosie-no" class="small">Nu niet</button></div>
+<div class="panel" id="session" role="dialog" aria-label="Sessie met Rosie" hidden>
+  <div class="panel-head"><img src="assets/portraits/rosie-bell.jpg" alt="" class="session-face"><div class="session-who"><h2>Rosie Bell</h2><div class="session-sub">Dorpstherapeut · Praktijk van Rosie · positieve ervaringen</div></div><button id="session-end" class="small" style="margin:0">Sessie afsluiten</button></div>
+  <div id="session-log" aria-live="polite"></div>
+  <div id="session-staged" hidden></div>
+  <div class="session-form"><textarea id="session-input" rows="2" placeholder="Vertel…" aria-label="Je antwoord aan Rosie"></textarea><button id="session-send" class="primary">Stuur</button></div>
+  <div class="session-foot">Dit gesprek wordt nergens bewaard; alleen wat jij opslaat komt in je lijst in Drive. Gaat het niet goed? Bel 113 (0800-0113, gratis, dag en nacht) of bij acuut gevaar 112.</div>
+</div>
 <div class="hud" id="call" role="status" aria-live="polite" hidden></div>
 <div id="hover-card" role="tooltip" hidden></div>
 <div class="panel" id="todo" role="dialog" aria-label="Takenlijst" hidden>
@@ -452,6 +487,7 @@
 </div>
 <div class="panel" id="chat" role="dialog" aria-label="Gesprek" hidden>
   <div class="panel-head"><img id="chat-face" alt="Loop naar deze persoon" title="Loop naar deze persoon"><div id="chat-who"><div id="chat-name"></div><div id="chat-role"></div></div><button id="chat-plan" class="small" style="margin:0" title="Een terugkerende taak voor deze directeur inplannen" aria-label="Terugkerende taak inplannen">⏰</button><button id="chat-link" class="small" style="margin:0" title="Directe link naar dit gesprek kopiëren" aria-label="Directe link naar dit gesprek kopiëren">🔗</button><button id="chat-close" class="small" style="margin:0">Sluiten</button></div>
+  <div id="chat-session-row" hidden><button id="chat-session" class="primary" title="Een sessie in de Praktijk van Rosie: samen je dag en positieve ervaringen doornemen">🌿 Mijn dag doornemen met Rosie</button></div>
   <div id="chat-log" aria-live="polite"></div>
   <div id="chat-form"><input id="chat-input" type="text" placeholder="Zeg iets…" aria-label="Je bericht" autocomplete="off" enterkeyhint="send"><button id="chat-send" class="primary">Stuur</button></div>
 </div>
@@ -507,5 +543,6 @@
 <script src="game/visit.js"></script>
 <script src="game/connectors.js"></script>
 <script src="game/schedules.js"></script>
+<script src="game/therapy.js"></script>
 </body>
 </html>

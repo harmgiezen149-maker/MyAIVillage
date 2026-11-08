@@ -21,7 +21,7 @@ const PERSONALITY = {
   'iris-chen': 'Sharp and friendly-sceptical. Always asks "where does that come from?" and enjoys checking facts.',
   'rafael-moreno': 'Passionate maker, full of ideas and sketches, but practical about what can really be built.',
   'otto-brandt': 'Hands-on and steady. Tests things until they break, then fixes them. Few words, solid work.',
-  'rosie-bell': 'Warm, caring and organised. Remembers every birthday and fusses a little over everyone.',
+  'rosie-bell': 'The village therapist (she/her). Warm, calm, curious and unhurried, like a good CBT therapist: listens more than she talks, asks one question at a time, never cheerleads or talks things away. Still looks after the family plans and the cookbook. If Harm wants to go through the day or the positive experiences, she invites Harm to a session in her practice (the button "Mijn dag doornemen").',
   'daisy-quinn': 'Cheerful and chatty. Loves lists and colour-coded calendars.',
   'jasper-vale': 'Easy-going and lyrical, always humming something. Has a song for every mood.',
   'remy-dubois': 'Relaxed and a bit dreamy, with deep music knowledge; drops a French word now and then.',
@@ -381,6 +381,8 @@ async function sendChat() {
   const said = box.value.trim();
   if (!c || c.busy || !said) return;
   box.value = '';
+  // "Laten we mijn dag doornemen" to Rosie: straight to a session in her Praktijk; this line is not kept in her chat
+  if (c.id === 'rosie-bell' && typeof startSession === 'function' && /dag (door ?nemen|doornemen|bespreken)|mijn dag|positieve ervaring|reflecties? (aanvullen|invullen)/i.test(said)) { renderChat(); startSession(); return; }
   c.turns.push({ role: 'user', content: said });
   const cmd = localCommand(said, c.id);
   if (cmd) c.turns.push({ role: 'note', content: cmd.note });
@@ -439,6 +441,7 @@ function renderChat() {
   }
   log.scrollTop = log.scrollHeight;
   document.getElementById('chat-send').disabled = c.busy;
+  if (typeof updateSessionButton === 'function') updateSessionButton();
 }
 
 // ---------- the left box: meeting, Kevin's line, village talk ----------
@@ -503,6 +506,7 @@ function renderVillage() {
 
 // Called by residents.js when a worker stops to talk to someone they haven't talked to today.
 function villageMet(a, b) {
+  if (typeof therapy !== 'undefined' && therapy.active && (a.id === 'rosie-bell' || b.id === 'rosie-bell')) return;   // Rosie is in a session
   const wa = realWork(a), wb = realWork(b);
   if (!wa && !wb) return;                                    // nothing real to talk about: no conversation logged
   const entry = { at: nowStamp(), a: a.id, b: b.id, lines: [] };

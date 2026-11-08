@@ -74,6 +74,12 @@ class VillageAudio {
     this.applyVolumes();
   }
 
+  // During a session with Rosie the village sounds go softer (Harm, 2026-11-08).
+  setSessionQuiet(quiet) {
+    this.sessionQuiet = quiet;
+    if (this.ctx && !this.muted) this.master.gain.setTargetAtTime(quiet ? 0.3 : 0.7, this.ctx.currentTime, 0.6);
+  }
+
   setIndoors(indoors) {
     this.indoors = indoors;
     if (this.ctx) this.outdoor.gain.setTargetAtTime(indoors ? 0.25 : 1, this.ctx.currentTime, 0.4);

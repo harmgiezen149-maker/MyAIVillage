@@ -160,6 +160,7 @@ function update(dt) {
   if (keys.has('ArrowDown') || keys.has('s')) dy += 1;
   if (dx || dy) { state.target = null; state.cameraFree = false; }
   if (state.meeting) state.target = null;                       // seated at the head of the table
+  if (typeof therapy !== 'undefined' && therapy.harmSeated) { dx = 0; dy = 0; state.target = null; }   // seated in Rosie's Praktijk
   // Click or tap: first a route along the paths (game/nav.js), then follow it point by point (Harm, 2026-11-01).
   if (!state.target) state.route = null;
   else if (state.routeFor !== state.target) planPlayerRoute();
@@ -690,8 +691,10 @@ function drawRoom(id) {
   const things = (room.props || []).map((p) => ({ y: p[2], draw: () => drawProp(p) }));
   if (state.meeting) things.push(...meetingThings());
   else {
-    things.push({ y: state.player.y, draw: drawCEOInPlace });
-    things.push({ y: state.kevin.y - 0.01, draw: drawKevinInPlace });
+    const session = typeof therapy !== 'undefined' && therapy.active && id === 'family-cottage';
+    if (session && therapy.harmSeated) things.push({ y: state.player.y, draw: therapyDrawHarm });   // on the sofa by the fire
+    else things.push({ y: state.player.y, draw: drawCEOInPlace });
+    if (!session) things.push({ y: state.kevin.y - 0.01, draw: drawKevinInPlace });                // Kevin waits outside a session
     if (typeof residentsHere === 'function') for (const r of residentsHere()) things.push({ y: r.y, draw: () => drawResidentInPlace(r) });
   }
   things.sort((a, b) => a.y - b.y).forEach((t) => t.draw());

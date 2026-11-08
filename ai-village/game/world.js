@@ -65,7 +65,7 @@ const BUILDINGS = [
   { id: 'scholars-tower', name: 'Geleerdentoren', job: 'Onderzoek', door: [915, 532], room: 'scholars-tower' },
   { id: 'counting-house', name: 'Rekenhuis', job: 'Geld & rekeningen', door: [712, 692], room: 'counting-house' },
   { id: 'artisans-workshop', name: 'Werkplaats', job: 'Producten', door: [2190, 712], room: 'artisans-workshop' },
-  { id: 'family-cottage', name: 'Familiehuisje', job: 'Familie & kookboek', door: [766, 1240], room: 'family-cottage' },
+  { id: 'family-cottage', name: 'Praktijk van Rosie', job: 'Dorpstherapeut · familie & kookboek', door: [766, 1240], room: 'family-cottage' },   // Harm, 2026-11-08
   { id: 'carriers-depot', name: 'Vrachtdepot', job: 'Logistiek & reizen', door: [256, 1560], room: 'carriers-depot' },
   { id: 'heralds-lodge', name: 'Herautenhuis', job: 'Contacten', door: [1380, 1408], room: 'heralds-lodge' },
   { id: 'bards-house', name: 'Bardenhuis', job: 'Muziek & darkglass', door: [1684, 1292], room: 'bards-house' },

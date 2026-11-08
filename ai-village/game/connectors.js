@@ -8,6 +8,7 @@ const CONNECTOR_TESTS = {
   'Internet': ['wikipedia', { query: 'Nederland' }],
   'Dorpsinternet': ['wikipedia', { query: 'Nederland' }],
   'Gmail': ['list_drafts', { pageSize: 1 }],
+  'Google Drive': ['search_files', { query: "parentId = '1uDxnN3DDuVyUidUzc8Y5tarlnNlAQMwU'", excludeContentSnippets: true, pageSize: 1 }],
   'Google Calendar': ['list_calendars', { pageSize: 1 }],
   'Kookboek': ['get_shopping_list', {}],
   'Darkglass': ['get_rig', {}],

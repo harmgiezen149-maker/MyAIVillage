@@ -38,6 +38,10 @@ function installFake(cfg) {
     const text = all(input); f.prompts.push(text); f.calls.push({ model: opts.model || '-', tools: (opts.tools || []).map((t) => t.name) });
     const said = Array.isArray(input) ? String(input[input.length - 1].content) : text;
     const tool = (n) => (opts.tools || []).find((t) => t.name === n);
+    if (tool('propose_save') && /opslaan/i.test(said)) { await tool('propose_save').execute({ experiences: [{ datum: '08-11-2026', ervaring: 'Fietstocht naar huis in de zon', waarom: 'Even tijd voor mezelf', gevoel: 'Rustig', sterkte: 70, reflectie: 'Ik neem de tijd voor mijzelf > ik weet wat mij helpt' }] }); return { text: 'Dan kun je ze opslaan met de knop.' }; }
+    if (tool('read_empty_reflections') && /lege reflecties/i.test(said)) { const out = JSON.parse(await tool('read_empty_reflections').execute({})); f.emptyRows = out; return { text: `Er zijn ${out.zonder_reflectie} ervaringen zonder reflectie.` }; }
+    if (tool('propose_fill') && /vul in/i.test(said)) { await tool('propose_fill').execute({ items: [{ rij: 2, ervaring: f.emptyRows.rijen[0].ervaring, reflectie: 'Ik ben een teamplayer' }] }); return { text: 'Opslaan kan met de knop.' }; }
+    if (tool('propose_save')) { f.sessionPrompt = Array.isArray(input) ? String(input[0].content) : ''; return { text: 'Wat maakte dat fijn voor jou?' }; }
     if (tool('create_task') && /inbox/i.test(said)) { await tool('create_task').execute({ task: 'Sorteer mijn inbox' }); return { text: 'Komt goed, ik geef het aan Margot.' }; }
     return { text: tool('hand_to_worker') ? 'ok' : 'Hallo Harm.' };
   }
@@ -68,8 +72,27 @@ function installFake(cfg) {
     if (text.includes('Did they agree')) return { committed: false };
     return {};
   };
-  const mcp = { callTool: async (server, tool) => {
+  // a fake Google Drive with Harm's list as one spreadsheet (read back as a markdown table, like the real one)
+  const drive = f.drive = { files: { L1: { title: 'Positieve ervaringen - Harm', rows: [
+    ['01-11-2026', 'Samen met collega\'s NOVA-stappen gezet', 'Het ging vooruit', 'Trots', '60', ''],
+    ['02-11-2026', 'Repetitie met de band', 'Muziek maken', 'Plezier', '80', 'Ik hoor erbij'],
+  ] } }, trashed: [], created: [] };
+  const asTable = (rows) => `### Table Range: A1:F${rows.length + 1}\n| Datum | Ervaring | Waarom het fijn was | Gevoel | Sterkte (0-100) | Reflexie |\n|---|---|---|---|---|---|\n`
+    + rows.map((r) => '| ' + r.map((c) => c.replace(/>/g, '\\>')).join(' | ') + ' |').join('\n');
+  const parseCsv = (csv) => { const out = []; let row = [], cell = '', q = false; for (let i = 0; i < csv.length; i++) { const ch = csv[i];
+    if (q) { if (ch === '"' && csv[i + 1] === '"') { cell += '"'; i++; } else if (ch === '"') q = false; else cell += ch; }
+    else if (ch === '"') q = true; else if (ch === ',') { row.push(cell); cell = ''; } else if (ch === '\n') { row.push(cell); out.push(row); row = []; cell = ''; } else cell += ch; }
+    return out.slice(1); };
+  async function driveTool(tool, input) {
+    if (tool === 'search_files') return { files: Object.entries(drive.files).filter(([id, x]) => !drive.trashed.includes(id) && x.title === 'Positieve ervaringen - Harm').map(([id, x]) => ({ id, title: x.title, viewUrl: 'https://docs.google.com/spreadsheets/d/' + id })).reverse() };
+    if (tool === 'read_file_content') return { content: asTable(drive.files[input.fileId].rows) };
+    if (tool === 'create_file') { const id = 'L' + (Object.keys(drive.files).length + 1); drive.files[id] = { title: input.title, rows: parseCsv(input.textContent), csv: input.textContent }; drive.created.push(id); return { id, viewUrl: 'https://docs.google.com/spreadsheets/d/' + id }; }
+    if (tool === 'trash_file') { drive.trashed.push(input.fileId); return {}; }
+    return {};
+  }
+  const mcp = { callTool: async (server, tool, input) => {
     f.mcp.push(server + ':' + tool);
+    if (server === 'Google Drive') return { payload: await driveTool(tool, input) };
     if ((server === 'Dorpsinternet' || server === 'Internet') && cfg.netUnconfirmed && !f.netAllowed) throw { code: 'unconfirmed', message: "connector access isn't confirmed for this artifact right now" };
     if (tool === 'create_draft') return { payload: { id: 'd1' } };
     if (tool === 'create_event') { if (f.calFailOnce) { f.calFailOnce = false; throw { code: 'server_unavailable', message: 'timeout' }; } return { payload: {} }; }

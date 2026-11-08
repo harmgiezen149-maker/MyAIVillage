@@ -30,7 +30,7 @@ function placeOf(r) {
   if (r.where === 'map') return 'in het dorp';
   const b = BUILDINGS.find((x) => x.room === r.where);
   if (!b) return 'binnen';
-  return (/^(Drukkerij|Geleerdentoren|Werkplaats)$/.test(b.name) ? 'in de ' : 'in het ') + b.name;
+  return (/^(Drukkerij|Geleerdentoren|Werkplaats|Praktijk)/.test(b.name) ? 'in de ' : 'in het ') + b.name;
 }
 
 function aimAt(point) {

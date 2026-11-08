@@ -627,6 +627,53 @@ One Artlist image per house. Every room:
   - "Koppelingen testen" laat beide zien, of alleen de werkende, en bij een fout ook de echte melding.
 - Online gezet als versie 1793779729-1bf5.
 
+## Rosie wordt dorpstherapeut (Harm, 2026-11-08)
+
+- Harm: "Kun je de rol van Rosie Bell aanpassen … naar dorpstherapeut en de skill positieve ervaringen laten uitvoeren. De sessie moet in haar huis plaatsvinden."
+- Harms keuzes:
+  - Rosie is **zij/haar**;
+  - ze houdt de familie- en kookboektaken;
+  - het huis heet **Praktijk van Rosie**;
+  - er komt een **avondherinnering**.
+- Label en beschrijving: "Directeur · Dorpstherapeut · familie & kookboek". Haar persoonlijkheid is een rustige CGT-gesprekspartner. Kevin stuurt welzijnsvragen naar haar.
+- **De sessie** (`game/therapy.js`):
+  - Zo start je een sessie:
+    - de knop "🌿 Mijn dag doornemen met Rosie" in haar gesprek;
+    - "laten we mijn dag doornemen" tegen haar zeggen (die zin wordt niet in haar gesprek bewaard);
+    - de link `…#rosie-sessie`;
+    - de avondbalk.
+  - Wat er dan gebeurt:
+    - Harm loopt naar de Praktijk en gaat op de bank bij de haard zitten; Rosie zit in de fauteuil tegenover.
+    - Daisy en anderen wachten buiten, en Kevin ook.
+    - Het dorpsgeluid wordt zachter. Er is geen dorpspraat met Rosie.
+    - Een vergadering kan pas als de sessie gesloten is.
+  - Het gesprek volgt Harms skill "positieve ervaringen", met de stappen 2 tot en met 7, wegnuanceren, een dag zonder positieve ervaring, veiligheid (113/112) en "lege reflecties aanvullen". Het draait op Opus 5.5 via Harms abonnement. De eerste vraag is vast, zonder aanroep.
+- **Opslaan:**
+  - Rosie stelt de rijen voor; Harm drukt zelf op "Opslaan in mijn lijst".
+  - Daarna gaat het zoals in de skill, maar in JavaScript in plaats van `positief_csv.py`:
+    1. de lijst als tekst lezen en controleren of het aantal rijen gelijk is aan n − 1;
+    2. de rijen toevoegen en controleren (datum, sterkte, ervaring);
+    3. een CSV uploaden, die Drive een spreadsheet maakt;
+    4. het resultaat teruglezen en controleren;
+    5. pas dan de vorige versie naar de prullenbak.
+  - Lukt het niet, dan blijft de lijst ongemoeid en komt er een los bestand. Nooit .xlsx of base64.
+- **Privacy:**
+  - Het sessiegesprek staat alleen in het geheugen van de pagina.
+  - Het komt niet in de opslag van het dorp, het geheugen, Kevins lijn, de dorpspraat, de takenlijst of een PDF.
+  - Bij "Sessie afsluiten" wordt het vergeten.
+- **Avondherinnering:** tussen 19:00 en 23:30 (Nederlandse tijd) verschijnt één keer per dag een balk: "Rosie heeft vanavond tijd om je dag met je door te nemen", met Ja, graag / Nu niet. Alleen als het dorp open is.
+- **Google Drive:** de pagina vraagt Google Drive aan, met alleen zoeken, lezen, bestand maken en naar de prullenbak verplaatsen. Harm geeft één keer toestemming via de knop of via Koppelingen testen.
+- Getest in `tests/office.test.js` met een nagemaakte Drive:
+  - sessie starten, gaan zitten, niemand anders in de kamer;
+  - de skill in de opdracht, Opus;
+  - opslaan pas na de knop;
+  - CSV met oude en nieuwe rijen, de oude versie naar de prullenbak;
+  - lege reflecties aanvullen;
+  - niets van de sessie in de opslag;
+  - vergeten na afsluiten;
+  - de avondbalk en `#rosie-sessie`.
+- Ook bekeken op telefoonformaat.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.

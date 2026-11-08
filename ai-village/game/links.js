@@ -22,6 +22,7 @@ function openFromHash() {
   const h = decodeURIComponent(location.hash.slice(1)).toLowerCase();
   if (!h) return;
   if (h === 'taken') { if (document.getElementById('todo').hidden) document.getElementById('todo-btn').click(); return; }
+  if (h === 'rosie-sessie') { if (typeof startSession === 'function') startSession(); return; }
   const id = findPerson(h);
   if (!id) return;
   if (office.chat && office.chat.id === id && !document.getElementById('chat').hidden) return;

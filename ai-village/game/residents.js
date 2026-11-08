@@ -29,7 +29,7 @@ const DIRECTORS = [
     seat: { seat: [676, 575], dir: 'left', desk: [463, 577, 235, 185] },
     worker: { id: 'otto-brandt', name: 'Otto Brandt', bio: 'Stagiair van Rafael: bouwt en test onderdelen.', spot: [560, 470], dir: 'left' } },
   { id: 'rosie-bell', name: 'Rosie Bell', house: 'family-cottage',
-    bio: 'Leidt het Familiehuisje: houdt familieplannen, verjaardagen en etentjes bij, en zorgt voor het kookboek (recepten, weekmenu, boodschappen).',
+    bio: 'Dorpstherapeut (zij/haar), in de Praktijk van Rosie: neemt \'s avonds samen met Harm de dag door en helpt de positieve ervaringen opmerken en vasthouden. Zorgt daarnaast nog steeds voor de familie en het kookboek (recepten, weekmenu, boodschappen).',
     seat: { seat: [861, 330], dir: 'up', desk: null },
     worker: { id: 'daisy-quinn', name: 'Daisy Quinn', bio: 'Stagiair van Rosie: houdt de familieagenda, het weekmenu en de boodschappenlijst bij.', spot: [760, 520], dir: 'right' } },
   { id: 'jasper-vale', name: 'Jasper Vale', house: 'bards-house',
@@ -429,6 +429,7 @@ function tryChat(w) {
 function updateResident(r, dt) {
   const H = heightIn(r.where);
   r.moving = false;
+  if (typeof therapyHold === 'function' && therapyHold(r, dt)) return;   // a session in the Praktijk (game/therapy.js)
   // chatting: stand still, facing each other
   if (r.chatting) {
     if (state.time > r.chatting.until) { r.chatting = null; r.wait = 0.5; }
@@ -540,7 +541,8 @@ function drawNameTags() {
   if (state.meeting) return;
   const H = personHeight();
   const p = state.player;
-  const people = [...residentsHere(), { ...state.kevin, name: KEVIN.name, role: 'Kevin' }];
+  const kevinAway = typeof therapy !== 'undefined' && therapy.active && state.scene === 'family-cottage';   // Kevin waits outside a session
+  const people = [...residentsHere(), ...(kevinAway ? [] : [{ ...state.kevin, name: KEVIN.name, role: 'Kevin' }])];
   const z = state.camera.zoom || 1;
   const big = 15 / z, small = 12 / z;   // the same, readable size on screen, however big the figures are drawn
   ctx.save();

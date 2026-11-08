@@ -105,3 +105,62 @@ test('a connector not yet allowed for the page: a bar with a button; the button 
     assert.deepEqual(v.errors, []);
   } finally { await v.close(); }
 });
+
+test('Rosie the village therapist: session in her Praktijk, the skill in the prompt, saving in the Drive list, nothing kept elsewhere', async () => {
+  const v = await openVillage(srv.url);
+  const { page } = v;
+  try {
+    assert.match(await page.evaluate(() => BUILDINGS.find((b) => b.id === 'family-cottage').name), /Praktijk van Rosie/);
+    // "laten we mijn dag doornemen" in Rosie's chat starts the session; that line is not kept in her chat
+    await page.evaluate(() => openChat('rosie-bell'));
+    await page.waitForSelector('#chat-session-row:not([hidden]) #chat-session');
+    await page.fill('#chat-input', 'Laten we mijn dag doornemen');
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('#session:not([hidden])');
+    await page.waitForFunction(() => therapy.harmSeated && residentById('rosie-bell').sessionSeat, null, { timeout: 60000 });
+    assert.equal(await page.evaluate(() => state.scene), 'family-cottage');
+    assert.deepEqual(await page.evaluate(() => residents.filter((r) => r.where === 'family-cottage' && r.id !== 'rosie-bell').map((r) => r.id)), [], 'nobody else in the room');
+    // a turn: the skill's rules go to Claude with Opus
+    await page.fill('#session-input', 'Ik heb vandaag in de zon naar huis gefietst.');
+    await page.click('#session-send');
+    await page.waitForFunction(() => therapy.turns.some((t) => t.content === 'Wat maakte dat fijn voor jou?'));
+    const prompt = await page.evaluate(() => window.__fake.sessionPrompt);
+    assert.match(prompt, /positieve ervaringen/); assert.match(prompt, /Eén vraag per bericht/); assert.match(prompt, /113/);
+    assert.ok(await page.evaluate(() => window.__fake.calls.some((c) => c.model === 'claude-opus-5-5' && c.tools.includes('propose_save'))));
+    // Rosie proposes the rows; nothing is saved before Harm presses the button
+    await page.fill('#session-input', 'Ja, laten we opslaan.');
+    await page.click('#session-send');
+    await page.waitForSelector('#session-save');
+    assert.equal(await page.evaluate(() => window.__fake.drive.created.length), 0);
+    await page.click('#session-save');
+    await page.waitForFunction(() => therapy.turns.some((t) => /Ze staan erin: 1 ervaring erbij, nu 3 in totaal/.test(t.content)), null, { timeout: 15000 });
+    const d = await page.evaluate(() => ({ created: window.__fake.drive.created, trashed: window.__fake.drive.trashed, csv: window.__fake.drive.files[window.__fake.drive.created[0]].csv }));
+    assert.deepEqual(d.trashed, ['L1'], 'the old version goes to the trash only after the check');
+    assert.match(d.csv, /^Datum,Ervaring,Waarom het fijn was,Gevoel,Sterkte \(0-100\),Reflexie\n/);
+    assert.match(d.csv, /Repetitie met de band,Muziek maken,Plezier,80,Ik hoor erbij/, 'old rows kept, with the > unescaped');
+    assert.match(d.csv, /08-11-2026,Fietstocht naar huis in de zon,Even tijd voor mezelf,Rustig,70,Ik neem de tijd voor mijzelf > ik weet wat mij helpt\n$/);
+    // empty reflections: read, propose, save (row count stays the same)
+    await page.fill('#session-input', 'Kunnen we de lege reflecties doen?');
+    await page.click('#session-send');
+    await page.waitForFunction(() => window.__fake.emptyRows);
+    assert.equal(await page.evaluate(() => window.__fake.emptyRows.zonder_reflectie), 1);
+    await page.fill('#session-input', 'Vul in: ik ben een teamplayer');
+    await page.click('#session-send');
+    await page.waitForSelector('#session-save');
+    await page.click('#session-save');
+    await page.waitForFunction(() => therapy.turns.some((t) => /1 reflectie aangevuld; er zijn er nog 0 leeg/.test(t.content)), null, { timeout: 15000 });
+    // privacy: nothing of the session in the village's own storage; forgotten when the session ends
+    const stored = await page.evaluate(() => JSON.stringify(window.__fake.store));
+    assert.ok(!/zon naar huis|Fietstocht|teamplayer|dag doornemen/i.test(stored), 'no session text in the village database');
+    await page.click('#session-end');
+    assert.equal(await page.isVisible('#session'), false);
+    assert.equal(await page.evaluate(() => therapy.turns.length), 0);
+    assert.equal(await page.evaluate(() => therapy.harmSeated), false);
+    // the evening bar and the direct link
+    await page.evaluate(() => { document.getElementById('rosie-bar').hidden = false; });
+    await page.click('#rosie-yes');
+    await page.waitForSelector('#session:not([hidden])');
+    assert.equal(await page.evaluate(() => location.hash), '#rosie-sessie');
+    assert.deepEqual(v.errors, []);
+  } finally { await v.close(); }
+});
