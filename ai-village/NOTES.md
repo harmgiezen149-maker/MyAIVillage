@@ -673,6 +673,8 @@ One Artlist image per house. Every room:
   - vergeten na afsluiten;
   - de avondbalk en `#rosie-sessie`.
 - Ook bekeken op telefoonformaat.
+- Online gezet als versie 1794157565-f731, met toestemming voor Google Drive (4 tools).
+  - Deze keer is gepubliceerd via het ingebouwde Artifact-gereedschap, omdat de vaste koppeling even weg was. Dat gereedschap zet zijn eigen omhulsel om de pagina. Gecontroleerd: taal, kleuren, lettertype, de opstart en de sessie werken gewoon (computer en telefoon).
 
 ## How the build log works (2026-10-30)
 
