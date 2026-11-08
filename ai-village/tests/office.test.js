@@ -119,6 +119,9 @@ test('Rosie the village therapist: session in her Praktijk, the skill in the pro
     await page.waitForSelector('#session:not([hidden])');
     await page.waitForFunction(() => therapy.harmSeated && residentById('rosie-bell').sessionSeat, null, { timeout: 60000 });
     assert.equal(await page.evaluate(() => state.scene), 'family-cottage');
+    // the painted session picture (one of the variants) fades in once both sit
+    await page.waitForFunction(() => { const s = sessionSceneNow(); return s && s.alpha >= 1; }, null, { timeout: 15000 });
+    assert.ok(await page.evaluate(() => SESSION_SCENES.includes(therapy.scene)));
     assert.deepEqual(await page.evaluate(() => residents.filter((r) => r.where === 'family-cottage' && r.id !== 'rosie-bell').map((r) => r.id)), [], 'nobody else in the room');
     // a turn: the skill's rules go to Claude with Opus
     await page.fill('#session-input', 'Ik heb vandaag in de zon naar huis gefietst.');

@@ -542,7 +542,8 @@ function drawNameTags() {
   const H = personHeight();
   const p = state.player;
   const kevinAway = typeof therapy !== 'undefined' && therapy.active && state.scene === 'family-cottage';   // Kevin waits outside a session
-  const people = [...residentsHere(), ...(kevinAway ? [] : [{ ...state.kevin, name: KEVIN.name, role: 'Kevin' }])];
+  const painted = kevinAway && typeof sessionSceneNow === 'function' && sessionSceneNow();       // Rosie painted into her chair
+  const people = [...residentsHere().filter((r) => !(painted && r.id === THERAPIST)), ...(kevinAway ? [] : [{ ...state.kevin, name: KEVIN.name, role: 'Kevin' }])];
   const z = state.camera.zoom || 1;
   const big = 15 / z, small = 12 / z;   // the same, readable size on screen, however big the figures are drawn
   ctx.save();

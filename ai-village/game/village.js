@@ -689,15 +689,19 @@ function drawRoom(id) {
   const img = images['room:' + id];
   if (img) ctx.drawImage(img, 0, 0, ROOM_W, ROOM_H);
   const things = (room.props || []).map((p) => ({ y: p[2], draw: () => drawProp(p) }));
+  let painted = null;
   if (state.meeting) things.push(...meetingThings());
   else {
     const session = typeof therapy !== 'undefined' && therapy.active && id === 'family-cottage';
-    if (session && therapy.harmSeated) things.push({ y: state.player.y, draw: therapyDrawHarm });   // on the sofa by the fire
+    painted = session ? sessionSceneNow() : null;                     // Harm and Rosie painted into the sofa and the chair
+    const hide = painted && painted.alpha >= 1;
+    if (session && therapy.harmSeated) { if (!hide) things.push({ y: state.player.y, draw: therapyDrawHarm }); }   // on the sofa by the fire
     else things.push({ y: state.player.y, draw: drawCEOInPlace });
     if (!session) things.push({ y: state.kevin.y - 0.01, draw: drawKevinInPlace });                // Kevin waits outside a session
-    if (typeof residentsHere === 'function') for (const r of residentsHere()) things.push({ y: r.y, draw: () => drawResidentInPlace(r) });
+    if (typeof residentsHere === 'function') for (const r of residentsHere()) if (!(hide && r.id === THERAPIST)) things.push({ y: r.y, draw: () => drawResidentInPlace(r) });
   }
   things.sort((a, b) => a.y - b.y).forEach((t) => t.draw());
+  if (painted) { ctx.save(); ctx.globalAlpha = painted.alpha; ctx.drawImage(painted.img, 0, 0, ROOM_W, ROOM_H); ctx.restore(); }
   if (typeof drawNameTags === 'function') drawNameTags();
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';

@@ -676,6 +676,20 @@ One Artlist image per house. Every room:
 - Online gezet als versie 1794157565-f731, met toestemming voor Google Drive (4 tools).
   - Deze keer is gepubliceerd via het ingebouwde Artifact-gereedschap, omdat de vaste koppeling even weg was. Dat gereedschap zet zijn eigen omhulsel om de pagina. Gecontroleerd: taal, kleuren, lettertype, de opstart en de sessie werken gewoon (computer en telefoon).
 
+## Rosie's Praktijk: geschilderde sessiebeelden (Harm, 2026-11-08)
+
+- Harm: "Maak met behulp van artlist van mijn karakter en die van Rosie een beter passend beeld die beter in de stoel of bank past." Daarna: "Beide. En maak nog een 3e variant waarop ik op de bank lig (als bij de psycholoog). En laat dan de 3 versies random zien in het dorp bij de sessies."
+- Gemaakt met Artlist (Nano Banana 2, beeld-naar-beeld, 2K, 4:3). Als voorbeeld dienden de kamer van de Praktijk en de karakterbladen van Harm en Rosie. Er zijn 2 varianten gemaakt voor 260 credits, met akkoord van Harm.
+- Bestanden: `assets/rooms/family-cottage-sessie-1.jpg` (Harm leunt achterover) en `-2.jpg` (Harm zit iets naar voren). Ze zijn even groot als de kamer (2400×1792) en de kamer staat er precies hetzelfde op.
+- Rosie zit op deze beelden in de achterste fauteuil bij de haard. Zo zitten ze schuin tegenover elkaar aan het tafeltje.
+- In het dorp (`game/therapy.js`, `SESSION_SCENES`):
+  - Bij elke sessie kiest het dorp er willekeurig een. Het neemt niet twee keer achter elkaar dezelfde; de vorige keuze staat in de browser (`village-session-scene`).
+  - Zodra Harm en Rosie allebei zitten, vloeit de kamer in 0,9 seconde over naar het geschilderde beeld. Daarna worden de losse figuurtjes en Rosies naamlabel niet meer getekend.
+  - De beelden worden pas geladen als een sessie begint, zodat het dorp niet trager opstart.
+  - Bij "Sessie afsluiten" komt de gewone kamer terug.
+- Downloaden van Artlist-beelden werkt nu direct (de volledige versie van cms-toolkit-artifacts.artlist.io). De verkleinde versie (imgix) wordt nog geblokkeerd.
+- Getest in `tests/office.test.js`: het beeld vloeit volledig in en is een van de varianten. Alle 18 tests slagen.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
@@ -776,9 +790,15 @@ One Artlist image per house. Every room:
 - **Usage limits hit / extra usage:** none reported.
 - **Built:** the read-only fix, broad search and science in the internet door, phase 4 (tests on GitHub, code split up, phone editor, keyboard use, speed limits on the Kookboek and Darkglass doors). Details in "Verbeterplan: fase 4".
 
+### Day 5 — 2026-11-08
+
+- **Artlist:** start 14.980 credits. 260 gebruikt voor 2 sessiebeelden van de Praktijk (Nano Banana 2). Stand nu ongeveer 14.720.
+- **Claude usage:** _open_. Harm to report from claude.ai → Settings → Usage.
+- **Built:** Rosie als dorpstherapeut (eerder vandaag) en de geschilderde sessiebeelden, die per sessie willekeurig wisselen.
+
 ## Open questions
 
-- Future art downloads: allow `cms-toolkit-artifacts.artlist.io` in the environment's network settings, or Harm uploads files in chat.
+- Art downloads: the full-size Artlist file now downloads directly (2026-11-08). The small preview (imgix) is still blocked; not needed.
 - Price per Artlist credit: work it out from the plan price (monthly price ÷ 40,000 on Max Pro), or use a fixed number from Harm?
 - The free 10th director spot (chair at the council table and the Guest House): a new director, or leave it free?
 - Sounds: the Artlist sound files could not be downloaded (403). Harm uploads them, or the village keeps its own soft sound (for now: its own sound).

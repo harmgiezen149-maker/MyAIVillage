@@ -18,7 +18,40 @@ const DRIVE = 'Google Drive', THERAPIE_MAP = '1uDxnN3DDuVyUidUzc8Y5tarlnNlAQMwU'
 const SHEET_TYPE = 'application/vnd.google-apps.spreadsheet';
 const LIJST_KOP = ['Datum', 'Ervaring', 'Waarom het fijn was', 'Gevoel', 'Sterkte (0-100)', 'Reflexie'];
 
-const therapy = { active: false, harmSeated: false, turns: [], busy: false, staged: null, list: null, leg: '', aim: null, daisyWas: null };
+const therapy = { active: false, harmSeated: false, turns: [], busy: false, staged: null, list: null, leg: '', aim: null, daisyWas: null, scene: null, sceneAt: 0 };
+
+// Painted session pictures (Harm, 2026-11-08, made with Artlist): the Praktijk with Harm and Rosie painted into the
+// sofa and the armchair, so they really sit in them. Once both are seated the room fades over to one of these, chosen
+// at random per session (Harm: "laat dan de versies random zien"), and the two little figures are not drawn.
+const SESSION_SCENES = ['family-cottage-sessie-1', 'family-cottage-sessie-2'];
+const sessionScenes = {};
+function loadSessionScenes() {
+  for (const n of SESSION_SCENES) {
+    if (sessionScenes[n]) continue;
+    const img = new Image();
+    sessionScenes[n] = { img, ready: false };
+    img.onload = () => { sessionScenes[n].ready = true; };
+    img.src = `assets/rooms/${n}.jpg`;
+  }
+}
+function pickSessionScene() {
+  let last = '';
+  try { last = localStorage.getItem('village-session-scene') || ''; } catch (e) { /* no storage */ }
+  const pool = SESSION_SCENES.length > 1 ? SESSION_SCENES.filter((n) => n !== last) : SESSION_SCENES;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  try { localStorage.setItem('village-session-scene', pick); } catch (e) { /* no storage */ }
+  return pick;
+}
+// The painted picture to show now (with how far it has faded in), or null: only while both sit and it has loaded.
+function sessionSceneNow() {
+  if (!therapy.active || !therapy.harmSeated || !therapy.scene) return null;
+  const rosie = residentById(THERAPIST);
+  if (!rosie || !rosie.sessionSeat || !rosie.seated) { therapy.sceneAt = 0; return null; }
+  const s = sessionScenes[therapy.scene];
+  if (!s || !s.ready) return null;
+  if (!therapy.sceneAt) therapy.sceneAt = state.time;
+  return { img: s.img, alpha: Math.min(1, (state.time - therapy.sceneAt) / 0.9) };
+}
 
 function vandaag() {
   const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Amsterdam' }));
@@ -112,7 +145,8 @@ function startSession() {
   if (!rosie) return;
   if (typeof closeChat === 'function' && office.chat) closeChat();
   if (typeof stopVisit === 'function') stopVisit();
-  Object.assign(therapy, { active: true, harmSeated: false, turns: [], busy: false, staged: null, list: null, leg: '', aim: null, streaming: null });
+  Object.assign(therapy, { active: true, harmSeated: false, turns: [], busy: false, staged: null, list: null, leg: '', aim: null, streaming: null, scene: pickSessionScene(), sceneAt: 0 });
+  loadSessionScenes();
   therapy.turns.push({ role: 'assistant', content: 'Hoi Harm. Fijn dat je er bent. Vertel eens over je dag: wat heb je allemaal gedaan en meegemaakt? Alles mag erin, ook wat lastig was. Daarna zoeken we samen de positieve momenten eruit.' });
   // Rosie walks to her armchair; Daisy waits outside while the session lasts
   rosie.inMeeting = false; rosie.summoned = false; rosie.chatting = null;
@@ -139,7 +173,7 @@ function endSession() {
       const p = nearestOpenPoint(PRAKTIJK, x + 60, y + 90) || ROOMS[PRAKTIJK].start;
       state.player.x = p[0]; state.player.y = p[1];
     }
-    therapy.harmSeated = false;
+    therapy.harmSeated = false; therapy.scene = null; therapy.sceneAt = 0;
     const daisy = residents.find((r) => r.role === 'Worker' && r.boss && r.boss.id === THERAPIST);
     if (daisy && therapy.daisyWas) { daisy.modeUntil = state.time + 10; therapy.daisyWas = null; }
     // the conversation is forgotten: nothing of it is kept anywhere but Harm's list in Drive
