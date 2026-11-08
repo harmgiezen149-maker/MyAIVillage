@@ -107,7 +107,9 @@ test('a connector not yet allowed for the page: a bar with a button; the button 
 });
 
 test('Rosie the village therapist: session in her Praktijk, the skill in the prompt, saving in the Drive list, nothing kept elsewhere', async () => {
-  const v = await openVillage(srv.url);
+  const voices = [{ name: 'Google Nederlands', lang: 'nl-NL', localService: false }, { name: 'Xander', lang: 'nl-NL', localService: true },
+    { name: 'Claire', lang: 'nl-NL', localService: true }, { name: 'Samantha', lang: 'en-US', localService: true }];
+  const v = await openVillage(srv.url, { fake: { voices } });
   const { page } = v;
   try {
     assert.match(await page.evaluate(() => BUILDINGS.find((b) => b.id === 'family-cottage').name), /Praktijk van Rosie/);
@@ -130,10 +132,22 @@ test('Rosie the village therapist: session in her Praktijk, the skill in the pro
     const prompt = await page.evaluate(() => window.__fake.sessionPrompt);
     assert.match(prompt, /positieve ervaringen/); assert.match(prompt, /Eén vraag per bericht/); assert.match(prompt, /113/);
     assert.ok(await page.evaluate(() => window.__fake.calls.some((c) => c.model === 'claude-opus-5-5' && c.tools.includes('propose_save'))));
+    // Rosie speaks: her greeting and her question, calm, with the on-device Dutch female voice (never the online one)
+    const said = await page.evaluate(() => window.__fake.spoken.filter((x) => x.text));
+    assert.ok(said.some((x) => /Fijn dat je er bent/.test(x.text)), 'the greeting is spoken');
+    assert.ok(said.some((x) => x.text === 'Wat maakte dat fijn voor jou?'), 'her question is spoken');
+    assert.ok(said.every((x) => x.voice === 'Claire' && x.rate < 1), 'Claire, slowly');
+    assert.match(await page.textContent('#session-voice'), /Stem aan/);
+    await page.click('#session-voice');                                          // Harm turns her voice off
+    assert.match(await page.textContent('#session-voice'), /Stem uit/);
+    assert.equal(await page.evaluate(() => localStorage.getItem('rosie-stem')), 'uit');
+    const before = said.length;
     // Rosie proposes the rows; nothing is saved before Harm presses the button
     await page.fill('#session-input', 'Ja, laten we opslaan.');
     await page.click('#session-send');
     await page.waitForSelector('#session-save');
+    assert.equal(await page.evaluate(() => window.__fake.spoken.filter((x) => x.text).length), before, 'silent when switched off');
+    await page.click('#session-voice');                                          // and on again
     assert.equal(await page.evaluate(() => window.__fake.drive.created.length), 0);
     await page.click('#session-save');
     await page.waitForFunction(() => therapy.turns.some((t) => /Ze staan erin: 1 ervaring erbij, nu 3 in totaal/.test(t.content)), null, { timeout: 15000 });

@@ -698,6 +698,19 @@ One Artlist image per house. Every room:
 - Downloaden van Artlist-beelden werkt nu direct (de volledige versie van cms-toolkit-artifacts.artlist.io). De verkleinde versie (imgix) wordt nog geblokkeerd.
 - Getest in `tests/office.test.js`: het beeld vloeit volledig in en is een van de 4 varianten. Alle 18 tests slagen.
 
+## Rosie spreekt (Harm, 2026-11-08)
+
+- Harm: "Laat Rosie ook spreken. Laat ze met een rustige typische therapeutische stem de vragen stellen."
+- `game/stem.js` gebruikt de spraak die al op Harms eigen apparaat zit (spraaksynthese van de browser). Dat is gratis, zonder sleutel, zonder extra dienst en zonder betalen per gebruik.
+- Privacy: alleen stemmen die op het apparaat zelf werken. Online stemmen, zoals "Google Nederlands" in Chrome of de "Online (Natural)"-stemmen in Edge, worden overgeslagen, omdat Rosies woorden dan naar Google of Microsoft gaan. ElevenLabs en Artlist zijn om dezelfde reden niet gebruikt: die bewaren wat ze uitspreken in je account.
+- Rustig: bij voorkeur een Nederlandse vrouwenstem, zoals Claire op iPhone/Mac of Colette op Windows. Ze spreekt iets langzamer (0,88) en iets lager (0,95), zin voor zin. Markdown, emoji en links worden niet voorgelezen. De pijltjes in een reflectie worden een korte pauze.
+- Rosie spreekt haar begroeting en elk antwoord uit. Als Harm iets stuurt of de sessie afsluit, stopt ze met praten.
+- De knop "🔈 Stem aan / 🔇 Stem uit" staat bovenin de sessie. De keuze wordt op het apparaat onthouden (`rosie-stem`). Zet Harm de stem weer aan, dan herhaalt Rosie haar laatste bericht.
+- Telefoons laten geluid alleen toe na een tik. Daarom wordt de spraak "ontgrendeld" bij het starten, bij Stuur en bij de stemknop.
+- Heeft het apparaat geen Nederlandse stem die lokaal werkt, dan verschijnt één melding en blijft Rosie stil. De sessie werkt dan gewoon.
+- Getest in `tests/office.test.js` met een nagemaakte spraak: de begroeting en de vraag worden uitgesproken, met Claire en langzaam, de online stem wordt overgeslagen, en uit is echt stil. Ook bekeken op telefoonformaat. Alle tests slagen.
+- Nog niet op een echt apparaat gehoord. Harm luistert bij de volgende sessie of de stem goed klinkt.
+
 ## How the build log works (2026-10-30)
 
 - Every session gets an entry with: date, start and end time, Artlist credit balance before and after, Claude usage before and after, and what was built.
@@ -802,7 +815,7 @@ One Artlist image per house. Every room:
 
 - **Artlist:** start 14.980 credits. 1.040 gebruikt voor de sessiebeelden van de Praktijk (4 × 260, Nano Banana 2). Stand nu ongeveer 13.940.
 - **Claude usage:** _open_. Harm to report from claude.ai → Settings → Usage.
-- **Built:** Rosie als dorpstherapeut (eerder vandaag) en de geschilderde sessiebeelden, die per sessie willekeurig wisselen.
+- **Built:** Rosie als dorpstherapeut (eerder vandaag), 4 geschilderde sessiebeelden die per sessie willekeurig wisselen, en Rosies stem met de eigen spraak van het apparaat.
 
 ## Open questions
 

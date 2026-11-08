@@ -391,7 +391,7 @@
 <div class="hud" id="consent-bar" role="alert" hidden></div>
 <div class="hud" id="rosie-bar" role="status" hidden><img src="assets/portraits/rosie-bell.jpg" alt=""><span>Rosie heeft vanavond tijd om je dag met je door te nemen.</span><button id="rosie-yes" class="small primary">Ja, graag</button><button id="rosie-no" class="small">Nu niet</button></div>
 <div class="panel" id="session" role="dialog" aria-label="Sessie met Rosie" hidden>
-  <div class="panel-head"><img src="assets/portraits/rosie-bell.jpg" alt="" class="session-face"><div class="session-who"><h2>Rosie Bell</h2><div class="session-sub">Dorpstherapeut · Praktijk van Rosie · positieve ervaringen</div></div><button id="session-end" class="small" style="margin:0">Sessie afsluiten</button></div>
+  <div class="panel-head"><img src="assets/portraits/rosie-bell.jpg" alt="" class="session-face"><div class="session-who"><h2>Rosie Bell</h2><div class="session-sub">Dorpstherapeut · Praktijk van Rosie · positieve ervaringen</div></div><button id="session-voice" class="small" style="margin:0" aria-pressed="true">🔈 Stem aan</button><button id="session-end" class="small" style="margin:0">Sessie afsluiten</button></div>
   <div id="session-log" aria-live="polite"></div>
   <div id="session-staged" hidden></div>
   <div class="session-form"><textarea id="session-input" rows="2" placeholder="Vertel…" aria-label="Je antwoord aan Rosie"></textarea><button id="session-send" class="primary">Stuur</button></div>
@@ -544,5 +544,6 @@
 <script src="game/connectors.js"></script>
 <script src="game/schedules.js"></script>
 <script src="game/therapy.js"></script>
+<script src="game/stem.js"></script>
 </body>
 </html>

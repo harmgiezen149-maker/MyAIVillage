@@ -160,6 +160,7 @@ function startSession() {
   renderSession();
   focusTyping(document.getElementById('session-input'));
   if (typeof audio !== 'undefined' && audio.setSessionQuiet) audio.setSessionQuiet(true);
+  if (typeof rosieSpeak === 'function') { rosieUnlock(); rosieSpeak(therapy.turns[0].content); }   // Rosie says hello (stem.js)
 }
 
 function endSession() {
@@ -174,6 +175,7 @@ function endSession() {
       state.player.x = p[0]; state.player.y = p[1];
     }
     therapy.harmSeated = false; therapy.scene = null; therapy.sceneAt = 0;
+    if (typeof rosieStop === 'function') rosieStop();
     const daisy = residents.find((r) => r.role === 'Worker' && r.boss && r.boss.id === THERAPIST);
     if (daisy && therapy.daisyWas) { daisy.modeUntil = state.time + 10; therapy.daisyWas = null; }
     // the conversation is forgotten: nothing of it is kept anywhere but Harm's list in Drive
@@ -254,6 +256,7 @@ async function sendSession() {
   if (!said || therapy.busy) return;
   if (!office.sample) { therapy.turns.push({ role: 'note', content: 'Praten met Rosie heeft Claude nodig: open het dorp op claude.ai.' }); renderSession(); return; }
   box.value = '';
+  if (typeof rosieStop === 'function') { rosieStop(); rosieUnlock(); }
   therapy.turns.push({ role: 'user', content: said });
   therapy.busy = true; renderSession();
   try {
@@ -270,6 +273,7 @@ async function sendSession() {
     const { text } = await office.sample(msgs, { model: MODELS.director, modelTier: 'complex', cache: false, tools: sessionTools(),
       onText: ({ text: t }) => { therapy.streaming = t; renderSession(); } });
     therapy.turns.push({ role: 'assistant', content: text });
+    if (typeof rosieSpeak === 'function' && therapy.active) rosieSpeak(text);   // her answer aloud (stem.js)
   } catch (e) {
     therapy.turns.push({ role: 'note', content: sampleErrorText(e) });
   } finally {

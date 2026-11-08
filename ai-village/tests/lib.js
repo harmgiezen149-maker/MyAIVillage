@@ -102,6 +102,15 @@ function installFake(cfg) {
   } };
   const caps = { db, sample, mcp, downloads: { save: async () => ({}) } };
   window.claude = { use: async (n) => (cfg.noClaude ? null : caps[n] || null) };
+  // the device's own speech (Rosie's voice): a stand-in that records what is said
+  if (cfg.voices) {
+    const spoken = [];
+    window.__fake.spoken = spoken;
+    Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, writable: true, value: function (text) { this.text = text; } });
+    Object.defineProperty(window, 'speechSynthesis', { configurable: true, get: () => fakeSynth });
+    const fakeSynth = { getVoices: () => cfg.voices, speak: (u) => { if (u.text) spoken.push({ text: u.text, voice: u.voice && u.voice.name, rate: u.rate }); },
+      cancel: () => { spoken.push({ cancel: true }); }, addEventListener: () => {} };
+  }
 }
 
 // Opens the village and walks in. Returns { browser, page, errors, close }.
