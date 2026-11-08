@@ -160,7 +160,7 @@ function startSession() {
   renderSession();
   focusTyping(document.getElementById('session-input'));
   if (typeof audio !== 'undefined' && audio.setSessionQuiet) audio.setSessionQuiet(true);
-  if (typeof rosieSpeak === 'function') { rosieUnlock(); rosieSpeak(therapy.turns[0].content); }   // Rosie says hello (stem.js)
+  if (typeof rosieSpeak === 'function') { rosieUnlock(); rosieSpeak(therapy.turns[0].content); renderVoiceButton(); }   // Rosie says hello (stem.js)
 }
 
 function endSession() {

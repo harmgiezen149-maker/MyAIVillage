@@ -138,9 +138,11 @@ test('Rosie the village therapist: session in her Praktijk, the skill in the pro
     assert.ok(said.some((x) => x.text === 'Wat maakte dat fijn voor jou?'), 'her question is spoken');
     assert.ok(said.every((x) => x.voice === 'Claire' && x.rate < 1), 'Claire, slowly');
     assert.match(await page.textContent('#session-voice'), /Stem aan/);
+    assert.match(await page.textContent('#session-voice-info'), /Stem: Claire \(nl-NL\), op dit apparaat/);
     await page.click('#session-voice');                                          // Harm turns her voice off
     assert.match(await page.textContent('#session-voice'), /Stem uit/);
     assert.equal(await page.evaluate(() => localStorage.getItem('rosie-stem')), 'uit');
+    assert.equal(await page.textContent('#session-voice-info'), 'Stem: uit');
     const before = said.length;
     // Rosie proposes the rows; nothing is saved before Harm presses the button
     await page.fill('#session-input', 'Ja, laten we opslaan.');

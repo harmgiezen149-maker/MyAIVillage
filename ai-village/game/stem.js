@@ -25,7 +25,7 @@ function pickVoice() {
   return local.slice().sort((a, b) => score(b) - score(a))[0];
 }
 if (synth) {
-  const again = () => { stem.voice = null; };
+  const again = () => { stem.voice = null; renderVoiceButton(); };
   if (synth.addEventListener) synth.addEventListener('voiceschanged', again); else synth.onvoiceschanged = again;
 }
 
@@ -81,7 +81,19 @@ function rosieSpeak(text) {
   }
 }
 
+// Which voice Rosie uses, under her name (Harm, 2026-11-08: "laat zien welke stem Rosie gebruikt").
+function voiceInfo() {
+  if (!synth) return 'Stem: deze app kan niet voorlezen. Open het dorp in Chrome of Safari.';
+  if (!stem.on) return 'Stem: uit';
+  const v = stem.voice || pickVoice();
+  if (v) return `Stem: ${v.name} (${v.lang}), op dit apparaat`;
+  const all = synth.getVoices() || [];
+  if (all.some((x) => /^nl([-_]|$)/i.test(x.lang || ''))) return 'Stem: alleen een online Nederlandse stem gevonden. Die gebruikt Rosie niet, zodat je woorden op je apparaat blijven.';
+  return 'Stem: geen Nederlandse stem gevonden op dit apparaat';
+}
 function renderVoiceButton() {
+  const info = document.getElementById('session-voice-info');
+  if (info) info.textContent = voiceInfo();
   const b = document.getElementById('session-voice');
   if (!b) return;
   b.hidden = !synth;

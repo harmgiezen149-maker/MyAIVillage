@@ -710,6 +710,14 @@ One Artlist image per house. Every room:
 - Heeft het apparaat geen Nederlandse stem die lokaal werkt, dan verschijnt één melding en blijft Rosie stil. De sessie werkt dan gewoon.
 - Getest in `tests/office.test.js` met een nagemaakte spraak: de begroeting en de vraag worden uitgesproken, met Claire en langzaam, de online stem wordt overgeslagen, en uit is echt stil. Ook bekeken op telefoonformaat. Alle tests slagen.
 - Nog niet op een echt apparaat gehoord. Harm luistert bij de volgende sessie of de stem goed klinkt.
+- Welke stem (Harm: "laat zien welke stem Rosie gebruikt"): onder Rosies naam in de sessie staat de stem, bijvoorbeeld "Stem: Nederlands Nederland (nl-NL), op dit apparaat". Andere meldingen die daar kunnen staan:
+  - "Stem: uit";
+  - "Stem: deze app kan niet voorlezen. Open het dorp in Chrome of Safari.";
+  - "alleen een online Nederlandse stem gevonden";
+  - "geen Nederlandse stem gevonden".
+- Tip voor Harms Samsung S25:
+  - In Instellingen bij tekst-naar-spraak kiezen voor Spraakservices van Google en Nederlands (Nederland) downloaden. Daar ook de stem kiezen.
+  - Het dorp openen in Chrome. Waarschijnlijk kan de Claude-app op Android niet voorlezen.
 
 ## How the build log works (2026-10-30)
 
