@@ -23,7 +23,7 @@ const therapy = { active: false, harmSeated: false, turns: [], busy: false, stag
 // Painted session pictures (Harm, 2026-11-08, made with Artlist): the Praktijk with Harm and Rosie painted into the
 // sofa and the armchair, so they really sit in them. Once both are seated the room fades over to one of these, chosen
 // at random per session (Harm: "laat dan de versies random zien"), and the two little figures are not drawn.
-const SESSION_SCENES = ['family-cottage-sessie-1', 'family-cottage-sessie-2'];
+const SESSION_SCENES = ['family-cottage-sessie-1', 'family-cottage-sessie-2', 'family-cottage-sessie-3', 'family-cottage-sessie-4'];
 const sessionScenes = {};
 function loadSessionScenes() {
   for (const n of SESSION_SCENES) {
